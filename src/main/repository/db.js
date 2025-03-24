@@ -21,10 +21,7 @@ const Usuario = sequelize.define('Usuario', {
     allowNull: false,
     unique: true
   },
-  senha: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
+
   tipo: {
     type: DataTypes.ENUM('Aluno', 'Professor', 'Adm'),
     allowNull: false
@@ -110,6 +107,5 @@ sequelize.sync();
 const usuario = await Usuario.create({
   nome: 'João',
   email: 'joao@example.com',
-  senha: '123456',
   tipo: 'adm'
 });
