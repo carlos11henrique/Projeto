@@ -1,0 +1,51 @@
+📊 Gráficos para o Sistema de Empréstimos
+📉 Gráfico de Linhas - Evolução dos Empréstimos
+
+Mostra o número de empréstimos feitos ao longo do tempo (dias, semanas ou meses).
+
+Ajuda a identificar picos de demanda.
+
+📊 Gráfico de Barras - Empréstimos por Categoria
+
+Exibe quais categorias de livros (ou itens) são mais emprestadas.
++
+Pode ser segmentado por mês ou ano.
+
+
+
+
+
+📌 Gráfico de Pizza - Percentual de Empréstimos por Tipo de Usuário
+
+Mostra a participação de Professores, Alunos e Terceiros nos empréstimos.
+
+
+
+
+
+📉 Gráfico de Colunas - Devoluções no Prazo vs. Atrasos
+
+Exibe a quantidade de devoluções feitas no prazo comparadas às devoluções em atraso.
+
+Ajuda a medir o cumprimento das regras de empréstimo.
+
+
+
+
+🕒 Gráfico de Barras Empilhadas - Tempo Médio de Empréstimo por Tipo de Usuário
+
+Mostra quanto tempo, em média, cada tipo de usuário fica com os itens emprestados.
+
+
+
+
+📌 Gráfico de Radar - Livros Mais Emprestados
+
+Destaca os livros mais populares ao longo do tempo.
+
+
+
+
+🔥 Mapa de Calor - Dias da Semana com Mais Empréstimos
+
+Mostra quais dias são mais movimentados na biblioteca, ajudando a otimizar a gestão.
