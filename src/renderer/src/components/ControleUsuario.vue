@@ -1,5 +1,6 @@
 <template>
   <div>
+    
     <form @submit.prevent="adicionarUsuario" class="mb-6">
       <!-- Dropdown para selecionar o tipo de usuário -->
       <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo do Usuário</label>

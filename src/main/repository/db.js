@@ -1,3 +1,4 @@
+const { type } = require('jquery');
 const Sequelize = require('sequelize');
 
 // Crie a conexão com o banco de dados
@@ -16,10 +17,18 @@ const Usuario = sequelize.define('Usuario', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  email: {
+  cpf: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  matricula: {
+    type : DataTypes.STRING,
+    allowNull: false
+
+  },
+  telefone: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true
   },
 
   tipo: {
@@ -59,6 +68,16 @@ Livro.init({
     type: Sequelize.STRING
   },
   editora: {
+    type: Sequelize.STRING
+  },
+  genero: {
+    type: Sequelize.STRING
+  },
+descricao: {
+  type: Sequelize.STRING
+
+},
+  imagem: {
     type: Sequelize.STRING
   }
 },
