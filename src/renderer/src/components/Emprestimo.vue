@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- Campo de pesquisa para livros -->
+    <!-- Pesquisa de Livros -->
     <div class="mb-4">
       <label for="search" class="block text-sm font-medium text-gray-700">Pesquisar Livro (Código, Título ou Autor)</label>
       <input 
@@ -11,66 +11,91 @@
       />
     </div>
 
-    <!-- Lista de livros -->
-    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+    <!-- Lista de Livros -->
+    <table class="w-full text-sm text-left text-gray-500">
+      <thead class="bg-gray-100">
         <tr>
           <th class="px-6 py-3">Código</th>
           <th class="px-6 py-3">Título</th>
           <th class="px-6 py-3">Autor</th>
-          <th class="px-6 py-3">Editora</th>
-          <th class="px-6 py-3">Gênero</th>
           <th class="px-6 py-3">Exemplares</th>
-          <th class="px-6 py-3">Imagem</th>
           <th class="px-6 py-3">Ações</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(livro, index) in filteredLivros" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+        <tr v-for="(livro, index) in filteredLivros" :key="index" class="border-b">
           <td class="px-6 py-4">{{ livro.codigo }}</td>
           <td class="px-6 py-4">{{ livro.titulo }}</td>
           <td class="px-6 py-4">{{ livro.autor }}</td>
-          <td class="px-6 py-4">{{ livro.editora }}</td>
-          <td class="px-6 py-4">{{ livro.genero }}</td>
           <td class="px-6 py-4">
-            <!-- Exibição dos exemplares -->
-            <div v-if="livro.exemplares.length > 0">
-              <select v-model="livroSelecionadoExemplar" class="p-2 border rounded-md">
-                <option v-for="(exemplar, i) in livro.exemplares" :key="i" :value="exemplar.id">
-                  Exemplar {{ exemplar.id }}
-                </option>
-              </select>
-            </div>
-            <div v-else>
-              Nenhum exemplar disponível
-            </div>
+            {{ livro.exemplares.length > 0 ? livro.exemplares.length : 'Indisponível' }}
           </td>
-          <td class="px-6 py-4"><img :src="livro.imagem" alt="Imagem do Livro" class="h-16 w-auto" /></td>
           <td class="px-6 py-4">
-            <!-- Emprestar livro -->
-            <button @click="iniciarEmprestimo(livro.codigo)" class="text-green-600 hover:underline ml-3">Emprestar</button>
-            <!-- Devolver livro -->
-            <button @click="devolverLivro(livro.codigo)" class="text-yellow-600 hover:underline ml-3">Devolver</button>
+            <button 
+              @click="iniciarEmprestimo(livro)" 
+              class="bg-blue-500 text-white px-3 py-1 rounded"
+            >
+              Emprestar
+            </button>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <!-- Pesquisa de usuário aparece quando "Emprestar" é clicado -->
-    <div v-if="mostrarPesquisaUsuario" class="mt-4">
-      <label for="usuario" class="block text-sm font-medium text-gray-700">Pesquisar Aluno (Matrícula, Nome ou CPF)</label>
-      <input v-model="searchUsuario" type="text" placeholder="Digite matrícula, nome ou CPF do aluno" class="mt-1 p-2 border border-gray-300 rounded-md w-full" />
-      
-      <!-- Exibe o usuário encontrado -->
-      <div v-if="usuarioSelecionado" class="mt-4">
-        <p><strong>Aluno Selecionado:</strong> {{ usuarioSelecionado.nome }} - {{ usuarioSelecionado.matricula }}</p>
-        <button @click="finalizarEmprestimo" class="text-blue-600 hover:underline mt-2">Confirmar Empréstimo</button>
+    <!-- Seção de Empréstimo -->
+    <div v-if="livroSelecionado" class="mt-6 p-4 border rounded bg-gray-100">
+      <h3 class="text-lg font-semibold">Empréstimo do Livro</h3>
+      <p><strong>Título:</strong> {{ livroSelecionado.titulo }}</p>
+      <p><strong>Autor:</strong> {{ livroSelecionado.autor }}</p>
+
+      <!-- Escolher exemplar -->
+      <div class="mt-2">
+        <label class="block text-sm font-medium">Escolher Exemplar:</label>
+        <select v-model="livroSelecionadoExemplar" class="mt-1 p-2 border rounded-md w-full">
+          <option v-for="exemplar in livroSelecionado.exemplares" :key="exemplar.id" :value="exemplar.id">
+            Exemplar {{ exemplar.id }}
+          </option>
+        </select>
       </div>
+
+      <!-- Pesquisa de Usuário -->
+      <div class="mt-4">
+        <label class="block text-sm font-medium">Pesquisar Usuário (Matrícula, Nome ou CPF)</label>
+        <input 
+          v-model="searchUsuario" 
+          type="text" 
+          placeholder="Digite matrícula, nome ou CPF" 
+          class="mt-1 p-2 border rounded-md w-full"
+        />
+        <ul v-if="filteredUsuarios.length" class="mt-2 border rounded bg-white max-h-32 overflow-y-auto">
+          <li 
+            v-for="usuario in filteredUsuarios" 
+            :key="usuario.matricula" 
+            @click="selecionarUsuario(usuario)"
+            class="p-2 hover:bg-gray-200 cursor-pointer"
+          >
+            {{ usuario.nome }} ({{ usuario.matricula }})
+          </li>
+        </ul>
+      </div>
+
+      <!-- Usuário Selecionado -->
+      <div v-if="usuarioSelecionado" class="mt-4 p-2 border rounded bg-white">
+        <p><strong>Aluno:</strong> {{ usuarioSelecionado.nome }}</p>
+        <p><strong>Matrícula:</strong> {{ usuarioSelecionado.matricula }}</p>
+      </div>
+
+      <!-- Botão de Empréstimo -->
+      <button 
+        v-if="livroSelecionadoExemplar && usuarioSelecionado" 
+        @click="finalizarEmprestimo" 
+        class="mt-4 bg-green-500 text-white px-4 py-2 rounded"
+      >
+        Confirmar Empréstimo
+      </button>
     </div>
   </div>
 </template>
-
-
 
 <script>
 export default {
@@ -82,19 +107,13 @@ export default {
           codigo: "123", 
           titulo: "Livro A", 
           autor: "Autor A", 
-          editora: "Editora A", 
-          genero: "Ficção", 
           exemplares: [{ id: 1 }, { id: 2 }, { id: 3 }],  
-          imagem: "url_image_a" 
         },
         { 
           codigo: "456", 
           titulo: "Livro B", 
           autor: "Autor B", 
-          editora: "Editora B", 
-          genero: "Romance", 
           exemplares: [{ id: 1 }, { id: 2 }],  
-          imagem: "url_image_b" 
         },
       ],
       usuarios: [
@@ -105,10 +124,9 @@ export default {
       emprestimos: [],
       searchQuery: "", // Pesquisa de livros
       searchUsuario: "", // Pesquisa de usuários
-      usuarioSelecionado: null, 
-      mostrarPesquisaUsuario: false, 
-      livroSelecionado: null, 
-      livroSelecionadoExemplar: null, 
+      usuarioSelecionado: null,
+      livroSelecionado: null,
+      livroSelecionadoExemplar: null,
     };
   },
   computed: {
@@ -127,5 +145,32 @@ export default {
       );    
     }
   },
+  methods: {
+    iniciarEmprestimo(livro) {
+      this.livroSelecionado = livro;
+      this.livroSelecionadoExemplar = livro.exemplares.length > 0 ? livro.exemplares[0].id : null;
+    },
+    selecionarUsuario(usuario) {
+      this.usuarioSelecionado = usuario;
+    },
+    finalizarEmprestimo() {
+      if (this.livroSelecionado && this.livroSelecionadoExemplar && this.usuarioSelecionado) {
+        alert(`Empréstimo realizado para ${this.usuarioSelecionado.nome} do livro "${this.livroSelecionado.titulo}" (Exemplar ${this.livroSelecionadoExemplar})`);
+        
+        // Simulação de empréstimo concluído
+        this.emprestimos.push({
+          livro: this.livroSelecionado,
+          exemplar: this.livroSelecionadoExemplar,
+          usuario: this.usuarioSelecionado,
+        });
+
+        // Resetar os campos após empréstimo
+        this.livroSelecionado = null;
+        this.livroSelecionadoExemplar = null;
+        this.usuarioSelecionado = null;
+        this.searchUsuario = "";
+      }
+    }
+  }
 };
 </script>
