@@ -3,7 +3,7 @@
     <!-- Navbar -->
     <nav class="bg-gray-800 text-white p-4 flex items-center justify-between">
       <div class="flex items-center">
-        <span class="text-lg font-semibold ml-2">Nome do Sistema</span>
+        <span class="text-lg font-semibold ml-2">Biblioteca</span>
       </div>
     </nav>
 

@@ -15,6 +15,7 @@
           <th class="px-6 py-3">Autor</th>
           <th class="px-6 py-3">Exemplares</th>
           <th class="px-6 py-3">Usuário com Livro</th>
+          <th class="px-6 py-3">Data de Devolução</th>
           <th class="px-6 py-3">Ações</th>
         </tr>
       </thead>
@@ -25,39 +26,38 @@
           <td class="px-6 py-4">{{ livro.autor }}</td>
           <td class="px-6 py-4">{{ livro.exemplares.length }}</td>
           <td class="px-6 py-4">{{ livro.emprestadoPara ? livro.emprestadoPara.nome : '-' }}</td>
+          <td class="px-6 py-4">{{ livro.dataDevolucao || '-' }}</td>
           <td class="px-6 py-4">
             <button v-if="!livro.emprestadoPara" @click="iniciarEmprestimo(livro)" class="bg-blue-500 text-white px-3 py-1 rounded">Emprestar</button>
             <button v-else @click="devolverLivro(livro)" class="bg-red-500 text-white px-3 py-1 rounded">Devolver</button>
+            <button v-if="livro.emprestadoPara" @click="aumentarPrazo(livro)" class="bg-yellow-500 text-white px-3 py-1 rounded ml-2">Aumentar Prazo</button>
           </td>
         </tr>
       </tbody>
     </table>
-
-    <!-- Seção de Empréstimo -->
+    
+    <!-- Exibição do Livro Selecionado -->
     <div v-if="livroSelecionado" class="mt-6 p-4 border rounded bg-gray-100">
-      <h3 class="text-lg font-semibold">Empréstimo do Livro</h3>
-      <p v-if="livroSelecionado"><strong>Título:</strong> {{ livroSelecionado.titulo }}</p>
-      <p v-if="livroSelecionado"><strong>Autor:</strong> {{ livroSelecionado.autor }}</p>
+      <h3 class="text-lg font-semibold">Livro Selecionado</h3>
+      <p><strong>Título:</strong> {{ livroSelecionado.titulo }}</p>
+      <p><strong>Autor:</strong> {{ livroSelecionado.autor }}</p>
+      <p><strong>Código:</strong> {{ livroSelecionado.codigo }}</p>
+      <p><strong>Exemplares:</strong> {{ livroSelecionado.exemplares.length }}</p>
+      <p><strong>Data de Devolução:</strong> {{ livroSelecionado.dataDevolucao || 'Não Emprestado' }}</p>
+    </div>
 
-      <!-- Escolher exemplar -->
-      <div class="mt-2">
-        <label class="block text-sm font-medium">Escolher Exemplar:</label>
-        <select v-model="livroSelecionadoExemplar" class="mt-1 p-2 border rounded-md w-full">
-          <option v-for="exemplar in livroSelecionado.exemplares" :key="exemplar.id" :value="exemplar.id">Exemplar {{ exemplar.id }}</option>
-        </select>
-      </div>
+    <!-- Seção de Pesquisa de Usuários -->
+    <div v-if="livroSelecionado" class="mt-6 p-4 border rounded bg-gray-100">
+      <h3 class="text-lg font-semibold">Selecionar Usuário</h3>
+      <input v-model="searchUsuario" type="text" placeholder="Matrícula, nome ou CPF" class="mt-1 p-2 border rounded-md w-full" />
 
-      <!-- Pesquisa de Usuário -->
-      <div class="mt-4">
-        <label class="block text-sm font-medium">Pesquisar Usuário</label>
-        <input v-model="searchUsuario" type="text" placeholder="Matrícula, nome ou CPF" class="mt-1 p-2 border rounded-md w-full" />
-        <ul v-if="filteredUsuarios.length" class="mt-2 border rounded bg-white max-h-32 overflow-y-auto">
-          <li v-for="usuario in filteredUsuarios" :key="usuario.matricula" @click="selecionarUsuario(usuario)" class="p-2 hover:bg-gray-200 cursor-pointer">{{ usuario.nome }} ({{ usuario.matricula }})</li>
-        </ul>
-      </div>
+      <ul v-if="filteredUsuarios.length" class="mt-2 border rounded bg-white max-h-32 overflow-y-auto">
+        <li v-for="usuario in filteredUsuarios" :key="usuario.matricula" @click="selecionarUsuario(usuario)" class="p-2 hover:bg-gray-200 cursor-pointer">
+          {{ usuario.nome }} ({{ usuario.matricula }})
+        </li>
+      </ul>
 
-      <!-- Botão de Empréstimo -->
-      <button v-if="livroSelecionadoExemplar && usuarioSelecionado" @click="finalizarEmprestimo" class="mt-4 bg-green-500 text-white px-4 py-2 rounded">Confirmar Empréstimo</button>
+      <button v-if="usuarioSelecionado" @click="finalizarEmprestimo" class="mt-4 bg-green-500 text-white px-4 py-2 rounded">Confirmar Empréstimo</button>
     </div>
   </div>
 </template>
@@ -67,8 +67,8 @@ export default {
   data() {
     return {
       livros: [
-        { codigo: "123", titulo: "Livro A", autor: "Autor A", exemplares: [{ id: 1 }, { id: 2 }], emprestadoPara: null },
-        { codigo: "456", titulo: "Livro B", autor: "Autor B", exemplares: [{ id: 1 }], emprestadoPara: null },
+        { codigo: "123", titulo: "Livro A", autor: "Autor A", exemplares: [{ id: 1 }, { id: 2 }], emprestadoPara: null, dataDevolucao: null },
+        { codigo: "456", titulo: "Livro B", autor: "Autor B", exemplares: [{ id: 1 }], emprestadoPara: null, dataDevolucao: null },
       ],
       usuarios: [
         { matricula: "001", nome: "João Silva", cpf: "123.456.789-00" },
@@ -76,9 +76,8 @@ export default {
       ],
       searchQuery: "",
       searchUsuario: "",
-      usuarioSelecionado: null,
       livroSelecionado: null,
-      livroSelecionadoExemplar: null,
+      usuarioSelecionado: null,
     };
   },
   computed: {
@@ -92,25 +91,33 @@ export default {
   methods: {
     iniciarEmprestimo(livro) {
       this.livroSelecionado = livro;
-      this.livroSelecionadoExemplar = livro.exemplares.length > 0 ? livro.exemplares[0].id : null;
     },
     selecionarUsuario(usuario) {
       this.usuarioSelecionado = usuario;
     },
     finalizarEmprestimo() {
-      if (this.livroSelecionado && this.livroSelecionadoExemplar && this.usuarioSelecionado) {
+      if (this.livroSelecionado && this.usuarioSelecionado) {
+        const dataAtual = new Date();
+        const novaData = new Date();
+        novaData.setDate(dataAtual.getDate() + 14); // 14 dias de prazo padrão
         this.livroSelecionado.emprestadoPara = this.usuarioSelecionado;
-        alert(`Empréstimo para ${this.usuarioSelecionado.nome}`);
+        this.livroSelecionado.dataDevolucao = novaData.toISOString().split('T')[0];
+        alert(`Empréstimo do livro "${this.livroSelecionado.titulo}" para ${this.usuarioSelecionado.nome} até ${this.livroSelecionado.dataDevolucao}`);
       }
       this.livroSelecionado = null;
       this.usuarioSelecionado = null;
-      this.livroSelecionadoExemplar = null;
     },
     devolverLivro(livro) {
-      if (!livro) return;
       livro.emprestadoPara = null;
-      this.livros = [...this.livros]; // Força atualização reativa
+      livro.dataDevolucao = null;
       alert(`Livro "${livro.titulo}" devolvido!`);
+    },
+    aumentarPrazo(livro) {
+      if (!livro.dataDevolucao) return;
+      let novaData = new Date(livro.dataDevolucao);
+      novaData.setDate(novaData.getDate() + 7); // Aumenta 7 dias no prazo
+      livro.dataDevolucao = novaData.toISOString().split('T')[0];
+      alert(`Prazo do livro "${livro.titulo}" estendido até ${livro.dataDevolucao}`);
     }
   }
 };
