@@ -23,6 +23,8 @@
     "@tailwindcss/vite": "^4.0.14",
     "electron-updater": "^6.3.9",
     "flowbite": "^3.1.2",
+    "highcharts": "^12.1.2",
+    "highcharts-vue": "^2.0.1",
     "jquery": "^3.7.1",
     "jquery-mask-plugin": "^1.14.16",
     "sequelize": "^6.37.6",

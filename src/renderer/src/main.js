@@ -1,6 +1,6 @@
 import './assets/main.css'
-
 import { createApp } from 'vue'
+import HighchartsVue from 'highcharts-vue'
 import App from './App.vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
@@ -20,11 +20,13 @@ const routes = [
 
         ]
     },
+    
 ]
 
 const router = createRouter({
     history: createMemoryHistory(),
     routes,
 })
+
 
 createApp(App).use(router).mount('#app')
