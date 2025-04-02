@@ -1,6 +1,11 @@
-import { Sequelize } from "sequelize";
-
-Sequelize('Livro', {
+import { DataTypes } from "sequelize";
+/**
+ * Cria o modelo de Livro no banco de dados
+ * @param {Sequelize} sequelize - Inst ncia do Sequelize
+ * @returns {Sequelize.Model} - O modelo de Livro
+ */
+export function createModel(sequelize) {
+  const Livro = sequelize.define('Livro', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -35,3 +40,6 @@ Sequelize('Livro', {
       allowNull: false
     }
   });
+
+  return Livro;
+}

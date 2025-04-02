@@ -21,9 +21,13 @@
           </div>
           <div>
             <label for="codigo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Código do Livro</label>
-            <input v-model="novoLivro.codigo" type="text" id="codigo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required />
+            <input v-model="novoLivro.codigoLivro" type="text" id="codigoLivro" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required />
           </div>
           <div>
+            <div>
+            <label for="codigo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição</label>
+            <input v-model="novoLivro.descricao" type="text" id="descricao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required />
+          </div>
             <label for="quantidade" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantidade</label>
             <input v-model="novoLivro.quantidade" type="number" id="quantidade" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required />
           </div>
@@ -70,16 +74,19 @@
 </template>
 
 <script>
+import { onMounted } from 'vue';
+
 export default {
   name: "Livro",
   data() {
     return {
       novoLivro: { 
-        codigo: "", 
+        codigoLivro: "", 
         titulo: "", 
         autor: "", 
         editora: "", 
-        genero: "", 
+        genero: "",
+        descricao: "", 
         quantidade: 0, 
         imagem: "" 
       },
@@ -97,13 +104,14 @@ export default {
   methods: {
     adicionarLivro() {
       if (this.novoLivro.codigo && this.novoLivro.titulo && this.novoLivro.autor && this.novoLivro.editora && this.novoLivro.genero && this.novoLivro.quantidade >= 0) {
-        this.livros.push({ ...this.novoLivro });
+      window.api.createLivro({...this.novoLivro});
         this.novoLivro = { 
-          codigo: "", 
+          codigoLivro: "", 
           titulo: "", 
           autor: "", 
           editora: "", 
           genero: "", 
+          descricao: "",
           quantidade: 0, 
           imagem: "" 
         };
@@ -115,7 +123,10 @@ export default {
     },
     removerLivro(index) {
       this.livros.splice(index, 1);
-    }
+    },
+
   }
+
 };
+
 </script>
