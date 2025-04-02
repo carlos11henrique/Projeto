@@ -31,7 +31,7 @@ sequelize('Usuario', {
     },
     serie: {
       type: DataTypes.STRING,
-      allowNull: true, // Este campo é opcional para 'Professor' e 'Adm'
+      allowNull: true, 
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -43,5 +43,5 @@ sequelize('Usuario', {
     }
   }, {
     timestamps: true,  
-    tableName: 'Usuarios',  // Nome da tabela no banco de dados
+    tableName: 'Usuarios', 
   });
