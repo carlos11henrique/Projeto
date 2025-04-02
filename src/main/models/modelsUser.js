@@ -10,17 +10,23 @@ sequelize('Usuario', {
       type: DataTypes.STRING,
       allowNull: false
     },
-    email: {
+    telefone: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true
     },
-    senha: {
+    cpf: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      unique: true
+    },
+    matricula: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true
     },
     tipo: {
-      type: DataTypes.ENUM('Aluno', 'Professor', 'Adm'),
+      type: DataTypes.ENUM('Aluno', 'Professor', 'Terceiros'),
       allowNull: false
     },
     serie: {
