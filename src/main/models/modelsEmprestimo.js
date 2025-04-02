@@ -1,7 +1,8 @@
-import { Sequelize } from "sequelize";
+import { DataTypes } from "sequelize";
 
-Sequelize('Emprestimo', {
-    id: {
+export function createModel(sequelize) {
+  const Emprestimo = sequelize.define('Emprestimo', {
+id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
@@ -30,3 +31,6 @@ Sequelize('Emprestimo', {
       type: DataTypes.STRING
     }
     });
+
+  return Emprestimo;
+}

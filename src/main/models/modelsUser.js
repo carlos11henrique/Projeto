@@ -1,7 +1,8 @@
-import { Sequelize } from "sequelize";
+import { DataTypes } from "sequelize";
 
-sequelize('Usuario', {
-    id: {
+export function createModel(sequelize) {
+  const Usuario = sequelize.define('Usuario', { 
+     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
@@ -45,3 +46,7 @@ sequelize('Usuario', {
     timestamps: true,  
     tableName: 'Usuarios', 
   });
+
+  return Usuario;
+
+}
