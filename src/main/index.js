@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { event } from 'jquery'
+
 import { LivroModel } from './models'
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -58,7 +59,65 @@ app.whenReady().then(() => {
     })
   });
 
+  ipcMain.on ('updateLivro',function (event, book) {
+    LivroModel.update(book, {where: {id: book.id}}).then(() => {
+      console.log('Livro atualizado com sucesso');
+    })
+  });
 
+  ipcMain.on ('deleteLivro',function (event, id) {
+    LivroModel.destroy({where: {id: id}}).then(() => {
+      console.log('Livro deletado com sucesso');
+    })
+  });
+
+  ipcMain.on ('buscarLivro',function (event, id) {
+    LivroModel.findByPk(id).then((livro) => {
+      event.reply('livro', livro);
+    })
+  });
+  
+
+  ipcMain.on ('createUsuario',function (event, user) {
+    LivroModel.create(user).then(() => {
+      console.log('Livro cadastrado com sucesso');
+    })
+  });
+
+  ipcMain.on ('updateUsuario',function (event, user) {
+    LivroModel.update(user, {where: {id: user.id}}).then(() => {
+      console.log('Livro atualizado com sucesso');
+    })
+  });
+
+  ipcMain.on ('deleteUsuario',function (event, id) {
+    LivroModel.destroy({where: {id: id}}).then(() => {
+      console.log('Livro deletado com sucesso');
+    })
+  });
+
+  ipcMain.on ('buscarUsuario',function (event, id) {
+    LivroModel.findByPk(id).then((livro) => {
+      event.reply('livro', livro);
+    })
+  });
+
+
+
+
+  ipcMain.on ('EmprestarLivro',function (event, emprestimo) {
+    LivroModel.create(emprestimo).then(() => {
+      console.log('Livro cadastrado com sucesso');
+    })
+  });
+
+  ipcMain.on ('DevolverLivro',function (event, emprestimo) {
+    LivroModel.update(emprestimo, {where: {id: emprestimo.id}}).then(() => {
+      console.log('Livro atualizado com sucesso');
+    })
+  });
+
+  
 
 
   createWindow()
