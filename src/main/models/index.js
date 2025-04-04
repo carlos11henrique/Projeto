@@ -15,6 +15,6 @@ const sequelize = new Sequelize({
 });
 console.log(fs.existsSync(DEST_DB))
 const Livro = createModel(sequelize);
-
+sequelize.sync();
 
 export { Livro as LivroModel, sequelize };
