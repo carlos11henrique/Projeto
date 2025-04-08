@@ -1,10 +1,17 @@
 import { DataTypes } from "sequelize";
 
-export function createModel(sequelize) {
+/**
+ * Cria o modelo de Emprestimo no banco de dados
+ * @param {Sequelize} sequelize - Inst ncia do Sequelize
+ * @returns {Sequelize.Model} - O modelo de Emprestimo
+ */
+export function EmprestimoModel(sequelize) {
   const Emprestimo = sequelize.define('Emprestimo', {
+    
 id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
+
       autoIncrement: true
     },
     livroId: {

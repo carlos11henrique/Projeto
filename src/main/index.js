@@ -3,6 +3,9 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { event } from 'jquery'
+import {emprestimoModel} from './models'
+import {UserModel} from './models'
+
 
 import { LivroModel } from './models'
 function createWindow() {
@@ -77,47 +80,59 @@ app.whenReady().then(() => {
     })
   });
   
-
-  ipcMain.on ('createUsuario',function (event, user) {
-    LivroModel.create(user).then(() => {
-      console.log('Livro cadastrado com sucesso');
-    })
-  });
-
-  ipcMain.on ('updateUsuario',function (event, user) {
-    LivroModel.update(user, {where: {id: user.id}}).then(() => {
-      console.log('Livro atualizado com sucesso');
-    })
-  });
-
-  ipcMain.on ('deleteUsuario',function (event, id) {
-    LivroModel.destroy({where: {id: id}}).then(() => {
-      console.log('Livro deletado com sucesso');
-    })
-  });
-
-  ipcMain.on ('buscarUsuario',function (event, id) {
-    LivroModel.findByPk(id).then((livro) => {
-      event.reply('livro', livro);
-    })
-  });
-
-
-
-
-  ipcMain.on ('EmprestarLivro',function (event, emprestimo) {
-    LivroModel.create(emprestimo).then(() => {
-      console.log('Livro cadastrado com sucesso');
-    })
-  });
-
-  ipcMain.on ('DevolverLivro',function (event, emprestimo) {
-    LivroModel.update(emprestimo, {where: {id: emprestimo.id}}).then(() => {
-      console.log('Livro atualizado com sucesso');
-    })
-  });
-
   
+
+  ipcMain.on ('createEmprestimo',function (event, emprestimo) {
+    emprestimoModel.create(emprestimo).then(() => {
+      console.log('Emprestimo cadastrado com sucesso');
+    })
+  });
+
+  ipcMain.on ('updateEmprestimo',function (event, emprestimo) {
+    emprestimoModel.update(emprestimo, {where: {id: emprestimo.id}}).then(() => {
+      console.log('Emprestimo atualizado com sucesso');
+    })
+  });
+
+  ipcMain.on ('deleteEmprestimo',function (event, id) {
+    emprestimoModel.destroy({where: {id: id}}).then(() => {
+      console.log('Emprestimo deletado com sucesso');
+    })
+  });
+
+  ipcMain.on ('buscarEmprestimo',function (event, id) { 
+    emprestimoModel.findByPk(id).then((emprestimo) => {
+      event.reply('emprestimo', emprestimo);
+    })
+  });
+
+
+  ipcMain.on ('createUser',function (event, user) {
+    UserModel.create(user).then(() => {
+      console.log('User cadastrado com sucesso');
+    })
+  });
+
+  ipcMain.on ('updateUser',function (event, user) {
+    UserModel.update(user, {where: {id: user.id}}).then(() => {
+      console.log('User atualizado com sucesso');
+    })
+  });
+
+
+  ipcMain.on ('deleteUser',function (event, id) {
+    UserModel.destroy({where: {id: id}}).then(() => {
+      console.log('User deletado com sucesso');
+    })
+  });
+
+  ipcMain.on ('buscarUser',function (event, id) { 
+    UserModel.findByPk(id).then((user) => {
+      event.reply('user', user);
+    })
+  });
+  
+
 
 
   createWindow()

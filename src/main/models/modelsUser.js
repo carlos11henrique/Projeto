@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 
-export function createModel(sequelize) {
+export function UserModel(sequelize) {
   const Usuario = sequelize.define('Usuario', { 
      id: {
       type: DataTypes.INTEGER,
