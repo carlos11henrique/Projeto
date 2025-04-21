@@ -3,7 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { event } from 'jquery'
-import {emprestimoModel} from './models'
+import {EmprestimoModel} from './models'
 import {UserModel} from './models'
 
 
@@ -83,25 +83,25 @@ app.whenReady().then(() => {
   
 
   ipcMain.on ('createEmprestimo',function (event, emprestimo) {
-    emprestimoModel.create(emprestimo).then(() => {
+    EmprestimoModel.create(emprestimo).then(() => {
       console.log('Emprestimo cadastrado com sucesso');
     })
   });
 
   ipcMain.on ('updateEmprestimo',function (event, emprestimo) {
-    emprestimoModel.update(emprestimo, {where: {id: emprestimo.id}}).then(() => {
+    EmprestimoModel.update(emprestimo, {where: {id: emprestimo.id}}).then(() => {
       console.log('Emprestimo atualizado com sucesso');
     })
   });
 
   ipcMain.on ('deleteEmprestimo',function (event, id) {
-    emprestimoModel.destroy({where: {id: id}}).then(() => {
+    EmprestimoModel.destroy({where: {id: id}}).then(() => {
       console.log('Emprestimo deletado com sucesso');
     })
   });
 
   ipcMain.on ('buscarEmprestimo',function (event, id) { 
-    emprestimoModel.findByPk(id).then((emprestimo) => {
+    EmprestimoModel.findByPk(id).then((emprestimo) => {
       event.reply('emprestimo', emprestimo);
     })
   });
