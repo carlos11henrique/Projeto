@@ -40,42 +40,53 @@
       </form>
   
       <input v-model="searchQuery" type="text" placeholder="Pesquisar livro..." class="mt-4 mb-4 p-2 border border-gray-300 rounded-md w-full" />
-      
       <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-          <tr>
-            <th class="px-6 py-3">Código</th>
-            <th class="px-6 py-3">Título</th>
-            <th class="px-6 py-3">Autor</th>
-            <th class="px-6 py-3">Editora</th>
-            <th class="px-6 py-3">Gênero</th>
-            <th class="px-6 py-3">Quantidade</th>
-            <th class="px-6 py-3">Imagem</th>
-            <th class="px-6 py-3">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(livro, index) in filteredLivros" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-            <td class="px-6 py-4">{{ livro.codigo }}</td>
-            <td class="px-6 py-4">{{ livro.titulo }}</td>
-            <td class="px-6 py-4">{{ livro.autor }}</td>
-            <td class="px-6 py-4">{{ livro.editora }}</td>
-            <td class="px-6 py-4">{{ livro.genero }}</td>
-            <td class="px-6 py-4">{{ livro.quantidade }}</td>
-            <td class="px-6 py-4"><img :src="livro.imagem" alt="Imagem do Livro" class="h-16 w-auto" /></td>
-            <td class="px-6 py-4">
-              <button @click="editarLivro(index)" class="text-blue-600 hover:underline">Editar</button>
-              <button @click="removerLivro(index)" class="text-red-600 hover:underline ml-3">Remover</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+  <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+    <tr>
+      <th class="px-6 py-3">Código</th>
+      <th class="px-6 py-3">Título</th>
+      <th class="px-6 py-3">Autor</th>
+      <th class="px-6 py-3">Editora</th>
+      <th class="px-6 py-3">Gênero</th>
+      <th class="px-6 py-3">Quantidade</th>
+      <th class="px-6 py-3">Imagem</th>
+      <th class="px-6 py-3">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr v-for="(livro, index) in livros" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+    <td class="px-6 py-4">{{ livro.codigoLivro }}</td> <!-- CORRIGIDO -->
+    <td class="px-6 py-4">{{ livro.titulo }}</td>
+    <td class="px-6 py-4">{{ livro.autor }}</td>
+    <td class="px-6 py-4">{{ livro.editora }}</td>
+    <td class="px-6 py-4">{{ livro.genero }}</td>
+    <td class="px-6 py-4">{{ livro.quantidade }}</td>
+    <td class="px-6 py-4">
+      <img :src="livro.imagem" alt="Imagem do Livro" class="h-16 w-auto" />
+    </td>
+    <td class="px-6 py-4">
+      <button @click="editarLivro(index)" class="text-blue-600 hover:underline">Editar</button>
+      <button @click="removerLivro(index)" class="text-red-600 hover:underline ml-3">Remover</button>
+    </td>
+  </tr>
+</tbody>
+
+</table>
     </div>
 </template>
 
+
+
+
+
+
+
 <script>
+
+
+
+
 import Swal from 'sweetalert2';
-import { onMounted } from 'vue';
 
 export default {
   name: "Livro",
@@ -92,82 +103,110 @@ export default {
         imagem: ""
       },
       livros: [],
+
       searchQuery: ""
     };
   },
   computed: {
-    filteredLivros() {
-      return this.livros.filter(livro =>
-        livro.titulo.toLowerCase().includes(this.searchQuery.toLowerCase())
-      );
-    }
+    filteredLivro() {
+    return this.livro.filter(livro => 
+      livro.titulo.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+      livro.autor.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+      livro.genero.toLowerCase().includes(this.searchQuery.toLowerCase())
+    );
+  },
+
   },
   methods: {
-    adicionarLivro() {
+    async adicionarLivro() {
       const livro = this.novoLivro;
 
       if (
         livro.codigoLivro && livro.titulo && livro.autor &&
         livro.editora && livro.genero && livro.quantidade >= 0
       ) {
-        window.api.createLivro({ ...livro });
+        try {
+          await window.api.createLivro({ ...livro });
 
-        this.livros.push({ ...livro });
+          Swal.fire({
+            icon: 'success',
+            title: 'Livro cadastrado!',
+            text: 'O livro foi adicionado com sucesso.'
+          });
 
-        // Limpar o formulário
-        this.novoLivro = {
-          codigoLivro: "",
-          titulo: "",
-          autor: "",
-          editora: "",
-          genero: "",
-          descricao: "",
-          quantidade: 0,
-          imagem: ""
-        };
+          this.novoLivro = {
+            codigoLivro: "",
+            titulo: "",
+            autor: "",
+            editora: "",
+            genero: "",
+            descricao: "",
+            quantidade: 0,
+            imagem: ""
+          };
 
-        // Mostrar alerta de sucesso
-        Swal.fire({
-          icon: 'success',
-          title: 'Livro cadastrado!',
-          text: 'O livro foi adicionado com sucesso.',
-          confirmButtonColor: '#3085d6'
-        });
+          this.carregarLivro();
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Erro!',
+            text: 'Não foi possível cadastrar o livro.'
+          });
+        }
       } else {
         Swal.fire({
           icon: 'warning',
           title: 'Campos obrigatórios!',
-          text: 'Preencha todos os campos corretamente.',
-          confirmButtonColor: '#d33'
+          text: 'Preencha todos os campos corretamente.'
         });
       }
     },
+    async carregarLivro() {
+    try {
+      const livros = await window.api.getLivro();
+      console.log(livros);
+      this.livros = livros;
+    } catch (error) {
+      console.error('Erro ao carregar livros:', error);
+    }
+  },
     editarLivro(index) {
       this.novoLivro = { ...this.livros[index] };
-      this.livros.splice(index, 1);
+      this.livros.splice(index, 1); // remove temporariamente da lista, será recriado ao salvar
     },
-    removerLivro(index) {
+    async removerLivro(index) {
+      const livro = this.livros[index];
+
       Swal.fire({
         title: 'Tem certeza?',
-        text: "Esta ação removerá o livro!",
+        text: "Deseja remover este livro?",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sim, remover',
+        confirmButtonText: 'Sim, remover!',
         cancelButtonText: 'Cancelar'
-      }).then((result) => {
+      }).then(async (result) => {
         if (result.isConfirmed) {
-          this.livros.splice(index, 1);
-          Swal.fire({
-            icon: 'success',
-            title: 'Removido!',
-            text: 'O livro foi removido com sucesso.',
-            confirmButtonColor: '#3085d6'
-          });
+          try {
+            await window.api.deleteLivro(livro.codigoLivro);
+            this.carregarLivro();
+
+            Swal.fire('Removido!', 'O livro foi removido.', 'success');
+          } catch (error) {
+            Swal.fire('Erro', 'Não foi possível remover o livro.', 'error');
+          }
         }
       });
-    }
+    },
+ 
+  },
+  mounted() {
+    this.carregarLivro();
+    
   }
 };
+
 </script>
+
+
+
+
