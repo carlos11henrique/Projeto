@@ -13,8 +13,9 @@ const sequelize = new Sequelize({
 console.log(fs.existsSync(DEST_DB));
 
 const Livro = createModel(sequelize);
-const User = createModel(sequelize);
-const Emprestimo = createModel(sequelize);
+console.log(Livro);
+const User = UserModel(sequelize);
+const Emprestimo = EmprestimoModel(sequelize);
 
 Livro.hasMany(Emprestimo);
 Emprestimo.belongsTo(Livro);
@@ -22,6 +23,7 @@ Emprestimo.belongsTo(Livro);
 User.hasMany(Emprestimo);
 Emprestimo.belongsTo(User);
 
-sequelize.sync();
+sequelize.sync(Livro, User, Emprestimo);
+sequelize.sync({ force: true });
 
 export { Livro as LivroModel, Emprestimo as EmprestimoModel, User as UserModel, sequelize };

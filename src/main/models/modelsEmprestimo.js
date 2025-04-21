@@ -14,20 +14,7 @@ id: {
 
       autoIncrement: true
     },
-    livroId: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: Livro,
-        key: 'id'
-      }
-    },
-    usuarioId: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: Usuario,
-        key: 'id'
-      }
-    },
+
     dataEmprestimo: {
       type: DataTypes.DATE
     },
