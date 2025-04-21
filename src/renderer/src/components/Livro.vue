@@ -74,21 +74,22 @@
 </template>
 
 <script>
+import Swal from 'sweetalert2';
 import { onMounted } from 'vue';
 
 export default {
   name: "Livro",
   data() {
     return {
-      novoLivro: { 
-        codigoLivro: "", 
-        titulo: "", 
-        autor: "", 
-        editora: "", 
+      novoLivro: {
+        codigoLivro: "",
+        titulo: "",
+        autor: "",
+        editora: "",
         genero: "",
-        descricao: "", 
-        quantidade: 0, 
-        imagem: "" 
+        descricao: "",
+        quantidade: 0,
+        imagem: ""
       },
       livros: [],
       searchQuery: ""
@@ -103,18 +104,42 @@ export default {
   },
   methods: {
     adicionarLivro() {
-      if (this.novoLivro.codigo && this.novoLivro.titulo && this.novoLivro.autor && this.novoLivro.editora && this.novoLivro.genero && this.novoLivro.quantidade >= 0) {
-      window.api.createLivro({...this.novoLivro});
-        this.novoLivro = { 
-          codigoLivro: "", 
-          titulo: "", 
-          autor: "", 
-          editora: "", 
-          genero: "", 
+      const livro = this.novoLivro;
+
+      if (
+        livro.codigoLivro && livro.titulo && livro.autor &&
+        livro.editora && livro.genero && livro.quantidade >= 0
+      ) {
+        window.api.createLivro({ ...livro });
+
+        this.livros.push({ ...livro });
+
+        // Limpar o formulário
+        this.novoLivro = {
+          codigoLivro: "",
+          titulo: "",
+          autor: "",
+          editora: "",
+          genero: "",
           descricao: "",
-          quantidade: 0, 
-          imagem: "" 
+          quantidade: 0,
+          imagem: ""
         };
+
+        // Mostrar alerta de sucesso
+        Swal.fire({
+          icon: 'success',
+          title: 'Livro cadastrado!',
+          text: 'O livro foi adicionado com sucesso.',
+          confirmButtonColor: '#3085d6'
+        });
+      } else {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Campos obrigatórios!',
+          text: 'Preencha todos os campos corretamente.',
+          confirmButtonColor: '#d33'
+        });
       }
     },
     editarLivro(index) {
@@ -122,11 +147,27 @@ export default {
       this.livros.splice(index, 1);
     },
     removerLivro(index) {
-      this.livros.splice(index, 1);
-    },
-
+      Swal.fire({
+        title: 'Tem certeza?',
+        text: "Esta ação removerá o livro!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, remover',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.livros.splice(index, 1);
+          Swal.fire({
+            icon: 'success',
+            title: 'Removido!',
+            text: 'O livro foi removido com sucesso.',
+            confirmButtonColor: '#3085d6'
+          });
+        }
+      });
+    }
   }
-
 };
-
 </script>
