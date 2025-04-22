@@ -23,8 +23,8 @@ export function UserModel(sequelize) {
     },
     matricula: {
       type: DataTypes.STRING,
-      allowNull: false,
-      unique: true
+      allowNull: true,
+  unique: true
     },
     tipo: {
       type: DataTypes.ENUM('Aluno', 'Professor', 'Terceiros'),

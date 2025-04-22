@@ -74,8 +74,6 @@
     </table>
   </div>      
 </template>
-
-
 <script>
 import $ from 'jquery';
 import 'jquery-mask-plugin';
@@ -84,7 +82,7 @@ export default {
   name: "ControleUsuario",
   data() {
     return {
-      tipoUsuario: "", // Estado para armazenar o tipo do usuário
+      tipoUsuario: "",
       searchQuery: "",
       usuarios: [],
       novoUsuario: { nome: "", cpf: "", matricula: "", serie: "", turma: "", telefone: "" },
@@ -99,18 +97,33 @@ export default {
     },
   },
   methods: {
-    adicionarUsuario() {
-      this.usuarios.push({ ...this.novoUsuario });
-      this.novoUsuario = { nome: "", cpf: "", matricula: "", serie: "", turma: "", telefone: "" };
+    async adicionarUsuario() {
+      try {
+        await window.api.createUser(this.novoUsuario);
+        this.usuarios.push({ ...this.novoUsuario });
+        this.novoUsuario = { nome: "", cpf: "", matricula: "", serie: "", turma: "", telefone: "" };
+        this.carregarUsuario();
+      } catch (error) {
+        console.error('Erro ao criar Usuário:', error);
+      }
     },
     editarUsuario(index) {
       const usuario = this.usuarios[index];
       const novoNome = prompt("Editar Nome:", usuario.nome);
       if (novoNome !== null) this.usuarios[index].nome = novoNome;
-    },
+    },   
     removerUsuario(index) {
       if (confirm("Tem certeza que deseja remover este usuário?")) {
         this.usuarios.splice(index, 1);
+      }
+    },
+    async carregarUsuario() {
+      try {
+        const usuarios = await window.api.getUser();
+        console.log(usuarios);
+        this.usuarios = usuarios;
+      } catch (error) {
+        console.error('Erro ao carregar usuários:', error);
       }
     },
   },
@@ -119,6 +132,8 @@ export default {
       $('#cpf').mask('000.000.000-00');
       $('#telefone').mask('(00) 00000-0000');
     });
+
+    this.carregarUsuario();
   }
 };
 </script>

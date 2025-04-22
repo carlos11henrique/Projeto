@@ -14,11 +14,13 @@ const api = {
   updateEmprestimo: (emprestimo) => ipcRenderer.send('updateEmprestimo', emprestimo),
   deleteEmprestimo: (id) => ipcRenderer.send('deleteEmprestimo', id),
   buscarEmprestimo: (id) => ipcRenderer.send('buscarEmprestimo', id),
+  getEmprestimo: () => ipcRenderer.invoke('getEmprestimo'),
 
   createUser: (user) => ipcRenderer.send('createUser', user),
   updateUser: (user) => ipcRenderer.send('updateUser', user),
   deleteUser: (id) => ipcRenderer.send('deleteUser', id),
   buscarUser: (id) => ipcRenderer.send('buscarUser', id),
+  getUser: () => ipcRenderer.invoke('getUser'),
 }
 
 

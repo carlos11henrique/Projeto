@@ -107,6 +107,10 @@ app.whenReady().then(() => {
     })
   });
 
+  ipcMain.handle ('getEmprestimo',async (event, ...args) => {
+    return (await EmprestimoModel.findAll()).map((emprestimo) => emprestimo.dataValues);
+  });
+
 
   ipcMain.on ('createUser',function (event, user) {
     UserModel.create(user).then(() => {
@@ -131,6 +135,10 @@ app.whenReady().then(() => {
     UserModel.findByPk(id).then((user) => {
       event.reply('user', user);
     })
+  });
+
+  ipcMain.handle ('getUser',async (event, ...args) => {
+    return (await UserModel.findAll()).map((user) => user.dataValues);
   });
   
 
