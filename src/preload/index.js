@@ -17,7 +17,7 @@ const api = {
   getEmprestimo: () => ipcRenderer.invoke('getEmprestimo'),
 
   createUser: (user) => ipcRenderer.send('createUser', user),
-  updateUser: (user) => ipcRenderer.send('updateUser', user),
+  updateUser: (user) => ipcRenderer.send('updateUser', user), 
   deleteUser: (id) => ipcRenderer.send('deleteUser', id),
   buscarUser: (id) => ipcRenderer.send('buscarUser', id),
   getUser: () => ipcRenderer.invoke('getUser'),

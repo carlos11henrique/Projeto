@@ -59,12 +59,12 @@
       </thead>
       <tbody>
         <tr v-for="(usuario, index) in usuarios" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-          <td class="px-6 py-4">{{ usuario.nome }}</td>
-          <td class="px-6 py-4">{{ usuario.cpf }}</td>
+          <td class="px-6 py-4">{{ usuario?.nome || 'Nome não disponível' }}</td>
+          <td class="px-6 py-4">{{ usuario?.cpf }}</td>
           <td v-if="tipoUsuario === 'Aluno'" class="px-6 py-4">{{ usuario.matricula }}</td>
           <td v-if="tipoUsuario === 'Aluno'" class="px-6 py-4">{{ usuario.serie }}</td>
           <td v-if="tipoUsuario === 'Aluno'" class="px-6 py-4">{{ usuario.turma }}</td>
-          <td class="px-6 py-4">{{ usuario.telefone }}</td>
+          <td class="px-6 py-4">{{ usuario?.telefone }}</td>
           <td class="px-6 py-4">
             <button @click="editarUsuario(index)" class="text-blue-600 hover:underline">Editar</button>
             <button @click="removerUsuario(index)" class="text-red-600 hover:underline ml-4">Excluir</button>
@@ -74,58 +74,106 @@
     </table>
   </div>      
 </template>
+
+
+
 <script>
 import $ from 'jquery';
 import 'jquery-mask-plugin';
+import Swal from 'sweetalert2';
 
 export default {
   name: "ControleUsuario",
   data() {
     return {
-      tipoUsuario: "",
-      searchQuery: "",
+      tipoSelecionado: "", // usado para filtrar tabela
       usuarios: [],
-      novoUsuario: { nome: "", cpf: "", matricula: "", serie: "", turma: "", telefone: "" },
+      novoUsuario: {
+        tipo: "",
+        nome: "",
+        cpf: "",
+        matricula: "",
+        serie: "",
+        turma: "",
+        telefone: ""
+      }
     };
   },
   computed: {
-    filteredUsuarios() {
-      return this.usuarios.filter(usuario =>
-        usuario.nome.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        usuario.matricula.includes(this.searchQuery)
-      );
-    },
+    usuariosFiltrados() {
+      if (!this.tipoSelecionado) return this.usuarios;
+      return this.usuarios.filter(u => u.tipo === this.tipoSelecionado);
+    }
+  },
+  watch: {
+    'novoUsuario.tipo'(val) {
+      this.tipoSelecionado = val;
+    }
   },
   methods: {
     async adicionarUsuario() {
-      try {
-        await window.api.createUser(this.novoUsuario);
-        this.usuarios.push({ ...this.novoUsuario });
-        this.novoUsuario = { nome: "", cpf: "", matricula: "", serie: "", turma: "", telefone: "" };
-        this.carregarUsuario();
-      } catch (error) {
-        console.error('Erro ao criar Usuário:', error);
-      }
-    },
-    editarUsuario(index) {
-      const usuario = this.usuarios[index];
+  try {
+    const usuarioLimpo = JSON.parse(JSON.stringify(this.novoUsuario));
+    const result = await window.api.createUser(usuarioLimpo);
+    this.usuarios.push(result);
+    this.resetForm();
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Usuário cadastrado!',
+      text: 'O usuário foi cadastrado com sucesso.',
+      confirmButtonColor: '#3085d6',
+      confirmButtonText: 'OK'
+    });
+
+  } catch (error) {
+    console.error("Erro ao criar usuário:", error);
+
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro ao cadastrar',
+      text: 'Não foi possível cadastrar o usuário. Tente novamente.',
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Fechar'
+    });
+  }
+},
+    editarUsuario(usuario) {
       const novoNome = prompt("Editar Nome:", usuario.nome);
-      if (novoNome !== null) this.usuarios[index].nome = novoNome;
-    },   
-    removerUsuario(index) {
-      if (confirm("Tem certeza que deseja remover este usuário?")) {
-        this.usuarios.splice(index, 1);
+      if (novoNome !== null) {
+        usuario.nome = novoNome;
+        window.api.updateUser(usuario);
       }
     },
-    async carregarUsuario() {
+    async removerUsuario(usuario) {
+      if (confirm("Tem certeza que deseja excluir?")) {
+        try {
+          await window.api.deleteUser(usuario.id);
+          this.usuarios = this.usuarios.filter(u => u.id !== usuario.id);
+        } catch (error) {
+          console.error("Erro ao remover usuário:", error);
+        }
+      }
+    },
+    async carregarUsuarios() {
       try {
-        const usuarios = await window.api.getUser();
-        console.log(usuarios);
-        this.usuarios = usuarios;
+        const lista = await window.api.getUser();
+        this.usuarios = lista;
       } catch (error) {
-        console.error('Erro ao carregar usuários:', error);
+        console.error("Erro ao carregar usuários:", error);
       }
     },
+    resetForm() {
+      this.novoUsuario = {
+        tipo: "",
+        nome: "",
+        cpf: "",
+        matricula: "",
+        serie: "",
+        turma: "",
+        telefone: ""
+      };
+    }
   },
   mounted() {
     $(document).ready(() => {
@@ -133,7 +181,7 @@ export default {
       $('#telefone').mask('(00) 00000-0000');
     });
 
-    this.carregarUsuario();
+    this.carregarUsuarios();
   }
 };
 </script>

@@ -112,10 +112,10 @@ app.whenReady().then(() => {
   });
 
 
-  ipcMain.on ('createUser',function (event, user) {
+  ipcMain.on('createUser', function (event, user) {
     UserModel.create(user).then(() => {
       console.log('User cadastrado com sucesso');
-    })
+    });
   });
 
   ipcMain.on ('updateUser',function (event, user) {
@@ -136,13 +136,12 @@ app.whenReady().then(() => {
       event.reply('user', user);
     })
   });
-
-  ipcMain.handle ('getUser',async (event, ...args) => {
+  
+  
+  ipcMain.handle('getUser', async (event, ...args) => {
     return (await UserModel.findAll()).map((user) => user.dataValues);
   });
   
-
-
 
   createWindow()
 
