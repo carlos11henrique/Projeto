@@ -41,7 +41,7 @@
       <p><strong>Título:</strong> {{ livroSelecionado.titulo }}</p>
       <p><strong>Autor:</strong> {{ livroSelecionado.autor }}</p>
       <p><strong>Código:</strong> {{ livroSelecionado.codigo }}</p>
-      <p><strong>Exemplares:</strong> {{ livroSelecionado.exemplares.length }}</p>
+      <p><strong>Exemplares:</strong> {{ livroSelecionado.exemplares}}</p>
       <p><strong>Data de Devolução:</strong> {{ livroSelecionado.dataDevolucao || 'Não Emprestado' }}</p>
 
       <div class="mt-4">
