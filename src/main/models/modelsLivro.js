@@ -38,6 +38,9 @@ export function createModel(sequelize) {
     imagem: {
       type: DataTypes.STRING,
       allowNull: false
+    },
+    status: {
+      type: DataTypes.STRING
     }
   });
 

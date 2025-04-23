@@ -45,7 +45,16 @@
     </form>
     
     <!-- Tabela de Usuários -->
+    <div class="mb-4">
+  <input
+    v-model="termoBusca"
+    type="text"
+    placeholder="Buscar por nome ou CPF..."
+    class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+  />
+</div>
     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400 mt-6">
+      
       <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
         <tr>
           <th class="px-6 py-3">Nome</th>
@@ -90,21 +99,33 @@ export default {
       usuarios: [],
       novoUsuario: {
         tipo: "",
+        termoBusca: "",
         nome: "",
         cpf: "",
         matricula: "",
         serie: "",
-        turma: "",
+        turma: null,
         telefone: ""
       }
     };
   },
   computed: {
     usuariosFiltrados() {
-      if (!this.tipoSelecionado) return this.usuarios;
-      return this.usuarios.filter(u => u.tipo === this.tipoSelecionado);
-    }
+  let lista = this.usuarios;
+  if (this.tipoSelecionado) {
+    lista = lista.filter(u => u.tipo === this.tipoSelecionado);
+  }
+  if (this.termoBusca.trim()) {
+    const busca = this.termoBusca.toLowerCase();
+    lista = lista.filter(u =>
+      (u.nome && u.nome.toLowerCase().includes(busca)) ||
+      (u.cpf && u.cpf.includes(busca))
+    );
+  }
+  return lista;
+}
   },
+
   watch: {
     'novoUsuario.tipo'(val) {
       this.tipoSelecionado = val;

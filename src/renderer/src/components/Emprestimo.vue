@@ -21,10 +21,10 @@
       </thead>
       <tbody>
         <tr v-for="(livro, index) in filteredLivros" :key="index" class="border-b">
-          <td class="px-6 py-4">{{ livro.codigo }}</td>
+          <td class="px-6 py-4">{{ livro.codigoLivro }}</td>
           <td class="px-6 py-4">{{ livro.titulo }}</td>
           <td class="px-6 py-4">{{ livro.autor }}</td>
-          <td class="px-6 py-4">{{ livro.exemplares}}</td>
+          <td class="px-6 py-4">{{ livro.exemplares }}</td>
           <td class="px-6 py-4">{{ livro.emprestadoPara ? livro.emprestadoPara.nome : '-' }}</td>
           <td class="px-6 py-4">{{ livro.dataDevolucao || '-' }}</td>
           <td class="px-6 py-4">
@@ -40,9 +40,11 @@
       <h3 class="text-lg font-semibold">Livro Selecionado</h3>
       <p><strong>Título:</strong> {{ livroSelecionado.titulo }}</p>
       <p><strong>Autor:</strong> {{ livroSelecionado.autor }}</p>
-      <p><strong>Código:</strong> {{ livroSelecionado.codigo }}</p>
-      <p><strong>Exemplares:</strong> {{ livroSelecionado.exemplares}}</p>
+      <p><strong>Código:</strong> {{ livroSelecionado.codigoLivro }}</p>
+      <p><strong>Exemplares:</strong> {{ livroSelecionado.exemplares }}</p>
       <p><strong>Data de Devolução:</strong> {{ livroSelecionado.dataDevolucao || 'Não Emprestado' }}</p>
+      <p><strong>Usuário:</strong> {{ livroSelecionado.emprestadoPara ? livroSelecionado.emprestadoPara.nome : 'Ninguém' }}</p>
+      <p><strong>Situação do Livro :</strong> {{ livroSelecionado.status || (livroSelecionado.emprestadoPara ? 'Emprestado' : 'Disponível') }}</p>
 
       <div class="mt-4">
         <h3 class="text-lg font-semibold">Selecionar Usuário</h3>
@@ -60,10 +62,6 @@
   </div>
 </template>
 
-
-
-
-
 <script>
 export default {
   data() {
@@ -78,19 +76,23 @@ export default {
   },
   computed: {
     filteredLivros() {
-  return this.livros.filter(livro => {
-    const codigo = livro.codigo || '';
-    const titulo = livro.titulo || '';
-    const autor = livro.autor || '';
-    const query = this.searchQuery.toLowerCase();
+      const query = this.searchQuery.toLowerCase();
+      const livrosFiltrados = this.livros.filter(livro => {
+        const codigoLivro = livro.codigoLivro || '';
+        const titulo = livro.titulo || '';
+        const autor = livro.autor || '';
+        return (
+          codigoLivro.toString().includes(this.searchQuery) ||
+          titulo.toLowerCase().includes(query) ||
+          autor.toLowerCase().includes(query)
+        );
+      });
 
-    return (
-      codigo.toString().includes(this.searchQuery) ||
-      titulo.toLowerCase().includes(query) ||
-      autor.toLowerCase().includes(query)
-    );
-  });
-},
+      const emprestados = livrosFiltrados.filter(livro => livro.emprestadoPara);
+      const disponiveis = livrosFiltrados.filter(livro => !livro.emprestadoPara);
+
+      return [...emprestados, ...disponiveis];
+    },
     filteredUsuarios() {
       return this.usuarios.filter(usuario =>
         usuario.nome.toLowerCase().includes(this.searchUsuario.toLowerCase()) ||
@@ -119,13 +121,32 @@ export default {
     },
 
     async carregarEmprestimos() {
-      try {
-        const emprestimos = await window.api.getEmprestimo();
-        console.log('Empréstimos carregados:', emprestimos);
-      } catch (error) {
-        console.error('Erro ao carregar empréstimos:', error);
+  try {
+    const emprestimos = await window.api.getEmprestimo();
+    console.log('Empréstimos recebidos:', emprestimos);
+    console.log('Livros disponíveis:', this.livros);
+    console.log('Usuários disponíveis:', this.usuarios);
+
+    this.livros.forEach(livro => {
+      const emprestimoAtivo = emprestimos.find(e => e.LivroId === livro.id && e.status === 'emprestado');
+      console.log(`Livro ${livro.titulo} (${livro.id}) -> Empréstimo ativo:`, emprestimoAtivo);
+
+      if (emprestimoAtivo) {
+        const usuario = this.usuarios.find(u => u.id === emprestimoAtivo.UsuarioId);
+        livro.emprestadoPara = usuario || { nome: 'Desconhecido' };
+        livro.dataDevolucao = emprestimoAtivo.dataDevolucao;
+        livro.status = 'emprestado';
+      } else {
+        livro.emprestadoPara = null;
+        livro.dataDevolucao = null;
+        livro.status = 'disponivel';
       }
-    },
+    });
+  } catch (error) {
+    console.error('Erro ao carregar empréstimos:', error);
+  }
+},
+
 
     iniciarEmprestimo(livro) {
       this.livroSelecionado = livro;
@@ -147,33 +168,39 @@ export default {
 
         this.livroSelecionado.emprestadoPara = this.usuarioSelecionado;
         this.livroSelecionado.dataDevolucao = novaData.toISOString().split('T')[0];
+        this.livroSelecionado.status = 'emprestado';
 
         try {
           await window.api.createEmprestimo({
-            livroId: this.livroSelecionado.id,
-            usuarioId: this.usuarioSelecionado.id,
-            dataDevolucao: this.livroSelecionado.dataDevolucao
-          });
+        livroId: this.livroSelecionado.id,
+         usuarioId: this.usuarioSelecionado.id,
+          dataDevolucao: this.livroSelecionado.dataDevolucao,
+           status: 'emprestado'
+           });
+
+         
 
           alert(`Empréstimo do livro "${this.livroSelecionado.titulo}" para ${this.usuarioSelecionado.nome} até ${this.livroSelecionado.dataDevolucao}`);
         } catch (error) {
           console.error('Erro ao criar empréstimo:', error);
         }
-      }
 
-      this.livroSelecionado = null;
-      this.usuarioSelecionado = null;
+        this.livroSelecionado = null;
+        this.usuarioSelecionado = null;
+      }
     },
 
     async devolverLivro(livro) {
       livro.emprestadoPara = null;
       livro.dataDevolucao = null;
+      livro.status = 'disponivel';
 
       try {
         await window.api.updateEmprestimo({
           livroId: livro.id,
           dataDevolucao: null,
-          devolvido: true
+          devolvido: true,
+          status: 'disponivel'
         });
 
         alert(`Livro "${livro.titulo}" devolvido!`);
@@ -201,9 +228,10 @@ export default {
       }
     }
   },
-  mounted() {
-    this.carregarLivro();
-    this.carregarEmprestimos();
-  }
+  async mounted() {
+  await this.carregarLivro();
+  await this.carregarUsuario();
+  await this.carregarEmprestimos();
+}
 };
 </script>

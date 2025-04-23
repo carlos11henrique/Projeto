@@ -24,11 +24,15 @@ export function UserModel(sequelize) {
     matricula: {
       type: DataTypes.STRING,
       allowNull: true,
-  unique: true
     },
     tipo: {
       type: DataTypes.ENUM('Aluno', 'Professor', 'Terceiros'),
       allowNull: false
+    },
+    turma: {
+      type: DataTypes.STRING,
+      allowNull: true, 
+
     },
     serie: {
       type: DataTypes.STRING,
@@ -42,6 +46,7 @@ export function UserModel(sequelize) {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW
     }
+    
   }, {
     timestamps: true,  
     tableName: 'Usuarios', 
