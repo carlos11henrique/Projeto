@@ -118,14 +118,14 @@ app.whenReady().then(() => {
   
   ipcMain.on('updateEmprestimo', async (event, data) => {
     try {
-      await Emprestimo.update({
+      await EmprestimoModel.update({
         dataEmprestimo: data.dataEmprestimo,
         dataDevolucao: data.dataDevolucao,
         status: data.status,
         LivroId: data.LivroId,
         UsuarioId: data.UsuarioId
       }, {
-        where: { id: data.id } // <-- aqui o data.id está undefined
+        where: { id: data.id }
       });
   
       event.reply('updateEmprestimoResponse', { sucesso: true });
@@ -134,6 +134,7 @@ app.whenReady().then(() => {
       event.reply('updateEmprestimoResponse', { sucesso: false, erro: error.message });
     }
   });
+  
   
   
   ipcMain.on('deleteEmprestimo', async (event, id) => {

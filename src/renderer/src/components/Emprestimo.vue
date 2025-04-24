@@ -61,7 +61,6 @@
     </div>
   </div>
 </template>
-
 <script>
 export default {
   data() {
@@ -88,8 +87,8 @@ export default {
         );
       });
 
-      const emprestados = livrosFiltrados.filter(livro => livro.emprestadoPara);
-      const disponiveis = livrosFiltrados.filter(livro => !livro.emprestadoPara);
+      const emprestados = livrosFiltrados.filter(livro => livro.status === 'emprestado');
+      const disponiveis = livrosFiltrados.filter(livro => livro.status !== 'emprestado');
 
       return [...emprestados, ...disponiveis];
     },
@@ -105,7 +104,7 @@ export default {
     async carregarLivro() {
       try {
         const livros = await window.api.getLivro();
-        this.livros = livros;
+        this.livros = livros.map(livro => ({ ...livro, status: 'disponivel' }));
       } catch (error) {
         console.error('Erro ao carregar livros:', error);
       }
@@ -121,32 +120,26 @@ export default {
     },
 
     async carregarEmprestimos() {
-  try {
-    const emprestimos = await window.api.getEmprestimo();
-    console.log('Empréstimos recebidos:', emprestimos);
-    console.log('Livros disponíveis:', this.livros);
-    console.log('Usuários disponíveis:', this.usuarios);
+      try {
+        const emprestimos = await window.api.getEmprestimo();
 
-    this.livros.forEach(livro => {
-      const emprestimoAtivo = emprestimos.find(e => e.LivroId === livro.id && e.status === 'emprestado');
-      console.log(`Livro ${livro.titulo} (${livro.id}) -> Empréstimo ativo:`, emprestimoAtivo);
-
-      if (emprestimoAtivo) {
-        const usuario = this.usuarios.find(u => u.id === emprestimoAtivo.UsuarioId);
-        livro.emprestadoPara = usuario || { nome: 'Desconhecido' };
-        livro.dataDevolucao = emprestimoAtivo.dataDevolucao;
-        livro.status = 'emprestado';
-      } else {
-        livro.emprestadoPara = null;
-        livro.dataDevolucao = null;
-        livro.status = 'disponivel';
+        this.livros.forEach(livro => {
+          const emprestimoAtivo = emprestimos.find(e => e.LivroId === livro.id && e.status === 'emprestado');
+          if (emprestimoAtivo) {
+            const usuario = this.usuarios.find(u => u.id === emprestimoAtivo.UsuarioId);
+            livro.emprestadoPara = usuario || { nome: 'Desconhecido' };
+            livro.dataDevolucao = emprestimoAtivo.dataDevolucao;
+            livro.status = 'emprestado';
+          } else {
+            livro.emprestadoPara = null;
+            livro.dataDevolucao = null;
+            livro.status = 'disponivel';
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao carregar empréstimos:', error);
       }
-    });
-  } catch (error) {
-    console.error('Erro ao carregar empréstimos:', error);
-  }
-},
-
+    },
 
     iniciarEmprestimo(livro) {
       this.livroSelecionado = livro;
@@ -166,48 +159,46 @@ export default {
         const novaData = new Date();
         novaData.setDate(dataAtual.getDate() + 14);
 
-        this.livroSelecionado.emprestadoPara = this.usuarioSelecionado;
-        this.livroSelecionado.dataDevolucao = novaData.toISOString().split('T')[0];
-        this.livroSelecionado.status = 'emprestado';
-
         try {
           await window.api.createEmprestimo({
-        livroId: this.livroSelecionado.id,
-         usuarioId: this.usuarioSelecionado.id,
-          dataDevolucao: this.livroSelecionado.dataDevolucao,
-           status: 'emprestado'
-           });
+            LivroId: this.livroSelecionado.id,
+            UsuarioId: this.usuarioSelecionado.id,
+            dataDevolucao: novaData.toISOString().split('T')[0],
+            status: 'emprestado'
+          });
 
-         
+          alert(`Empréstimo do livro "${this.livroSelecionado.titulo}" para ${this.usuarioSelecionado.nome} até ${novaData.toISOString().split('T')[0]}`);
 
-          alert(`Empréstimo do livro "${this.livroSelecionado.titulo}" para ${this.usuarioSelecionado.nome} até ${this.livroSelecionado.dataDevolucao}`);
+          this.livroSelecionado = null;
+          this.usuarioSelecionado = null;
+
+          await this.carregarEmprestimos();
         } catch (error) {
           console.error('Erro ao criar empréstimo:', error);
         }
-
-        this.livroSelecionado = null;
-        this.usuarioSelecionado = null;
       }
     },
 
     async devolverLivro(livro) {
-      livro.emprestadoPara = null;
-      livro.dataDevolucao = null;
-      livro.status = 'disponivel';
+  try {
+    await window.api.updateEmprestimo({
+      id: livro.emprestimoId, // <-- necessário!
+      LivroId: livro.id,
+      dataDevolucao: new Date().toISOString().split('T')[0], 
+      devolvido: true,
+      status: 'disponivel'
+    });
 
-      try {
-        await window.api.updateEmprestimo({
-          livroId: livro.id,
-          dataDevolucao: null,
-          devolvido: true,
-          status: 'disponivel'
-        });
+    alert(`Livro "${livro.titulo}" devolvido!`);
 
-        alert(`Livro "${livro.titulo}" devolvido!`);
-      } catch (error) {
-        console.error('Erro ao devolver livro:', error);
-      }
-    },
+    await this.carregarEmprestimos();
+  } catch (error) {
+    console.error('Erro ao devolver livro:', error);
+  }
+},
+
+
+
 
     async aumentarPrazo(livro) {
       if (!livro.dataDevolucao) return;
@@ -215,23 +206,24 @@ export default {
       try {
         const novaData = new Date(livro.dataDevolucao);
         novaData.setDate(novaData.getDate() + 7);
-        livro.dataDevolucao = novaData.toISOString().split('T')[0];
 
         await window.api.updateEmprestimo({
-          livroId: livro.id,
-          dataDevolucao: livro.dataDevolucao
+          LivroId: livro.id,
+          dataDevolucao: novaData.toISOString().split('T')[0]
         });
 
-        alert(`Prazo aumentado para ${livro.dataDevolucao}`);
+        alert(`Prazo aumentado para ${novaData.toISOString().split('T')[0]}`);
+
+        await this.carregarEmprestimos();
       } catch (error) {
         console.error('Erro ao atualizar empréstimo:', error);
       }
     }
   },
   async mounted() {
-  await this.carregarLivro();
-  await this.carregarUsuario();
-  await this.carregarEmprestimos();
-}
+    await this.carregarLivro();
+    await this.carregarUsuario();
+    await this.carregarEmprestimos();
+  }
 };
 </script>
