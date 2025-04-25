@@ -35,6 +35,10 @@ export function createModel(sequelize) {
       type: DataTypes.STRING,
       allowNull: false
     },
+    exemplar:{
+      type:DataTypes.INTEGER,
+      allowNull:false
+    },
     imagem: {
       type: DataTypes.STRING,
       allowNull: false
