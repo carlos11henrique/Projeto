@@ -160,7 +160,7 @@ export default {
         novaData.setDate(dataAtual.getDate() + 14);
 
         try {
-          await window.api.createEmprestimo({
+          await window.api.updateEmprestimo({
             LivroId: this.livroSelecionado.id,
             UsuarioId: this.usuarioSelecionado.id,
             dataDevolucao: novaData.toISOString().split('T')[0],
@@ -182,12 +182,12 @@ export default {
     async devolverLivro(livro) {
   try {
     await window.api.updateEmprestimo({
-      id: livro.emprestimoId, // <-- necessário!
-      LivroId: livro.id,
-      dataDevolucao: new Date().toISOString().split('T')[0], 
-      devolvido: true,
-      status: 'disponivel'
-    });
+  id: emprestimo.emprestimoId, // <- agora não será mais undefined
+  LivroId: emprestimo.livro.id,
+  dataDevolucao: new Date().toISOString().split('T')[0],
+  status: 'disponivel'
+});
+
 
     alert(`Livro "${livro.titulo}" devolvido!`);
 

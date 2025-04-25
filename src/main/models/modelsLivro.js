@@ -1,3 +1,4 @@
+import { type } from "jquery";
 import { DataTypes } from "sequelize";
 /**
  * Cria o modelo de Livro no banco de dados
