@@ -120,26 +120,29 @@ export default {
     },
 
     async carregarEmprestimos() {
-      try {
-        const emprestimos = await window.api.getEmprestimo();
+  try {
+    const emprestimos = await window.api.getEmprestimo();
 
-        this.livros.forEach(livro => {
-          const emprestimoAtivo = emprestimos.find(e => e.LivroId === livro.id && e.status === 'emprestado');
-          if (emprestimoAtivo) {
-            const usuario = this.usuarios.find(u => u.id === emprestimoAtivo.UsuarioId);
-            livro.emprestadoPara = usuario || { nome: 'Desconhecido' };
-            livro.dataDevolucao = emprestimoAtivo.dataDevolucao;
-            livro.status = 'emprestado';
-          } else {
-            livro.emprestadoPara = null;
-            livro.dataDevolucao = null;
-            livro.status = 'disponivel';
-          }
-        });
-      } catch (error) {
-        console.error('Erro ao carregar empréstimos:', error);
+    this.livros.forEach(livro => {
+      const emprestimoAtivo = emprestimos.find(e => e.LivroId === livro.id && e.status === 'emprestado');
+      if (emprestimoAtivo) {
+        const usuario = this.usuarios.find(u => u.id === emprestimoAtivo.UsuarioId);
+        livro.emprestadoPara = usuario || { nome: 'Desconhecido' };
+        livro.dataDevolucao = emprestimoAtivo.dataDevolucao;
+        livro.status = 'emprestado';
+        livro.emprestimoId = emprestimoAtivo.id; // ✅ Adicionado aqui
+      } else {
+        livro.emprestadoPara = null;
+        livro.dataDevolucao = null;
+        livro.status = 'disponivel';
+        livro.emprestimoId = null; // ✅ Para garantir limpeza quando necessário
       }
-    },
+    });
+  } catch (error) {
+    console.error('Erro ao carregar empréstimos:', error);
+  }
+},
+
 
     iniciarEmprestimo(livro) {
       this.livroSelecionado = livro;
@@ -182,7 +185,7 @@ export default {
     async devolverLivro(livro) {
   try {
     await window.api.updateEmprestimo({
-      id: livro.emprestimoId, // <-- necessário!
+      id: livro.emprestimoId, 
       LivroId: livro.id,
       dataDevolucao: new Date().toISOString().split('T')[0], 
       devolvido: true,
@@ -199,26 +202,27 @@ export default {
 
 
 
+async aumentarPrazo(livro) {
+  if (!livro.dataDevolucao || !livro.emprestimoId) return;
 
-    async aumentarPrazo(livro) {
-      if (!livro.dataDevolucao) return;
+  try {
+    const novaData = new Date(livro.dataDevolucao);
+    novaData.setDate(novaData.getDate() + 7);
 
-      try {
-        const novaData = new Date(livro.dataDevolucao);
-        novaData.setDate(novaData.getDate() + 7);
+    await window.api.updateEmprestimo({
+      id: livro.emprestimoId, // 👈 necessário!
+      LivroId: livro.id,
+      dataDevolucao: novaData.toISOString().split('T')[0],
+      status: 'emprestado' // 👈 garantir que continua como emprestado
+    });
 
-        await window.api.updateEmprestimo({
-          LivroId: livro.id,
-          dataDevolucao: novaData.toISOString().split('T')[0]
-        });
+    alert(`Prazo aumentado para ${novaData.toISOString().split('T')[0]}`);
+    await this.carregarEmprestimos();
+  } catch (error) {
+    console.error('Erro ao atualizar empréstimo:', error);
+  }
+}
 
-        alert(`Prazo aumentado para ${novaData.toISOString().split('T')[0]}`);
-
-        await this.carregarEmprestimos();
-      } catch (error) {
-        console.error('Erro ao atualizar empréstimo:', error);
-      }
-    }
   },
   async mounted() {
     await this.carregarLivro();

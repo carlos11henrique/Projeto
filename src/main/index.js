@@ -118,6 +118,12 @@ app.whenReady().then(() => {
   
   ipcMain.on('updateEmprestimo', async (event, data) => {
     try {
+      console.log('Dados recebidos para update:', data); // 👈 Ajuda a ver se o id tá vindo
+  
+      if (!data.id) {
+        throw new Error('ID do empréstimo não fornecido.');
+      }
+  
       await EmprestimoModel.update({
         dataEmprestimo: data.dataEmprestimo,
         dataDevolucao: data.dataDevolucao,
@@ -134,7 +140,6 @@ app.whenReady().then(() => {
       event.reply('updateEmprestimoResponse', { sucesso: false, erro: error.message });
     }
   });
-  
   
   
   ipcMain.on('deleteEmprestimo', async (event, id) => {
