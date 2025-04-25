@@ -1,3 +1,4 @@
+import { type } from "jquery";
 import { DataTypes } from "sequelize";
 /**
  * Cria o modelo de Livro no banco de dados
@@ -34,6 +35,10 @@ export function createModel(sequelize) {
     descricao: {
       type: DataTypes.STRING,
       allowNull: false
+    },
+    exemplar:{
+      type:DataTypes.INTEGER,
+      allowNull:false
     },
     imagem: {
       type: DataTypes.STRING,
