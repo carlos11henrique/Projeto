@@ -24,7 +24,7 @@
           <td class="px-6 py-4">{{ livro.codigoLivro }}</td>
           <td class="px-6 py-4">{{ livro.titulo }}</td>
           <td class="px-6 py-4">{{ livro.autor }}</td>
-          <td class="px-6 py-4">{{ livro.exemplares }}</td>
+          <td class="px-6 py-4">{{ livro.exemplar }}</td>
           <td class="px-6 py-4">{{ livro.emprestadoPara ? livro.emprestadoPara.nome : '-' }}</td>
           <td class="px-6 py-4">{{ livro.dataDevolucao || '-' }}</td>
           <td class="px-6 py-4">
@@ -41,7 +41,7 @@
       <p><strong>Título:</strong> {{ livroSelecionado.titulo }}</p>
       <p><strong>Autor:</strong> {{ livroSelecionado.autor }}</p>
       <p><strong>Código:</strong> {{ livroSelecionado.codigoLivro }}</p>
-      <p><strong>Exemplares:</strong> {{ livroSelecionado.exemplares }}</p>
+      <p><strong>Exemplares:</strong> {{ livroSelecionado.exemplar }}</p>
       <p><strong>Data de Devolução:</strong> {{ livroSelecionado.dataDevolucao || 'Não Emprestado' }}</p>
       <p><strong>Usuário:</strong> {{ livroSelecionado.emprestadoPara ? livroSelecionado.emprestadoPara.nome : 'Ninguém' }}</p>
       <p><strong>Situação do Livro :</strong> {{ livroSelecionado.status || (livroSelecionado.emprestadoPara ? 'Emprestado' : 'Disponível') }}</p>
