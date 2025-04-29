@@ -126,49 +126,66 @@ computed: {
 },
 methods: {
   async adicionarLivro() {
-    const livro = this.novoLivro;
+  const livroBase = this.novoLivro;
 
-    if (
-      livro.codigoLivro && livro.titulo && livro.autor &&
-      livro.editora && livro.genero && livro.quantidade >= 0
-    ) {
-      try {
-        await window.api.createLivro({ ...livro });
+  const quantidade = parseInt(livroBase.quantidade);
+  const codigoBase = livroBase.codigoLivro.replace(/\d+$/, '') || livroBase.codigoLivro;
+  const numeroInicial = parseInt(livroBase.codigoLivro.match(/\d+$/)) || 1;
 
-        Swal.fire({
-          icon: 'success',
-          title: 'Livro cadastrado!',
-          text: 'O livro foi adicionado com sucesso.'
-        });
+  if (
+    livroBase.codigoLivro && livroBase.titulo && livroBase.autor &&
+    livroBase.editora && livroBase.genero && quantidade > 0
+  ) {
+    try {
+      for (let i = 0; i < quantidade; i++) {
+        const novoCodigo = `${codigoBase}${numeroInicial + i}`;
+        const novoExemplar = `${numeroInicial + i}`;
 
-        this.novoLivro = {
-          codigoLivro: "",
-          titulo: "",
-          autor: "",
-          editora: "",
-          genero: "",
-          descricao: "",
-          exemplar: "",
-          quantidade: 0,
-          imagem: ""
+        const novoLivro = {
+          ...livroBase,
+          codigoLivro: novoCodigo,
+          exemplar: novoExemplar,
+          quantidade: 1 // cada exemplar é uma unidade
         };
 
-        this.carregarLivro();
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Erro!',
-          text: 'Não foi possível cadastrar o livro.'
-        });
+        await window.api.createLivro(novoLivro);
       }
-    } else {
+
       Swal.fire({
-        icon: 'warning',
-        title: 'Campos obrigatórios!',
-        text: 'Preencha todos os campos corretamente.'
+        icon: 'success',
+        title: 'Livros cadastrados!',
+        text: 'Todos os exemplares foram adicionados com sucesso.'
+      });
+
+      this.novoLivro = {
+        codigoLivro: "",
+        titulo: "",
+        autor: "",
+        editora: "",
+        genero: "",
+        descricao: "",
+        exemplar: "",
+        quantidade: 0,
+        imagem: ""
+      };
+
+      this.carregarLivro();
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Erro!',
+        text: 'Não foi possível cadastrar os livros.'
       });
     }
-  },
+  } else {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Campos obrigatórios!',
+      text: 'Preencha todos os campos corretamente.'
+    });
+  }
+},
+
   async carregarLivro() {
   try {
     const livros = await window.api.getLivro();
