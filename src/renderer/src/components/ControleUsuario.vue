@@ -41,7 +41,32 @@
         </div>
       </div>
       
-      <button type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5">Cadastrar</button>
+      <div class="flex gap-4">
+  <button
+    v-if="!editando"
+    type="submit"
+    class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5"
+  >
+    Cadastrar
+  </button>
+
+  <button
+    v-else
+    @click="atualizarUsuario"
+    class="text-white bg-yellow-500 hover:bg-yellow-600 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5"
+  >
+    Atualizar
+  </button>
+
+  <button
+    v-if="editando"
+    @click="resetForm"
+    class="text-white bg-gray-600 hover:bg-gray-700 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5"
+  >
+    Cancelar
+  </button>
+</div>
+   
     </form>
     
     <!-- Tabela de Usuários -->
@@ -93,22 +118,42 @@ import Swal from 'sweetalert2';
 
 export default {
   name: "ControleUsuario",
-  data() {
-    return {
-      tipoSelecionado: "", // usado para filtrar tabela
-      usuarios: [],
-      novoUsuario: {
-        tipo: "",
-        termoBusca: "",
-        nome: "",
-        cpf: "",
-        matricula: "",
-        serie: "",
-        turma: null,
-        telefone: ""
-      }
-    };
-  },
+    data() {
+  return {
+    tipoSelecionado: "",
+    termoBusca: "",
+    editando: false,
+    usuarioEditandoId: null,
+    usuarios: [],
+    tipoUsuario: "",
+    novoUsuario: {
+      tipo: "",
+      nome: "",
+      cpf: "",
+      matricula: "",
+      serie: "",
+      turma: "",
+      telefone: ""
+    }
+  };
+},
+
+resetForm() {
+  this.novoUsuario = {
+    tipo: "",
+    nome: "",
+    cpf: "",
+    matricula: "",
+    serie: "",
+    turma: "",
+    telefone: ""
+  };
+  this.editando = false;
+  this.usuarioEditandoId = null;
+  this.tipoUsuario = "";
+},
+
+
   computed: {
     usuariosFiltrados() {
   let lista = this.usuarios;
@@ -159,13 +204,47 @@ export default {
     });
   }
 },
-    editarUsuario(usuario) {
-      const novoNome = prompt("Editar Nome:", usuario.nome);
-      if (novoNome !== null) {
-        usuario.nome = novoNome;
-        window.api.updateUser(usuario);
-      }
-    },
+async atualizarUsuario() {
+  try {
+    const usuarioAtualizado = JSON.parse(JSON.stringify(this.novoUsuario));
+    usuarioAtualizado.id = this.usuarioEditandoId;
+
+    await window.api.updateUser(usuarioAtualizado);
+
+    // Atualiza a lista local
+    const index = this.usuarios.findIndex(u => u.id === usuarioAtualizado.id);
+    if (index !== -1) {
+      this.usuarios[index] = usuarioAtualizado;
+    }
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Usuário atualizado!',
+      text: 'As informações foram alteradas com sucesso.'
+    });
+
+    this.resetForm();
+    this.editando = false;
+    this.usuarioEditandoId = null;
+  } catch (error) {
+    console.error("Erro ao atualizar usuário:", error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro!',
+      text: 'Não foi possível atualizar o usuário.'
+    });
+  }
+},
+
+async editarUsuario(index) {
+  const usuario = this.usuarios[index];
+  this.novoUsuario = { ...usuario };
+  this.tipoUsuario = usuario.tipo;
+  this.usuarioEditandoId = usuario.id;
+  this.editando = true;
+},
+
+
     async removerUsuario(usuario) {
       if (confirm("Tem certeza que deseja excluir?")) {
         try {
@@ -176,6 +255,7 @@ export default {
         }
       }
     },
+   
     async carregarUsuarios() {
       try {
         const lista = await window.api.getUser();

@@ -21,6 +21,21 @@ const api = {
   deleteUser: (id) => ipcRenderer.send('deleteUser', id),
   buscarUser: (id) => ipcRenderer.send('buscarUser', id),
   getUser: () => ipcRenderer.invoke('getUser'),
+
+
+
+  // Grafico
+
+
+  getEvolucaoEmprestimos: () => ipcRenderer.invoke('grafico-evolucao-emprestimos'),
+  getEmprestimosCategoria: () => ipcRenderer.invoke('grafico-emprestimos-categoria'),
+  getPercentualUsuarios: () => ipcRenderer.invoke('grafico-percentual-tipo-usuario'),
+  getDevolucoesPrazo: () => ipcRenderer.invoke('grafico-devolucoes-prazo'),
+  getTempoMedioUsuario: () => ipcRenderer.invoke('grafico-media-tempo-usuario'),
+  getLivrosPopulares: () => ipcRenderer.invoke('grafico-livros-mais-emprestados'),
+  getDiasSemanaMovimentados: () => ipcRenderer.invoke('grafico-dias-semana'),
+  getRankingLivrosAno: () => ipcRenderer.invoke('grafico-ranking-livros-ano'),
+
 }
 
 

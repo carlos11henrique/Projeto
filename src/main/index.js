@@ -217,6 +217,152 @@ app.whenReady().then(() => {
     }
   });
   
+// GRAFICOS 
+
+ipcMain.handle('grafico-evolucao-emprestimos', async () => {
+  return new Promise((resolve, reject) => {
+    db.all(`
+      SELECT strftime('%Y-%m', data_emprestimo) AS periodo, COUNT(*) AS total
+      FROM emprestimos
+      GROUP BY periodo
+      ORDER BY periodo;
+    `, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+});
+
+
+
+ipcMain.handle('grafico-emprestimos-categoria', async () => {
+  return new Promise((resolve, reject) => {
+    db.all(`
+      SELECT categorias.nome AS categoria, COUNT(*) AS total
+      FROM emprestimos
+      JOIN livros ON emprestimos.livro_id = livros.id
+      JOIN categorias ON livros.categoria_id = categorias.id
+      GROUP BY categoria
+      ORDER BY total DESC;
+    `, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+});
+
+
+
+ipcMain.handle('grafico-percentual-tipo-usuario', async () => {
+  return new Promise((resolve, reject) => {
+    db.all(`
+      SELECT usuarios.tipo AS tipo_usuario, COUNT(*) AS total
+      FROM emprestimos
+      JOIN usuarios ON emprestimos.usuario_id = usuarios.id
+      GROUP BY tipo_usuario;
+    `, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+});
+
+
+ipcMain.handle('grafico-devolucoes-prazo', async () => {
+  return new Promise((resolve, reject) => {
+    db.all(`
+      SELECT 
+        CASE 
+          WHEN data_devolucao <= data_prevista THEN 'No Prazo'
+          ELSE 'Em Atraso'
+        END AS status,
+        COUNT(*) AS total
+      FROM emprestimos
+      WHERE data_devolucao IS NOT NULL
+      GROUP BY status;
+    `, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+});
+
+
+
+ipcMain.handle('grafico-media-tempo-usuario', async () => {
+  return new Promise((resolve, reject) => {
+    db.all(`
+      SELECT usuarios.tipo AS tipo_usuario,
+             AVG(julianday(data_devolucao) - julianday(data_emprestimo)) AS media_dias
+      FROM emprestimos
+      JOIN usuarios ON emprestimos.usuario_id = usuarios.id
+      WHERE data_devolucao IS NOT NULL
+      GROUP BY tipo_usuario;
+    `, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+});
+
+
+
+ipcMain.handle('grafico-livros-mais-emprestados', async () => {
+  return new Promise((resolve, reject) => {
+    db.all(`
+      SELECT livros.titulo, COUNT(*) AS total
+      FROM emprestimos
+      JOIN livros ON emprestimos.livro_id = livros.id
+      GROUP BY livro_id
+      ORDER BY total DESC
+      LIMIT 5;
+    `, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+});
+
+
+
+ipcMain.handle('grafico-dias-semana', async () => {
+  return new Promise((resolve, reject) => {
+    db.all(`
+      SELECT 
+        strftime('%w', data_emprestimo) AS dia_semana,
+        COUNT(*) AS total
+      FROM emprestimos
+      GROUP BY dia_semana
+      ORDER BY dia_semana;
+    `, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+});
+
+
+ipcMain.handle('grafico-ranking-livros-ano', async () => {
+  return new Promise((resolve, reject) => {
+    db.all(`
+      SELECT 
+        livros.titulo,
+        strftime('%Y', emprestimos.data_emprestimo) AS ano,
+        COUNT(*) AS total_emprestimos
+      FROM emprestimos
+      JOIN livros ON emprestimos.livro_id = livros.id
+      GROUP BY livros.titulo, ano
+      ORDER BY total_emprestimos DESC
+      LIMIT 10;
+    `, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+});
+
+
+
 
   createWindow()
 
