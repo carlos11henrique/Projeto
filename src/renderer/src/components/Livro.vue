@@ -45,8 +45,8 @@
         required />
     </div>
     <div>
-      <label for="quantidade" class="block mb-2 text-sm font-medium text-gray-900">Quantidade</label>
-      <input v-model="novoLivro.quantidade" type="number" id="quantidade"
+      <label v-if="novoLivro.quantidade" for="quantidade" class="block mb-2 text-sm font-medium text-gray-900">Quantidade</label>
+      <input v-if="novoLivro.quantidade" v-model="novoLivro.quantidade" type="number" id="quantidade"
         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
         required />
     </div>
@@ -60,6 +60,11 @@
     class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center">
     Cadastrar
   </button>
+  <button v-if="editando" @click="salvarEdicaoLivro"
+  class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center mt-2">
+  Salvar Edição
+</button>
+
 </form>
 
 
@@ -103,78 +108,154 @@
 
 
 
-
-
 <script>
-
-
-
-
 import Swal from 'sweetalert2';
 
 export default {
-name: "Livro",
-data() {
-  return {
-    novoLivro: {
-      codigoLivro: "",
-      titulo: "",
-      autor: "",
-      editora: "",
-      genero: "",
-      descricao: "",
-      exemplar: "",
-      quantidade: 0,
-      imagem: ""
-    },
-    livros: [],
+  name: "Livro",
+  data() {
+    return {
+      novoLivro: {
+        codigoLivro: "",
+        titulo: "",
+        autor: "",
+        editora: "",
+        genero: "",
+        descricao: "",
+        exemplar: "",
+        quantidade: 0,
+        imagem: ""
+      },
+      livros: [],
+      searchQuery: "",
+      editando: false, // controla se estamos em modo de edição
+      indexEdicao: null
+    };
+  },
+  computed: {
+    filteredLivro() {
+      return this.livros.filter(livro =>
+        livro.titulo.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        livro.autor.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        livro.genero.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    }
+  },
+  methods: {
+    async adicionarLivro() {
+      if (this.editando) return; // bloqueia adicionar enquanto edita
 
-    searchQuery: ""
-  };
-},
-computed: {
-  filteredLivro() {
-  return this.livro.filter(livro => 
-    livro.titulo.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-    livro.autor.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-    livro.genero.toLowerCase().includes(this.searchQuery.toLowerCase())
-  );
-},
+      const livroBase = this.novoLivro;
+      const quantidade = parseInt(livroBase.quantidade);
+      const codigoBase = livroBase.codigoLivro.replace(/\d+$/, '') || livroBase.codigoLivro;
+      const numeroInicial = parseInt(livroBase.codigoLivro.match(/\d+$/)) || 1;
 
-},
-methods: {
-  async adicionarLivro() {
-  const livroBase = this.novoLivro;
+      if (
+        livroBase.codigoLivro && livroBase.titulo && livroBase.autor &&
+        livroBase.editora && livroBase.genero && quantidade > 0
+      ) {
+        try {
+          for (let i = 0; i < quantidade; i++) {
+            const novoCodigo = `${codigoBase}${numeroInicial + i}`;
+            const novoExemplar = `${numeroInicial + i}`;
 
-  const quantidade = parseInt(livroBase.quantidade);
-  const codigoBase = livroBase.codigoLivro.replace(/\d+$/, '') || livroBase.codigoLivro;
-  const numeroInicial = parseInt(livroBase.codigoLivro.match(/\d+$/)) || 1;
+            const novoLivro = {
+              ...livroBase,
+              codigoLivro: novoCodigo,
+              exemplar: novoExemplar,
+              quantidade: 1
+            };
 
-  if (
-    livroBase.codigoLivro && livroBase.titulo && livroBase.autor &&
-    livroBase.editora && livroBase.genero && quantidade > 0
-  ) {
-    try {
-      for (let i = 0; i < quantidade; i++) {
-        const novoCodigo = `${codigoBase}${numeroInicial + i}`;
-        const novoExemplar = `${numeroInicial + i}`;
+            await window.api.createLivro(novoLivro);
+          }
 
-        const novoLivro = {
-          ...livroBase,
-          codigoLivro: novoCodigo,
-          exemplar: novoExemplar,
-          quantidade: 1 // cada exemplar é uma unidade
-        };
+          Swal.fire({
+            icon: 'success',
+            title: 'Livros cadastrados!',
+            text: 'Todos os exemplares foram adicionados com sucesso.'
+          });
 
-        await window.api.createLivro(novoLivro);
+          this.resetarFormulario();
+          this.carregarLivro();
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Erro!',
+            text: 'Não foi possível cadastrar os livros.'
+          });
+        }
+      } else {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Campos obrigatórios!',
+          text: 'Preencha todos os campos corretamente.'
+        });
       }
+    },
+
+    editarLivro(index) {
+      this.novoLivro = { ...this.livros[index] };
+      this.editando = true;
+      this.indexEdicao = index;
+    },
+
+    async salvarEdicaoLivro() {
+  try {
+    const livroParaSalvar = JSON.parse(JSON.stringify(this.novoLivro)); 
+    await window.api.updateLivro(livroParaSalvar);
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Livro atualizado!',
+      text: 'As informações foram alteradas com sucesso.'
+    });
+
+    this.resetarFormulario();
+    this.carregarLivro();
+  } catch (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro!',
+      text: 'Não foi possível atualizar o livro.'
+    });
+    console.error('Erro ao atualizar livro:', error);
+  }
+},
+
+    async removerLivro(index) {
+      const livro = this.livros[index];
 
       Swal.fire({
-        icon: 'success',
-        title: 'Livros cadastrados!',
-        text: 'Todos os exemplares foram adicionados com sucesso.'
-      });
+        title: 'Tem certeza?',
+        text: "Deseja remover este livro?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, remover!',
+        cancelButtonText: 'Cancelar'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            await window.api.deleteLivro(livro.codigoLivro);
+            this.carregarLivro();
 
+            Swal.fire('Removido!', 'O livro foi removido.', 'success');
+          } catch (error) {
+            Swal.fire('Erro', 'Não foi possível remover o livro.', 'error');
+          }
+        }
+      });
+    },
+
+    async carregarLivro() {
+      try {
+        const livros = await window.api.getLivro();
+        this.livros = livros;
+      } catch (error) {
+        console.error('Erro ao carregar livros:', error);
+      }
+    },
+
+    resetarFormulario() {
       this.novoLivro = {
         codigoLivro: "",
         titulo: "",
@@ -186,70 +267,15 @@ methods: {
         quantidade: 0,
         imagem: ""
       };
-
-      this.carregarLivro();
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro!',
-        text: 'Não foi possível cadastrar os livros.'
-      });
+      this.editando = false;
+      this.indexEdicao = null;
     }
-  } else {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Campos obrigatórios!',
-      text: 'Preencha todos os campos corretamente.'
-    });
-  }
-},
-
-  async carregarLivro() {
-  try {
-    const livros = await window.api.getLivro();
-    console.log(livros);
-    this.livros = livros;
-  } catch (error) {
-    console.error('Erro ao carregar livros:', error);
-  }
-},
-  editarLivro(index) {
-    this.novoLivro = { ...this.livros[index] };
-    this.livros.splice(index, 1); // remove temporariamente da lista, será recriado ao salvar
   },
-  async removerLivro(index) {
-    const livro = this.livros[index];
-
-    Swal.fire({
-      title: 'Tem certeza?',
-      text: "Deseja remover este livro?",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sim, remover!',
-      cancelButtonText: 'Cancelar'
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          await window.api.deleteLivro(livro.codigoLivro);
-          this.carregarLivro();
-
-          Swal.fire('Removido!', 'O livro foi removido.', 'success');
-        } catch (error) {
-          Swal.fire('Erro', 'Não foi possível remover o livro.', 'error');
-        }
-      }
-    });
-  },
-
-},
-mounted() {
-  this.carregarLivro();
-  
-}
+  mounted() {
+    this.carregarLivro();
+  }
 };
-
 </script>
-
 
 
 
