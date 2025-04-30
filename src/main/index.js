@@ -6,6 +6,7 @@ import { event } from 'jquery'
 import {EmprestimoModel} from './models'
 import {UserModel} from './models'
 import { LivroModel } from './models'
+import { CategoriaModel } from './models'
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 900,
@@ -217,9 +218,21 @@ app.whenReady().then(() => {
     }
   });
   
+ipcMain.handle('getCategoria', async () => {
+  try {
+    const categorias = await CategoriaModel.findAll();
+    return categorias.map(c => c.dataValues);
+  } catch (error) {
+    console.error('Erro em getCategorias:', error);
+    throw error;
+  }
+});
+
 // GRAFICOS 
 
-ipcMain.handle('grafico-evolucao-emprestimos', async () => {
+
+
+ipcMain.handle('getEvolucaoEmprestimos', async () => {
   return new Promise((resolve, reject) => {
     db.all(`
       SELECT strftime('%Y-%m', data_emprestimo) AS periodo, COUNT(*) AS total
@@ -235,7 +248,7 @@ ipcMain.handle('grafico-evolucao-emprestimos', async () => {
 
 
 
-ipcMain.handle('grafico-emprestimos-categoria', async () => {
+ipcMain.handle('getEmprestimosCategoria', async () => {
   return new Promise((resolve, reject) => {
     db.all(`
       SELECT categorias.nome AS categoria, COUNT(*) AS total
@@ -253,7 +266,7 @@ ipcMain.handle('grafico-emprestimos-categoria', async () => {
 
 
 
-ipcMain.handle('grafico-percentual-tipo-usuario', async () => {
+ipcMain.handle('getPercentualUsuarios', async () => {
   return new Promise((resolve, reject) => {
     db.all(`
       SELECT usuarios.tipo AS tipo_usuario, COUNT(*) AS total
@@ -268,7 +281,7 @@ ipcMain.handle('grafico-percentual-tipo-usuario', async () => {
 });
 
 
-ipcMain.handle('grafico-devolucoes-prazo', async () => {
+ipcMain.handle('getDevolucoesPrazo', async () => {
   return new Promise((resolve, reject) => {
     db.all(`
       SELECT 
@@ -289,7 +302,7 @@ ipcMain.handle('grafico-devolucoes-prazo', async () => {
 
 
 
-ipcMain.handle('grafico-media-tempo-usuario', async () => {
+ipcMain.handle('getTempoMedioUsuario', async () => {
   return new Promise((resolve, reject) => {
     db.all(`
       SELECT usuarios.tipo AS tipo_usuario,
@@ -307,7 +320,7 @@ ipcMain.handle('grafico-media-tempo-usuario', async () => {
 
 
 
-ipcMain.handle('grafico-livros-mais-emprestados', async () => {
+ipcMain.handle('getLivrosPopulares', async () => {
   return new Promise((resolve, reject) => {
     db.all(`
       SELECT livros.titulo, COUNT(*) AS total
@@ -325,7 +338,7 @@ ipcMain.handle('grafico-livros-mais-emprestados', async () => {
 
 
 
-ipcMain.handle('grafico-dias-semana', async () => {
+ipcMain.handle('getDiasSemanaMovimentados', async () => {
   return new Promise((resolve, reject) => {
     db.all(`
       SELECT 
@@ -342,7 +355,7 @@ ipcMain.handle('grafico-dias-semana', async () => {
 });
 
 
-ipcMain.handle('grafico-ranking-livros-ano', async () => {
+ipcMain.handle('getRankingLivrosAno', async () => {
   return new Promise((resolve, reject) => {
     db.all(`
       SELECT 

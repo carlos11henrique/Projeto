@@ -28,40 +28,51 @@ import Highcharts from "highcharts";
 import HighchartsVue from "highcharts-vue";
 import Heatmap from "highcharts/modules/heatmap";
 
-
-
 export default {
   name: "Dashboard",
   components: {
     highcharts: HighchartsVue.component,
+  },
+  async mounted() {
+    const evolucao = await window.graficosAPI.getEvolucaoEmprestimos();
+    const categoria = await window.graficosAPI.getEmprestimosCategoria();
+    const percentual = await window.graficosAPI.getPercentualUsuarios();
+    const devolucoes = await window.graficosAPI.getDevolucoesPrazo();
+    const tempoMedio = await window.graficosAPI.getTempoMedioUsuario();
+    const populares = await window.graficosAPI.getLivrosPopulares();
+    const diasSemana = await window.graficosAPI.getDiasSemanaMovimentados();
+
+    this.lineChartOptions.series[0].data = evolucao;
+    this.barChartOptions.xAxis.categories = categoria.map(item => item.categoria);
+    this.barChartOptions.series[0].data = categoria.map(item => item.total);
+    this.pieChartOptions.series[0].data = percentual;
+    this.columnChartOptions.series[0].data = devolucoes.noPrazo;
+    this.columnChartOptions.series[1].data = devolucoes.atrasadas;
+    this.stackedBarChartOptions.series[0].data = tempoMedio;
+    this.radarChartOptions.xAxis.categories = populares.map(item => item.titulo);
+    this.radarChartOptions.series[0].data = populares.map(item => item.total);
+    this.heatMapOptions.series[0].data = diasSemana;
   },
   data() {
     return {
       lineChartOptions: {
         chart: { type: "line" },
         title: { text: "Evolução dos Empréstimos" },
-        xAxis: { categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"] },
+        xAxis: { categories: [] },
         yAxis: { title: { text: "Número de Empréstimos" } },
-        series: [{ name: "Empréstimos", data: [100, 200, 150, 300, 250, 400, 350] }],
+        series: [{ name: "Empréstimos", data: [] }],
       },
       barChartOptions: {
         chart: { type: "bar" },
         title: { text: "Empréstimos por Categoria" },
-        xAxis: { categories: ["Ficção", "Não Ficção", "Tecnologia", "História"] },
+        xAxis: { categories: [] },
         yAxis: { title: { text: "Número de Empréstimos" } },
-        series: [{ name: "Empréstimos", data: [120, 150, 180, 100] }],
+        series: [{ name: "Empréstimos", data: [] }],
       },
       pieChartOptions: {
         chart: { type: "pie" },
         title: { text: "Percentual de Empréstimos por Tipo de Usuário" },
-        series: [{
-          name: "Usuário",
-          data: [
-            { name: "Professores", y: 40 },
-            { name: "Alunos", y: 50 },
-            { name: "Terceiros", y: 10 },
-          ],
-        }],
+        series: [{ name: "Usuário", data: [] }],
       },
       columnChartOptions: {
         chart: { type: "column" },
@@ -69,8 +80,8 @@ export default {
         xAxis: { categories: ["Jan", "Feb", "Mar", "Apr", "May"] },
         yAxis: { title: { text: "Quantidade" } },
         series: [
-          { name: "No Prazo", data: [80, 150, 130, 200, 180] },
-          { name: "Atrasadas", data: [20, 30, 50, 60, 40] },
+          { name: "No Prazo", data: [] },
+          { name: "Atrasadas", data: [] },
         ],
       },
       stackedBarChartOptions: {
@@ -78,14 +89,14 @@ export default {
         title: { text: "Tempo Médio de Empréstimo por Tipo de Usuário" },
         xAxis: { categories: ["Professores", "Alunos", "Terceiros"] },
         yAxis: { title: { text: "Tempo Médio (dias)" } },
-        series: [{ name: "Tempo Médio", data: [5, 7, 3] }],
+        series: [{ name: "Tempo Médio", data: [] }],
       },
       radarChartOptions: {
         chart: { type: "area" },
         title: { text: "Livros Mais Emprestados" },
-        xAxis: { categories: ["Livro 1", "Livro 2", "Livro 3", "Livro 4", "Livro 5"] },
+        xAxis: { categories: [] },
         yAxis: { title: { text: "Empréstimos" } },
-        series: [{ name: "Livros", data: [100, 200, 150, 120, 180] }],
+        series: [{ name: "Livros", data: [] }],
       },
       heatMapOptions: {
         chart: { type: "heatmap" },
@@ -96,10 +107,7 @@ export default {
         series: [{
           name: "Empréstimos",
           borderWidth: 1,
-          data: [
-            [0, 0, 10], [1, 0, 15], [2, 0, 20], [3, 0, 25], [4, 0, 30], [5, 0, 35], [6, 0, 40],
-            [0, 1, 12], [1, 1, 18], [2, 1, 22], [3, 1, 28], [4, 1, 35], [5, 1, 40], [6, 1, 45],
-          ],
+          data: [],
         }],
       },
     };

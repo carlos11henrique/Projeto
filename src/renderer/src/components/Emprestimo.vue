@@ -13,6 +13,7 @@
           <th class="px-6 py-3">Código</th>
           <th class="px-6 py-3">Título</th>
           <th class="px-6 py-3">Autor</th>
+          <th class="px-6 py-3">Genero</th>
           <th class="px-6 py-3">Exemplares</th>
           <th class="px-6 py-3">Usuário com Livro</th>
           <th class="px-6 py-3">Data de Devolução</th>
@@ -24,9 +25,15 @@
           <td class="px-6 py-4">{{ livro.codigoLivro }}</td>
           <td class="px-6 py-4">{{ livro.titulo }}</td>
           <td class="px-6 py-4">{{ livro.autor }}</td>
+          <td class="px-6 py-4">{{ livro.genero }}</td>
           <td class="px-6 py-4">{{ livro.exemplar }}</td>
           <td class="px-6 py-4">{{ livro.emprestadoPara ? livro.emprestadoPara.nome : '-' }}</td>
-          <td class="px-6 py-4">{{ livro.dataDevolucao || '-' }}</td>
+          <td
+            class="px-6 py-4"
+            :class="{ 'text-red-600 font-semibold': isAtrasado(livro.dataDevolucao) }"
+          >
+            {{ livro.dataDevolucao || '-' }}
+          </td>
           <td class="px-6 py-4">
             <button v-if="!livro.emprestadoPara" @click="iniciarEmprestimo(livro)" class="bg-blue-500 text-white px-3 py-1 rounded">Emprestar</button>
             <button v-else @click="devolverLivro(livro)" class="bg-red-500 text-white px-3 py-1 rounded">Devolver</button>
@@ -40,6 +47,7 @@
       <h3 class="text-lg font-semibold">Livro Selecionado</h3>
       <p><strong>Título:</strong> {{ livroSelecionado.titulo }}</p>
       <p><strong>Autor:</strong> {{ livroSelecionado.autor }}</p>
+      <p><strong>Gênero:</strong> {{ livroSelecionado.genero }}</p>
       <p><strong>Código:</strong> {{ livroSelecionado.codigoLivro }}</p>
       <p><strong>Exemplares:</strong> {{ livroSelecionado.exemplar }}</p>
       <p><strong>Data de Devolução:</strong> {{ livroSelecionado.dataDevolucao || 'Não Emprestado' }}</p>
@@ -61,7 +69,13 @@
     </div>
   </div>
 </template>
+
+
+
+
 <script>
+import Swal from 'sweetalert2';
+
 export default {
   data() {
     return {
@@ -101,6 +115,8 @@ export default {
     }
   },
   methods: {
+
+    
     async carregarLivro() {
       try {
         const livros = await window.api.getLivro();
@@ -128,20 +144,25 @@ export default {
       if (emprestimoAtivo) {
         const usuario = this.usuarios.find(u => u.id === emprestimoAtivo.UsuarioId);
         livro.emprestadoPara = usuario || { nome: 'Desconhecido' };
-        livro.dataDevolucao = emprestimoAtivo.dataDevolucao;
+
+        // ✅ Formatar a data de devolução para o formato brasileiro
+        const dataFormatada = new Date(emprestimoAtivo.dataDevolucao).toLocaleDateString('pt-BR');
+        livro.dataDevolucao = dataFormatada;
+
         livro.status = 'emprestado';
-        livro.emprestimoId = emprestimoAtivo.id; // ✅ Adicionado aqui
+        livro.emprestimoId = emprestimoAtivo.id;
       } else {
         livro.emprestadoPara = null;
         livro.dataDevolucao = null;
         livro.status = 'disponivel';
-        livro.emprestimoId = null; // ✅ Para garantir limpeza quando necessário
+        livro.emprestimoId = null;
       }
     });
   } catch (error) {
     console.error('Erro ao carregar empréstimos:', error);
   }
 },
+
 
 
     iniciarEmprestimo(livro) {
@@ -157,42 +178,76 @@ export default {
     },
 
     async finalizarEmprestimo() {
-      if (this.livroSelecionado && this.usuarioSelecionado) {
-        const dataAtual = new Date();
-        const novaData = new Date();
-        novaData.setDate(dataAtual.getDate() + 14);
+  if (this.livroSelecionado && this.usuarioSelecionado) {
+    const dataAtual = new Date();
+    const novaData = new Date();
+    novaData.setDate(dataAtual.getDate() + 14);
+    const dataFormatada = novaData.toLocaleDateString('pt-BR');
 
-        try {
-          await window.api.createEmprestimo({
-            LivroId: this.livroSelecionado.id,
-            UsuarioId: this.usuarioSelecionado.id,
-            dataDevolucao: novaData.toISOString().split('T')[0],
-            status: 'emprestado'
-          });
+    try {
+      await window.api.createEmprestimo({
+        LivroId: this.livroSelecionado.id,
+        UsuarioId: this.usuarioSelecionado.id,
+        dataDevolucao: novaData.toISOString().split('T')[0],
+        status: 'emprestado'
+      });
 
-          alert(`Empréstimo do livro "${this.livroSelecionado.titulo}" para ${this.usuarioSelecionado.nome} até ${novaData.toISOString().split('T')[0]}`);
-
-          this.livroSelecionado = null;
-          this.usuarioSelecionado = null;
-
-          await this.carregarEmprestimos();
-        } catch (error) {
-          console.error('Erro ao criar empréstimo:', error);
+      // ✅ SweetAlert2
+      Swal.fire({
+        title: '📚 Empréstimo Realizado!',
+        html: `
+          <div style="font-size: 16px;">
+            <strong>Livro:</strong> <span style="color: #3b82f6;">"${this.livroSelecionado.titulo}"</span><br/>
+            <strong>Usuário:</strong> ${this.usuarioSelecionado.nome}<br/>
+            <strong>Devolução até:</strong> <span style="color: #10b981;">${dataFormatada}</span>
+          </div>
+        `,
+        icon: 'success',
+        confirmButtonText: 'Ok',
+        confirmButtonColor: '#10b981',
+        background: '#f0fdf4',
+        customClass: {
+          popup: 'rounded-xl shadow-lg',
         }
-      }
-    },
+      });
 
-    async devolverLivro(livro) {
+      this.livroSelecionado = null;
+      this.usuarioSelecionado = null;
+
+      await this.carregarEmprestimos();
+    } catch (error) {
+      console.error('Erro ao criar empréstimo:', error);
+    }
+  }
+},
+
+
+async devolverLivro(livro) {
   try {
     await window.api.updateEmprestimo({
-      id: livro.emprestimoId, 
+      id: livro.emprestimoId,
       LivroId: livro.id,
-      dataDevolucao: new Date().toISOString().split('T')[0], 
+      dataDevolucao: new Date().toISOString().split('T')[0],
       devolvido: true,
       status: 'disponivel'
     });
 
-    alert(`Livro "${livro.titulo}" devolvido!`);
+    Swal.fire({
+      title: '✅ Livro Devolvido!',
+      html: `
+        <div style="font-size: 16px;">
+          <strong>Título:</strong> <span style="color: #3b82f6;">"${livro.titulo}"</span><br/>
+          <strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}
+        </div>
+      `,
+      icon: 'info',
+      confirmButtonText: 'Ok',
+      confirmButtonColor: '#3b82f6',
+      background: '#eff6ff',
+      customClass: {
+        popup: 'rounded-xl shadow-lg',
+      }
+    });
 
     await this.carregarEmprestimos();
   } catch (error) {
@@ -201,22 +256,55 @@ export default {
 },
 
 
+isAtrasado(dataDevolucao) {
+  if (!dataDevolucao) return false;
+
+  const partes = dataDevolucao.split('/');
+  const dataFormatada = new Date(`${partes[2]}-${partes[1]}-${partes[0]}`);
+  const hoje = new Date();
+
+  hoje.setHours(0, 0, 0, 0);
+  dataFormatada.setHours(0, 0, 0, 0);
+
+  return dataFormatada < hoje;
+},
 
 async aumentarPrazo(livro) {
   if (!livro.dataDevolucao || !livro.emprestimoId) return;
 
   try {
-    const novaData = new Date(livro.dataDevolucao);
+    // ✅ Corrigir o formato "dd/mm/aaaa" para Date válida
+    const partes = livro.dataDevolucao.split('/');
+    const dataISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+    const novaData = new Date(dataISO);
+
+    // ✅ Adicionar 7 dias
     novaData.setDate(novaData.getDate() + 7);
 
     await window.api.updateEmprestimo({
-      id: livro.emprestimoId, // 👈 necessário!
+      id: livro.emprestimoId,
       LivroId: livro.id,
       dataDevolucao: novaData.toISOString().split('T')[0],
-      status: 'emprestado' // 👈 garantir que continua como emprestado
+      status: 'emprestado'
     });
 
-    alert(`Prazo aumentado para ${novaData.toISOString().split('T')[0]}`);
+    Swal.fire({
+      title: '📅 Prazo Estendido!',
+      html: `
+        <div style="font-size: 16px;">
+          <strong>Livro:</strong> <span style="color: #3b82f6;">"${livro.titulo}"</span><br/>
+          <strong>Nova data de devolução:</strong> <span style="color: #10b981;">${novaData.toLocaleDateString('pt-BR')}</span>
+        </div>
+      `,
+      icon: 'success',
+      confirmButtonText: 'Entendido',
+      confirmButtonColor: '#10b981',
+      background: '#ecfdf5',
+      customClass: {
+        popup: 'rounded-xl shadow-lg',
+      }
+    });
+
     await this.carregarEmprestimos();
   } catch (error) {
     console.error('Erro ao atualizar empréstimo:', error);

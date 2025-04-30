@@ -20,12 +20,18 @@
         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
         required />
     </div>
+
+
+
     <div>
-      <label for="genero" class="block mb-2 text-sm font-medium text-gray-900">Gênero</label>
-      <input v-model="novoLivro.genero" type="text" id="genero"
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-        required />
-    </div>
+      <label for="editora" class="block mb-2 text-sm font-medium text-gray-900">Gênero</label>
+
+      <select v-model="novoLivro.genero"
+      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+      <option disabled value="">Selecione um gênero</option>
+  <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.nome">{{ categoria.nome }}</option>
+</select>
+</div>
     <div>
       <label for="codigoLivro" class="block mb-2 text-sm font-medium text-gray-900">Código do Livro</label>
       <input v-model="novoLivro.codigoLivro" type="text" id="codigoLivro"
@@ -45,10 +51,11 @@
         required />
     </div>
     <div>
-      <label v-if="novoLivro.quantidade" for="quantidade" class="block mb-2 text-sm font-medium text-gray-900">Quantidade</label>
-      <input v-if="novoLivro.quantidade" v-model="novoLivro.quantidade" type="number" id="quantidade"
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-        required />
+      <label v-if="!editando" for="quantidade" class="block mb-2 text-sm font-medium text-gray-900">Quantidade</label>
+<input v-if="!editando" v-model="novoLivro.quantidade" type="number" id="quantidade"
+  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+  required />
+
     </div>
     <div class="md:col-span-2">
       <label for="imagem" class="block mb-2 text-sm font-medium text-gray-900">Imagem do Livro (URL)</label>
@@ -73,31 +80,31 @@
 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
   <tr>
     <th class="px-6 py-3">Código</th>
+    <th class="px-6 py-3">Exemplar</th>
     <th class="px-6 py-3">Título</th>
     <th class="px-6 py-3">Autor</th>
     <th class="px-6 py-3">Editora</th>
     <th class="px-6 py-3">Gênero</th>
-    <th class="px-6 py-3">Quantidade</th>
     <th class="px-6 py-3">Imagem</th>
     <th class="px-6 py-3">Ações</th>
   </tr>
 </thead>
 <tbody>
-<tr v-for="(livro, index) in livros" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-  <td class="px-6 py-4">{{ livro.codigoLivro }}</td> 
-  <td class="px-6 py-4">{{ livro.titulo }}</td>
-  <td class="px-6 py-4">{{ livro.autor }}</td>
-  <td class="px-6 py-4">{{ livro.editora }}</td>
-  <td class="px-6 py-4">{{ livro.genero }}</td>
-  <td class="px-6 py-4">{{ livro.quantidade }}</td>
-  <td class="px-6 py-4">
-    <img :src="livro.imagem" alt="Imagem do Livro" class="h-16 w-auto" />
-  </td>
-  <td class="px-6 py-4">
-    <button @click="editarLivro(index)" class="text-blue-600 hover:underline">Editar</button>
-    <button @click="removerLivro(index)" class="text-red-600 hover:underline ml-3">Remover</button>
-  </td>
-</tr>
+  <tr v-for="(livro, index) in filteredLivro" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+    <td class="px-6 py-4">{{ livro.codigoLivro }}</td> 
+    <td class="px-6 py-4">{{ livro.exemplar }}</td>
+    <td class="px-6 py-4">{{ livro.titulo }}</td>
+    <td class="px-6 py-4">{{ livro.autor }}</td>
+    <td class="px-6 py-4">{{ livro.editora }}</td>
+    <td class="px-6 py-4">{{ livro.genero }}</td>
+    <td class="px-6 py-4">
+      <img :src="livro.imagem" alt="Imagem do Livro" class="h-16 w-auto" />
+    </td>
+    <td class="px-6 py-4">
+      <button @click="editarLivro(index)" class="text-blue-600 hover:underline">Editar</button>
+      <button @click="removerLivro(index)" class="text-red-600 hover:underline ml-3">Remover</button>
+    </td>
+  </tr>
 </tbody>
 
 </table>
@@ -114,23 +121,26 @@ import Swal from 'sweetalert2';
 export default {
   name: "Livro",
   data() {
-    return {
-      novoLivro: {
-        codigoLivro: "",
-        titulo: "",
-        autor: "",
-        editora: "",
-        genero: "",
-        descricao: "",
-        exemplar: "",
-        quantidade: 0,
-        imagem: ""
-      },
-      livros: [],
-      searchQuery: "",
-      editando: false, // controla se estamos em modo de edição
-      indexEdicao: null
-    };
+  return {
+    novoLivro: {
+      codigoLivro: "",
+      titulo: "",
+      autor: "",
+      editora: "",
+      genero: "",
+      descricao: "",
+      exemplar: "",
+      quantidade: 0,
+      imagem: ""
+    },
+    livros: [],
+    searchQuery: "",
+    categorias: [],  // Correção aqui
+    editando: false,
+    indexEdicao: null
+  };
+
+
   },
   computed: {
     filteredLivro() {
@@ -246,6 +256,15 @@ export default {
       });
     },
 
+    async carregarCategoria() {
+  try {
+    const categorias = await window.api.getCategoria();
+    this.categorias = categorias;  // Armazenando as categorias na variável correta
+  } catch (error) {
+    console.error('Erro ao carregar categorias:', error);
+  }
+},
+
     async carregarLivro() {
       try {
         const livros = await window.api.getLivro();
@@ -273,6 +292,8 @@ export default {
   },
   mounted() {
     this.carregarLivro();
+    this.carregarCategoria(); 
+
   }
 };
 </script>
