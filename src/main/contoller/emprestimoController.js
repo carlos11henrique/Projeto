@@ -1,4 +1,4 @@
-import { Emprestimo } from '../models/Emprestimo.js';
+import { Emprestimo } from '../models/modelsEmprestimo.js';
 
 const EmprestimoController = {
     async listar(req, res) {

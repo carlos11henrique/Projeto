@@ -1,4 +1,4 @@
-import { Livro } from "../models/Livro";
+import { Livro } from "../models/modelsLivro.js";
 
 const LivroController = {
     async listar(req, res) {
