@@ -18,6 +18,10 @@ const Livro = createModel(sequelize);
 const User = UserModel(sequelize);
 const Emprestimo = EmprestimoModel(sequelize);
 
+
+
+Categoria.hasMany(Livro);
+Livro.belongsTo(Categoria);
 Livro.hasMany(Emprestimo);
 Emprestimo.belongsTo(Livro);
 User.hasMany(Emprestimo);
