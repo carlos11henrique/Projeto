@@ -11,9 +11,6 @@ export function CategoriaModel(sequelize) {
       type: DataTypes.STRING(50),
       allowNull: false
     }
-  }, {
-    tableName: 'Categorias',
-    timestamps: true 
   });
 
   return Categoria;

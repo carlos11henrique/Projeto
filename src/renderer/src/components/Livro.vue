@@ -25,12 +25,12 @@
 
     <div>
       <label for="editora" class="block mb-2 text-sm font-medium text-gray-900">Gênero</label>
-
-      <select v-model="novoLivro.genero"
-      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-      <option disabled value="">Selecione um gênero</option>
-  <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.nome">{{ categoria.nome }}</option>
+      <select v-model="novoLivro.genero" id="genero"
+  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+  <option disabled value="">Selecione um gênero</option>
+  <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">{{ categoria.nome }}</option>
 </select>
+
 </div>
     <div>
       <label for="codigoLivro" class="block mb-2 text-sm font-medium text-gray-900">Código do Livro</label>
@@ -58,9 +58,8 @@
 
     </div>
     <div class="md:col-span-2">
-      <label for="imagem" class="block mb-2 text-sm font-medium text-gray-900">Imagem do Livro (URL)</label>
-      <input v-model="novoLivro.imagem" type="text" id="imagem"
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" />
+      <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">Upload Imagem</label>
+<input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="file_input" type="file">
     </div>
   </div>
   <button type="submit"
@@ -123,16 +122,18 @@ export default {
   data() {
   return {
     novoLivro: {
-      codigoLivro: "",
-      titulo: "",
-      autor: "",
-      editora: "",
-      genero: "",
-      descricao: "",
-      exemplar: "",
-      quantidade: 0,
-      imagem: ""
-    },
+  codigoLivro: "",
+  titulo: "",
+  autor: "",
+  editora: "",
+  categoriaId: "", 
+  descricao: "",
+  exemplar: "",
+  quantidade: 0,
+  genero: "",
+  imagem: ""
+},
+
     livros: [],
     searchQuery: "",
     categorias: [],  // Correção aqui
@@ -152,6 +153,12 @@ export default {
     }
   },
   methods: {
+
+   async getNomeCategoria(id) {
+  const cat = this.categorias.find(c => c.id === id);
+  return cat ? cat.nome : 'Desconhecido';
+},
+
     async adicionarLivro() {
       if (this.editando) return; // bloqueia adicionar enquanto edita
 
@@ -173,7 +180,9 @@ export default {
               ...livroBase,
               codigoLivro: novoCodigo,
               exemplar: novoExemplar,
-              quantidade: 1
+              quantidade: 1,
+              categoriaId: livroBase.categoriaId
+
             };
 
             await window.api.createLivro(novoLivro);
@@ -280,7 +289,7 @@ export default {
         titulo: "",
         autor: "",
         editora: "",
-        genero: "",
+        categoriaId: "",
         descricao: "",
         exemplar: "",
         quantidade: 0,

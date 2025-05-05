@@ -1,24 +1,12 @@
 <template>
   <div>
-    <!-- Gráfico de Linhas - Evolução dos Empréstimos -->
+    <!-- Gráficos -->
     <highcharts :options="lineChartOptions" />
-
-    <!-- Gráfico de Barras - Empréstimos por Categoria -->
     <highcharts :options="barChartOptions" />
-
-    <!-- Gráfico de Pizza - Percentual de Empréstimos por Tipo de Usuário -->
     <highcharts :options="pieChartOptions" />
-
-    <!-- Gráfico de Colunas - Devoluções no Prazo vs. Atrasos -->
     <highcharts :options="columnChartOptions" />
-
-    <!-- Gráfico de Barras Empilhadas - Tempo Médio de Empréstimo por Tipo de Usuário -->
     <highcharts :options="stackedBarChartOptions" />
-
-    <!-- Gráfico de Radar - Livros Mais Emprestados -->
     <highcharts :options="radarChartOptions" />
-
-    <!-- Mapa de Calor - Dias da Semana com Mais Empréstimos -->
     <highcharts :options="heatMapOptions" />
   </div>
 </template>
@@ -26,35 +14,17 @@
 <script>
 import Highcharts from "highcharts";
 import HighchartsVue from "highcharts-vue";
-import Heatmap from "highcharts/modules/heatmap";
+import Heatmap from "highcharts/modules/heatmap"; // Importando o módulo Heatmap corretamente
 
 export default {
   name: "Dashboard",
   components: {
     highcharts: HighchartsVue.component,
   },
-  async mounted() {
-    const evolucao = await window.graficosAPI.getEvolucaoEmprestimos();
-    const categoria = await window.graficosAPI.getEmprestimosCategoria();
-    const percentual = await window.graficosAPI.getPercentualUsuarios();
-    const devolucoes = await window.graficosAPI.getDevolucoesPrazo();
-    const tempoMedio = await window.graficosAPI.getTempoMedioUsuario();
-    const populares = await window.graficosAPI.getLivrosPopulares();
-    const diasSemana = await window.graficosAPI.getDiasSemanaMovimentados();
-
-    this.lineChartOptions.series[0].data = evolucao;
-    this.barChartOptions.xAxis.categories = categoria.map(item => item.categoria);
-    this.barChartOptions.series[0].data = categoria.map(item => item.total);
-    this.pieChartOptions.series[0].data = percentual;
-    this.columnChartOptions.series[0].data = devolucoes.noPrazo;
-    this.columnChartOptions.series[1].data = devolucoes.atrasadas;
-    this.stackedBarChartOptions.series[0].data = tempoMedio;
-    this.radarChartOptions.xAxis.categories = populares.map(item => item.titulo);
-    this.radarChartOptions.series[0].data = populares.map(item => item.total);
-    this.heatMapOptions.series[0].data = diasSemana;
-  },
   data() {
     return {
+
+      // Definindo as opções dos gráficos
       lineChartOptions: {
         chart: { type: "line" },
         title: { text: "Evolução dos Empréstimos" },
@@ -112,8 +82,47 @@ export default {
       },
     };
   },
+  async mounted() {
+  // Carregar os dados de várias fontes
+  try {
+    const evolucao = await window.api.getEvolucaoEmprestimos();
+    const categoria = await window.api.getEmprestimosCategoria();
+    const percentual = await window.api.getPercentualUsuarios();
+    const devolucoes = await window.api.getDevolucoesPrazo();
+    const tempoMedio = await window.api.getTempoMedioUsuario();
+    const populares = await window.api.getLivrosPopulares();
+    const diasSemana = await window.api.getDiasSemanaMovimentados();
+
+    // Verificando e ajustando os dados para o heatmap
+    const heatmapData = diasSemana.map(item => {
+      const x = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"].indexOf(item.dia);
+      const y = ["Semana 1", "Semana 2", "Semana 3", "Semana 4"].indexOf(item.semana);
+      return [x, y, item.quantidade]; // Formato [x, y, value]
+    });
+
+    // Atualizando as opções dos gráficos
+    this.lineChartOptions.series[0].data = evolucao;
+    this.barChartOptions.xAxis.categories = categoria.map(item => item.categoria);
+    this.barChartOptions.series[0].data = categoria.map(item => item.total);
+    this.pieChartOptions.series[0].data = percentual;
+    this.columnChartOptions.series[0].data = devolucoes.noPrazo;
+    this.columnChartOptions.series[1].data = devolucoes.atrasadas;
+    this.stackedBarChartOptions.series[0].data = tempoMedio;
+    this.radarChartOptions.xAxis.categories = populares.map(item => item.titulo);
+    this.radarChartOptions.series[0].data = populares.map(item => item.total);
+
+    // Atualizando o gráfico de heatmap com os dados ajustados
+    this.heatMapOptions.series[0].data = heatmapData;
+
+  } catch (error) {
+    console.error('Erro ao carregar os dados para os gráficos:', error);
+  }
+},
 };
 </script>
+
+
+
 
 <style scoped>
 /* Adicione estilos personalizados para o Dashboard aqui */

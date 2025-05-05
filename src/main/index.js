@@ -7,6 +7,7 @@ import {EmprestimoModel} from './models'
 import {UserModel} from './models'
 import { LivroModel } from './models'
 import { CategoriaModel } from './models'
+
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 900,
@@ -228,15 +229,39 @@ ipcMain.handle('getCategoria', async () => {
   }
 });
 
+
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'atom',
+    privileges: {
+      secure: true,
+      standard: true,
+      supportFetchAPI: true,
+      corsEnabled: true
+    }
+  }
+])
+
+app.whenReady().then(() => {
+  protocol.handle('atom', (request) => {
+    const filePath = request.url.slice('atom://'.length)
+    const fullPath = path.join(__dirname, filePath)
+    const fileUrl = url.pathToFileURL(fullPath).toString()
+    return net.fetch(fileUrl)
+  })
+});
+
+
 // GRAFICOS 
 
 
-
+// Evolução dos Empréstimos por Mês
 ipcMain.handle('getEvolucaoEmprestimos', async () => {
   return new Promise((resolve, reject) => {
-    db.all(`
-      SELECT strftime('%Y-%m', data_emprestimo) AS periodo, COUNT(*) AS total
-      FROM emprestimos
+    db.query(`
+      SELECT DATE_FORMAT(dataEmprestimo, '%Y-%m') AS periodo, COUNT(*) AS total
+      FROM Emprestimos
       GROUP BY periodo
       ORDER BY periodo;
     `, (err, rows) => {
@@ -246,16 +271,15 @@ ipcMain.handle('getEvolucaoEmprestimos', async () => {
   });
 });
 
-
-
+// Empréstimos por Categoria
 ipcMain.handle('getEmprestimosCategoria', async () => {
   return new Promise((resolve, reject) => {
-    db.all(`
-      SELECT categorias.nome AS categoria, COUNT(*) AS total
-      FROM emprestimos
-      JOIN livros ON emprestimos.livro_id = livros.id
-      JOIN categorias ON livros.categoria_id = categorias.id
-      GROUP BY categoria
+    db.query(`
+      SELECT Categoria.nome AS categoria, COUNT(*) AS total
+      FROM Emprestimos
+      JOIN Livro ON Emprestimos.LivroId = Livro.id
+      JOIN Categoria ON Livro.CategoriaId = Categoria.id
+      GROUP BY Categoria.nome
       ORDER BY total DESC;
     `, (err, rows) => {
       if (err) reject(err);
@@ -264,15 +288,14 @@ ipcMain.handle('getEmprestimosCategoria', async () => {
   });
 });
 
-
-
+// Percentual de Empréstimos por Tipo de Usuário
 ipcMain.handle('getPercentualUsuarios', async () => {
   return new Promise((resolve, reject) => {
-    db.all(`
-      SELECT usuarios.tipo AS tipo_usuario, COUNT(*) AS total
-      FROM emprestimos
-      JOIN usuarios ON emprestimos.usuario_id = usuarios.id
-      GROUP BY tipo_usuario;
+    db.query(`
+      SELECT Usuarios.tipo AS tipo_usuario, COUNT(*) AS total
+      FROM Emprestimos
+      JOIN Usuarios ON Emprestimos.UsuarioId = Usuarios.id
+      GROUP BY Usuarios.tipo;
     `, (err, rows) => {
       if (err) reject(err);
       else resolve(rows);
@@ -280,18 +303,18 @@ ipcMain.handle('getPercentualUsuarios', async () => {
   });
 });
 
-
+// Devoluções no Prazo vs. Atrasadas
 ipcMain.handle('getDevolucoesPrazo', async () => {
   return new Promise((resolve, reject) => {
-    db.all(`
+    db.query(`
       SELECT 
         CASE 
-          WHEN data_devolucao <= data_prevista THEN 'No Prazo'
+          WHEN dataDevolucao <= DATE_ADD(dataEmprestimo, INTERVAL 7 DAY) THEN 'No Prazo'
           ELSE 'Em Atraso'
         END AS status,
         COUNT(*) AS total
-      FROM emprestimos
-      WHERE data_devolucao IS NOT NULL
+      FROM Emprestimos
+      WHERE dataDevolucao IS NOT NULL
       GROUP BY status;
     `, (err, rows) => {
       if (err) reject(err);
@@ -300,17 +323,16 @@ ipcMain.handle('getDevolucoesPrazo', async () => {
   });
 });
 
-
-
+// Tempo Médio de Empréstimo por Tipo de Usuário
 ipcMain.handle('getTempoMedioUsuario', async () => {
   return new Promise((resolve, reject) => {
-    db.all(`
-      SELECT usuarios.tipo AS tipo_usuario,
-             AVG(julianday(data_devolucao) - julianday(data_emprestimo)) AS media_dias
-      FROM emprestimos
-      JOIN usuarios ON emprestimos.usuario_id = usuarios.id
-      WHERE data_devolucao IS NOT NULL
-      GROUP BY tipo_usuario;
+    db.query(`
+      SELECT Usuarios.tipo AS tipo_usuario,
+             AVG(DATEDIFF(dataDevolucao, dataEmprestimo)) AS media_dias
+      FROM Emprestimos
+      JOIN Usuarios ON Emprestimos.UsuarioId = Usuarios.id
+      WHERE dataDevolucao IS NOT NULL
+      GROUP BY Usuarios.tipo;
     `, (err, rows) => {
       if (err) reject(err);
       else resolve(rows);
@@ -318,15 +340,14 @@ ipcMain.handle('getTempoMedioUsuario', async () => {
   });
 });
 
-
-
+// Livros Mais Populares
 ipcMain.handle('getLivrosPopulares', async () => {
   return new Promise((resolve, reject) => {
-    db.all(`
-      SELECT livros.titulo, COUNT(*) AS total
-      FROM emprestimos
-      JOIN livros ON emprestimos.livro_id = livros.id
-      GROUP BY livro_id
+    db.query(`
+      SELECT Livro.titulo, COUNT(*) AS total
+      FROM Emprestimos
+      JOIN Livro ON Emprestimos.LivroId = Livro.id
+      GROUP BY Livro.id
       ORDER BY total DESC
       LIMIT 5;
     `, (err, rows) => {
@@ -336,15 +357,14 @@ ipcMain.handle('getLivrosPopulares', async () => {
   });
 });
 
-
-
+// Dias da Semana com Mais Empréstimos
 ipcMain.handle('getDiasSemanaMovimentados', async () => {
   return new Promise((resolve, reject) => {
-    db.all(`
+    db.query(`
       SELECT 
-        strftime('%w', data_emprestimo) AS dia_semana,
+        DAYOFWEEK(dataEmprestimo) AS dia_semana,
         COUNT(*) AS total
-      FROM emprestimos
+      FROM Emprestimos
       GROUP BY dia_semana
       ORDER BY dia_semana;
     `, (err, rows) => {
@@ -354,17 +374,17 @@ ipcMain.handle('getDiasSemanaMovimentados', async () => {
   });
 });
 
-
+// Ranking de Livros por Ano
 ipcMain.handle('getRankingLivrosAno', async () => {
   return new Promise((resolve, reject) => {
-    db.all(`
+    db.query(`
       SELECT 
-        livros.titulo,
-        strftime('%Y', emprestimos.data_emprestimo) AS ano,
+        Livro.titulo,
+        YEAR(Emprestimos.dataEmprestimo) AS ano,
         COUNT(*) AS total_emprestimos
-      FROM emprestimos
-      JOIN livros ON emprestimos.livro_id = livros.id
-      GROUP BY livros.titulo, ano
+      FROM Emprestimos
+      JOIN Livro ON Emprestimos.LivroId = Livro.id
+      GROUP BY Livro.titulo, ano
       ORDER BY total_emprestimos DESC
       LIMIT 10;
     `, (err, rows) => {

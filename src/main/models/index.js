@@ -19,7 +19,7 @@ const User = UserModel(sequelize);
 const Emprestimo = EmprestimoModel(sequelize);
 
 
-
+ 
 Categoria.hasMany(Livro);
 Livro.belongsTo(Categoria);
 Livro.hasMany(Emprestimo);
@@ -28,8 +28,10 @@ User.hasMany(Emprestimo);
 Emprestimo.belongsTo(User);
 (async () => {
     try {
+        
         await sequelize.sync({ force: true });
         console.log("Banco sincronizado com sucesso.");
+        
 
         
     } catch (err) {
