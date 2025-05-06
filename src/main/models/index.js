@@ -8,7 +8,8 @@ import fs from "node:fs";
 
 const sequelize = new Sequelize({
     dialect: 'sqlite',
-    storage: DEST_DB
+    storage: DEST_DB,
+    logging:false,
 });
 
 console.log("DB existe:", fs.existsSync(DEST_DB));
@@ -29,7 +30,7 @@ Emprestimo.belongsTo(User);
 (async () => {
     try {
         
-        await sequelize.sync({ force: true });
+        await sequelize.sync({ force: true});
         console.log("Banco sincronizado com sucesso.");
         
 

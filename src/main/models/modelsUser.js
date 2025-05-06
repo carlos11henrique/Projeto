@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 
 export function UserModel(sequelize) {
-  const Usuario = sequelize.define('Usuario', { 
+  const Usuario = sequelize.define('User', { 
      id: {
       type: DataTypes.INTEGER,
       primaryKey: true,

@@ -3,7 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { event } from 'jquery'
-import {EmprestimoModel} from './models'
+import {EmprestimoModel,sequelize} from './models'
 import {UserModel} from './models'
 import { LivroModel } from './models'
 import { CategoriaModel } from './models'
@@ -16,7 +16,7 @@ function createWindow() {
     autoHideMenuBar: false,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: join(__dirname, '..','preload','index.js'),
       sandbox: false
     }
   })
@@ -55,12 +55,150 @@ app.whenReady().then(() => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+
   const handleError = (event, error, context = '') => {
     console.error(`Erro em ${context}:`, error);
     if (event?.reply) {
-      event.reply('erro', { context, message: error.message });
+       event.reply('erro', { context, message: error.message });
     }
   };
+
+  
+  // Evolução dos Empréstimos por Mês
+  ipcMain.handle('getEvolucaoEmprestimos', async () => {
+    return  sequelize.query(`
+        SELECT strftime('%y-%m', 'dataEmprestimo') AS periodo, COUNT(*) AS total
+        FROM Loans
+        GROUP BY periodo
+        ORDER BY periodo;
+      `)
+  })
+
+
+  // Empréstimos por Categoria
+  ipcMain.handle('getEmprestimosCategoria', async () => {
+    return new Promise((resolve, reject) => {
+      sequelize.query(`
+        SELECT Categories.nome AS categoria, COUNT(*) AS total
+        FROM Loans
+        JOIN Books ON Loans.BookId = Books.id
+        JOIN Categories ON Books.CategoryId = Categories.id
+        GROUP BY Categories.nome
+        ORDER BY total DESC;
+      `, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+  });
+
+  // Percentual de Empréstimos por Tipo de Usuário
+  ipcMain.handle('getPercentualUsuarios', async () => {
+    return new Promise((resolve, reject) => {
+      sequelize.query(`
+        SELECT Usuarios.tipo AS tipo_usuario, COUNT(*) AS total
+        FROM Emprestimos
+        JOIN Usuarios ON Emprestimos.UsuarioId = Usuarios.id
+        GROUP BY Usuarios.tipo;
+      `, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+  });
+
+  // Devoluções no Prazo vs. Atrasadas
+  ipcMain.handle('getDevolucoesPrazo', async () => {
+    return new Promise((resolve, reject) => {
+      sequelize.query(`
+        SELECT 
+          CASE 
+            WHEN dataDevolucao <= DATE_ADD(dataEmprestimo, INTERVAL 7 DAY) THEN 'No Prazo'
+            ELSE 'Em Atraso'
+          END AS status,
+          COUNT(*) AS total
+        FROM Emprestimos
+        WHERE dataDevolucao IS NOT NULL
+        GROUP BY status;
+      `, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+  });
+
+  // Tempo Médio de Empréstimo por Tipo de Usuário
+  ipcMain.handle('getTempoMedioUsuario', async () => {
+    return new Promise((resolve, reject) => {
+      sequelize.query(`
+        SELECT Usuarios.tipo AS tipo_usuario,
+              AVG(DATEDIFF(dataDevolucao, dataEmprestimo)) AS media_dias
+        FROM Emprestimos
+        JOIN Usuarios ON Emprestimos.UsuarioId = Usuarios.id
+        WHERE dataDevolucao IS NOT NULL
+        GROUP BY Usuarios.tipo;
+      `, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+  });
+
+  // Livros Mais Populares
+  ipcMain.handle('getLivrosPopulares', async () => {
+    return new Promise((resolve, reject) => {
+      sequelize.query(`
+        SELECT Livro.titulo, COUNT(*) AS total
+        FROM Emprestimos
+        JOIN Livro ON Emprestimos.LivroId = Livro.id
+        GROUP BY Livro.id
+        ORDER BY total DESC
+        LIMIT 5;
+      `, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+  });
+
+  // Dias da Semana com Mais Empréstimos
+  ipcMain.handle('getDiasSemanaMovimentados', async () => {
+    return new Promise((resolve, reject) => {
+      sequelize.query(`
+        SELECT 
+          DAYOFWEEK(dataEmprestimo) AS dia_semana,
+          COUNT(*) AS total
+        FROM Emprestimos
+        GROUP BY dia_semana
+        ORDER BY dia_semana;
+      `, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+  });
+
+  // Ranking de Livros por Ano
+  ipcMain.handle('getRankingLivrosAno', async () => {
+    return new Promise((resolve, reject) => {
+      sequelize.query(`
+        SELECT 
+          Livro.titulo,
+          YEAR(Emprestimos.dataEmprestimo) AS ano,
+          COUNT(*) AS total_emprestimos
+        FROM Emprestimos
+        JOIN Livro ON Emprestimos.LivroId = Livro.id
+        GROUP BY Livro.titulo, ano
+        ORDER BY total_emprestimos DESC
+        LIMIT 10;
+      `, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+  });
+
+
   
   ipcMain.on('createLivro', async (event, book) => {
     try {
@@ -226,195 +364,32 @@ ipcMain.handle('getCategoria', async () => {
   } catch (error) {
     console.error('Erro em getCategorias:', error);
     throw error;
-  }
-});
-
-
-
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: 'atom',
-    privileges: {
-      secure: true,
-      standard: true,
-      supportFetchAPI: true,
-      corsEnabled: true
-    }
-  }
-])
-
-app.whenReady().then(() => {
-  protocol.handle('atom', (request) => {
-    const filePath = request.url.slice('atom://'.length)
-    const fullPath = path.join(__dirname, filePath)
-    const fileUrl = url.pathToFileURL(fullPath).toString()
-    return net.fetch(fileUrl)
-  })
-});
-
-
-// GRAFICOS 
-
-
-// Evolução dos Empréstimos por Mês
-ipcMain.handle('getEvolucaoEmprestimos', async () => {
-  return new Promise((resolve, reject) => {
-    db.query(`
-      SELECT DATE_FORMAT(dataEmprestimo, '%Y-%m') AS periodo, COUNT(*) AS total
-      FROM Emprestimos
-      GROUP BY periodo
-      ORDER BY periodo;
-    `, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-});
-
-// Empréstimos por Categoria
-ipcMain.handle('getEmprestimosCategoria', async () => {
-  return new Promise((resolve, reject) => {
-    db.query(`
-      SELECT Categoria.nome AS categoria, COUNT(*) AS total
-      FROM Emprestimos
-      JOIN Livro ON Emprestimos.LivroId = Livro.id
-      JOIN Categoria ON Livro.CategoriaId = Categoria.id
-      GROUP BY Categoria.nome
-      ORDER BY total DESC;
-    `, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-});
-
-// Percentual de Empréstimos por Tipo de Usuário
-ipcMain.handle('getPercentualUsuarios', async () => {
-  return new Promise((resolve, reject) => {
-    db.query(`
-      SELECT Usuarios.tipo AS tipo_usuario, COUNT(*) AS total
-      FROM Emprestimos
-      JOIN Usuarios ON Emprestimos.UsuarioId = Usuarios.id
-      GROUP BY Usuarios.tipo;
-    `, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-});
-
-// Devoluções no Prazo vs. Atrasadas
-ipcMain.handle('getDevolucoesPrazo', async () => {
-  return new Promise((resolve, reject) => {
-    db.query(`
-      SELECT 
-        CASE 
-          WHEN dataDevolucao <= DATE_ADD(dataEmprestimo, INTERVAL 7 DAY) THEN 'No Prazo'
-          ELSE 'Em Atraso'
-        END AS status,
-        COUNT(*) AS total
-      FROM Emprestimos
-      WHERE dataDevolucao IS NOT NULL
-      GROUP BY status;
-    `, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-});
-
-// Tempo Médio de Empréstimo por Tipo de Usuário
-ipcMain.handle('getTempoMedioUsuario', async () => {
-  return new Promise((resolve, reject) => {
-    db.query(`
-      SELECT Usuarios.tipo AS tipo_usuario,
-             AVG(DATEDIFF(dataDevolucao, dataEmprestimo)) AS media_dias
-      FROM Emprestimos
-      JOIN Usuarios ON Emprestimos.UsuarioId = Usuarios.id
-      WHERE dataDevolucao IS NOT NULL
-      GROUP BY Usuarios.tipo;
-    `, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-});
-
-// Livros Mais Populares
-ipcMain.handle('getLivrosPopulares', async () => {
-  return new Promise((resolve, reject) => {
-    db.query(`
-      SELECT Livro.titulo, COUNT(*) AS total
-      FROM Emprestimos
-      JOIN Livro ON Emprestimos.LivroId = Livro.id
-      GROUP BY Livro.id
-      ORDER BY total DESC
-      LIMIT 5;
-    `, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-});
-
-// Dias da Semana com Mais Empréstimos
-ipcMain.handle('getDiasSemanaMovimentados', async () => {
-  return new Promise((resolve, reject) => {
-    db.query(`
-      SELECT 
-        DAYOFWEEK(dataEmprestimo) AS dia_semana,
-        COUNT(*) AS total
-      FROM Emprestimos
-      GROUP BY dia_semana
-      ORDER BY dia_semana;
-    `, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-});
-
-// Ranking de Livros por Ano
-ipcMain.handle('getRankingLivrosAno', async () => {
-  return new Promise((resolve, reject) => {
-    db.query(`
-      SELECT 
-        Livro.titulo,
-        YEAR(Emprestimos.dataEmprestimo) AS ano,
-        COUNT(*) AS total_emprestimos
-      FROM Emprestimos
-      JOIN Livro ON Emprestimos.LivroId = Livro.id
-      GROUP BY Livro.titulo, ano
-      ORDER BY total_emprestimos DESC
-      LIMIT 10;
-    `, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-});
-
-
-
-
+  }})
+  
   createWindow()
+});
 
-  app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
+
+app.on('activate', function () {
+  // On macOS it's common to re-create a window in the app when the
+  // dock icon is clicked and there are no other windows open.
+  if (BrowserWindow.getAllWindows().length === 0) createWindow()
 })
 
-
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
+
+process.on?.('unhandledRejection', (reason, promise) => {
+  console.error('❌ Promessa rejeitada não tratada:', reason);
+});
+
+// Quit when all windows are closed, except on macOS. There, it's common
+// for applications and their menu bar to stay active until the user quits
+// explicitly with Cmd + Q.
+
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.

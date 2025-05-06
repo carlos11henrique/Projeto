@@ -6,7 +6,7 @@ import { DataTypes } from "sequelize";
  * @returns {Sequelize.Model} - O modelo de Emprestimo
  */
 export function EmprestimoModel(sequelize) {
-  const Emprestimo = sequelize.define('Emprestimo', {
+  const Emprestimo = sequelize.define('Loan', {
     
 id: {
       type: DataTypes.INTEGER,

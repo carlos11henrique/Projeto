@@ -5,7 +5,7 @@ import { DataTypes } from "sequelize";
  * @returns {Sequelize.Model} - O modelo de Livro
  */
 export function createModel(sequelize) {
-  const Livro = sequelize.define('Livro', {
+  const Livro = sequelize.define('Book', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
