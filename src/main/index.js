@@ -117,7 +117,7 @@ app.whenReady().then(() => {
             ELSE 'Em Atraso'
           END AS status,
           COUNT(*) AS total
-        FROM Emprestimos
+        FROM Loans
         WHERE dataDevolucao IS NOT NULL
         GROUP BY status;
       `, (err, rows) => {
@@ -131,10 +131,10 @@ app.whenReady().then(() => {
   ipcMain.handle('getTempoMedioUsuario', async () => {
     return new Promise((resolve, reject) => {
       sequelize.query(`
-        SELECT Usuarios.tipo AS tipo_usuario,
+        SELECT Users.tipo AS tipo_usuario,
               AVG(DATEDIFF(dataDevolucao, dataEmprestimo)) AS media_dias
-        FROM Emprestimos
-        JOIN Usuarios ON Emprestimos.UsuarioId = Usuarios.id
+        FROM Loans
+        JOIN Usuarios ON Loans.UsuarioId = Usuarios.id
         WHERE dataDevolucao IS NOT NULL
         GROUP BY Usuarios.tipo;
       `, (err, rows) => {
@@ -149,8 +149,8 @@ app.whenReady().then(() => {
     return new Promise((resolve, reject) => {
       sequelize.query(`
         SELECT Livro.titulo, COUNT(*) AS total
-        FROM Emprestimos
-        JOIN Livro ON Emprestimos.LivroId = Livro.id
+        FROM Loans
+        JOIN Livro ON Loans.LivroId = Livro.id
         GROUP BY Livro.id
         ORDER BY total DESC
         LIMIT 5;
@@ -184,10 +184,10 @@ app.whenReady().then(() => {
       sequelize.query(`
         SELECT 
           Livro.titulo,
-          YEAR(Emprestimos.dataEmprestimo) AS ano,
+          YEAR(Loans.dataEmprestimo) AS ano,
           COUNT(*) AS total_emprestimos
-        FROM Emprestimos
-        JOIN Livro ON Emprestimos.LivroId = Livro.id
+        FROM Loans
+        JOIN Livro ON Loans.LivroId = Livro.id
         GROUP BY Livro.titulo, ano
         ORDER BY total_emprestimos DESC
         LIMIT 10;
@@ -268,8 +268,8 @@ app.whenReady().then(() => {
         dataEmprestimo: data.dataEmprestimo,
         dataDevolucao: data.dataDevolucao,
         status: data.status,
-        LivroId: data.LivroId,
-        UsuarioId: data.UsuarioId
+        booksId: data.bookId,
+        userId: data.userId
       }, {
         where: { id: data.id }
       });
@@ -302,8 +302,8 @@ app.whenReady().then(() => {
   
   ipcMain.handle('getEmprestimo', async () => {
     try {
-      const emprestimos = await EmprestimoModel.findAll();
-      return emprestimos.map(e => e.dataValues);
+      const Loans = await EmprestimoModel.findAll();
+      return Loans.map(e => e.dataValues);
     } catch (error) {
       console.error('Erro em getEmprestimo:', error);
       throw error;
@@ -359,8 +359,8 @@ app.whenReady().then(() => {
   
 ipcMain.handle('getCategoria', async () => {
   try {
-    const categorias = await CategoriaModel.findAll();
-    return categorias.map(c => c.dataValues);
+    const Category = await CategoriaModel.findAll();
+    return Category.map(c => c.dataValues);
   } catch (error) {
     console.error('Erro em getCategorias:', error);
     throw error;

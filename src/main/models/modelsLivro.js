@@ -27,10 +27,7 @@ export function createModel(sequelize) {
       type: DataTypes.STRING,
       allowNull: false
     },
- genero : {
-      type: DataTypes.STRING,
-      allowNull: false
- },
+
     descricao: {
       type: DataTypes.STRING,
       allowNull: false

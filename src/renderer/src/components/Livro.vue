@@ -24,11 +24,20 @@
 
 
     <div>
-      <label for="editora" class="block mb-2 text-sm font-medium text-gray-900">Gênero</label>
-      <select v-model="novoLivro.genero" id="genero"
-  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+      <label for="genero" class="block mb-2 text-sm font-medium text-gray-900">Gênero</label>
+      <select
+  v-model="novoLivro.categoriaId"
+  id="categoriaId"
+  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+  >
   <option disabled value="">Selecione um gênero</option>
-  <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">{{ categoria.nome }}</option>
+  <option 
+    v-for="categoria in categorias" 
+    :key="categoria.id" 
+    :value="categoria.id"
+  >
+    {{ categoria.nome }}
+  </option>
 </select>
 
 </div>
@@ -95,7 +104,7 @@
     <td class="px-6 py-4">{{ livro.titulo }}</td>
     <td class="px-6 py-4">{{ livro.autor }}</td>
     <td class="px-6 py-4">{{ livro.editora }}</td>
-    <td class="px-6 py-4">{{ livro.genero }}</td>
+    <td class="px-6 py-4">{{ livro.categor }}</td>
     <td class="px-6 py-4">
       <img :src="livro.imagem" alt="Imagem do Livro" class="h-16 w-auto" />
     </td>
@@ -130,8 +139,8 @@ export default {
   descricao: "",
   exemplar: "",
   quantidade: 0,
-  genero: "",
-  imagem: ""
+  imagem: "",
+  categoriaId: '',
 },
 
     livros: [],
@@ -169,8 +178,8 @@ export default {
 
       if (
         livroBase.codigoLivro && livroBase.titulo && livroBase.autor &&
-        livroBase.editora && livroBase.genero && quantidade > 0
-      ) {
+        livroBase.editora && livroBase.categoriaId && quantidade > 0
+        ) {
         try {
           for (let i = 0; i < quantidade; i++) {
             const novoCodigo = `${codigoBase}${numeroInicial + i}`;
