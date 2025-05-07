@@ -96,10 +96,10 @@ app.whenReady().then(() => {
   ipcMain.handle('getPercentualUsuarios', async () => {
     return new Promise((resolve, reject) => {
       sequelize.query(`
-        SELECT Usuarios.tipo AS tipo_usuario, COUNT(*) AS total
-        FROM Emprestimos
-        JOIN Usuarios ON Emprestimos.UsuarioId = Usuarios.id
-        GROUP BY Usuarios.tipo;
+         SELECT Users.tipo AS tipo_usuario, COUNT(*) AS total
+    FROM Loans
+    JOIN Users ON Loans.UserId = Users.id
+    GROUP BY Users.tipo;
       `, (err, rows) => {
         if (err) reject(err);
         else resolve(rows);
@@ -245,30 +245,30 @@ app.whenReady().then(() => {
       throw error;
     }
   });
-  
+ ipcMain.on('createEmprestimo', async (event, emprestimo) => {
+   try {
+     await EmprestimoModel.create(emprestimo);
+     console.log('Emprestimo cadastrado com sucesso');
+   } catch (error) {
+     handleError(event, error, 'createEmprestimo');
+   }
+ }) 
+
+
   // Repetir padrão para Emprestimo
-  ipcMain.on('createEmprestimo', async (event, emprestimo) => {
-    try {
-      await EmprestimoModel.create(emprestimo);
-      console.log('Emprestimo cadastrado com sucesso');
-    } catch (error) {
-      handleError(event, error, 'createEmprestimo');
-    }
-  });
-  
   ipcMain.on('updateEmprestimo', async (event, data) => {
     try {
-      console.log('Dados recebidos para update:', data); // 👈 Ajuda a ver se o id tá vindo
+      console.log('Dados recebidos para update:', data);
   
       if (!data.id) {
         throw new Error('ID do empréstimo não fornecido.');
       }
   
-      await EmprestimoModel.update({
+      await Emprestimo.update({
         dataEmprestimo: data.dataEmprestimo,
         dataDevolucao: data.dataDevolucao,
         status: data.status,
-        booksId: data.bookId,
+        bookId: data.bookId,
         userId: data.userId
       }, {
         where: { id: data.id }
@@ -282,33 +282,43 @@ app.whenReady().then(() => {
   });
   
   
+  // 📌 Deletar empréstimo
   ipcMain.on('deleteEmprestimo', async (event, id) => {
     try {
-      await EmprestimoModel.destroy({ where: { id: id } });
+      await Emprestimo.destroy({ where: { id } });
       console.log('Emprestimo deletado com sucesso');
     } catch (error) {
       handleError(event, error, 'deleteEmprestimo');
     }
   });
   
+  
+  // 📌 Buscar empréstimo por ID
   ipcMain.on('buscarEmprestimo', async (event, id) => {
     try {
-      const emprestimo = await EmprestimoModel.findByPk(id);
+      const emprestimo = await Emprestimo.findByPk(id, {
+        include: [Livro, User]
+      });
       event.reply('emprestimo', emprestimo);
     } catch (error) {
       handleError(event, error, 'buscarEmprestimo');
     }
   });
   
+  
+  // 📌 Buscar todos os empréstimos
   ipcMain.handle('getEmprestimo', async () => {
     try {
-      const Loans = await EmprestimoModel.findAll();
-      return Loans.map(e => e.dataValues);
-    } catch (error) {
-      console.error('Erro em getEmprestimo:', error);
-      throw error;
-    }
-  });
+      const emprestimos = await EmprestimoModel.findAll();
+        return emprestimos.map(u => u.dataValues)
+
+      } catch (error) {
+        console.error('Erro em getEmprestimo:', error);
+        throw error;
+      }
+    });
+    
+  
   
   // Repetir padrão para User
   ipcMain.on('createUser', async (event, user) => {

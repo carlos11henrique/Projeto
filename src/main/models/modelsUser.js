@@ -47,9 +47,7 @@ export function UserModel(sequelize) {
       defaultValue: DataTypes.NOW
     }
     
-  }, {
-    timestamps: true,  
-    tableName: 'Usuarios', 
+  
   });
 
   return Usuario;
