@@ -128,31 +128,39 @@ export default {
     },
 
     async carregarLoans() {
-      try {
-        const loans = await window.api.getEmprestimo();
-        this.books.forEach(book => {
-          book.emprestadoPara = null;
-          book.dataDevolucao = null;
-          book.status = 'disponivel';
-          book.emprestimoId = null;
-        });
+  try {
+    const loans = await window.api.getEmprestimo();
 
-        loans.forEach(loan => {
-          if (loan.status === 'emprestado') {
-            const book = this.books.find(b => b.id === loan.LivroId);
-            const user = this.users.find(u => u.id === loan.UserId);
-            if (book) {
-              book.emprestadoPara = user || { nome: 'Desconhecido' };
-              book.dataDevolucao = new Date(loan.dataDevolucao).toLocaleDateString('pt-BR');
-              book.status = 'emprestado';
-              book.emprestimoId = loan.id;
-            }
-          }
-        });
-      } catch (error) {
-        console.error('Erro ao carregar empréstimos:', error);
+    // Garante que seja um array antes de continuar
+    if (!Array.isArray(loans)) {
+      console.error("Dados de empréstimos inválidos:", loans);
+      return;
+    }
+
+    this.books.forEach(book => {
+      book.emprestadoPara = null;
+      book.dataDevolucao = null;
+      book.status = 'disponivel';
+      book.loanId = null;
+    });
+
+    loans.forEach(loan => {
+      if (loan.status === 'emprestado') {
+        const book = this.books.find(b => b.id === loan.BookId || b.id === loan.LivroId);
+        const user = this.users.find(u => u.id === loan.UserId);
+        if (book) {
+          book.emprestadoPara = user || { nome: 'Desconhecido' };
+          book.dataDevolucao = new Date(loan.dataDevolucao).toLocaleDateString('pt-BR');
+          book.status = 'emprestado';
+          book.loanId = loan.id;
+        }
       }
-    },
+    });
+  } catch (error) {
+    console.error('Erro ao carregar empréstimos:', error);
+  }
+}
+,
 
     iniciarEmprestimo(book) {
       this.bookSelecionado = book;
@@ -168,98 +176,134 @@ export default {
 
     async finalizarEmprestimo() {
   try {
-    // Verifique se tanto o livro quanto o usuário estão selecionados
     if (!this.bookSelecionado || !this.userSelecionado) {
-      console.error("É necessário selecionar um livro e um usuário.");
-      alert("Por favor, selecione um livro e um usuário.");
-      return;  // Impede o envio da requisição se algum campo estiver faltando
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos obrigatórios',
+        text: 'Por favor, selecione um livro e um usuário.',
+      });
+      return;
     }
 
-    // Se ambos os campos estiverem preenchidos, continua com o processo de criação do empréstimo
     const hoje = new Date();
     const devolucao = new Date();
-    devolucao.setDate(hoje.getDate() + 14); // Defina o prazo de devolução para 14 dias a partir de hoje
+    devolucao.setDate(hoje.getDate() + 14);
     const dataFormatada = devolucao.toLocaleDateString('pt-BR');
 
-    // Crie o empréstimo via API
-    await window.api.createEmprestimo({
-      LivroId: this.bookSelecionado.id,
-      UsuarioId: this.userSelecionado.id,
-      dataDevolucao: devolucao.toISOString().split('T')[0], // Formato adequado para dataDevolucao
-      status: 'emprestado'
+    const confirmacao = await Swal.fire({
+      title: 'Confirmar Empréstimo?',
+      html: `
+        <strong>Livro:</strong> "${this.bookSelecionado.titulo}"<br/>
+        <strong>Usuário:</strong> ${this.userSelecionado.nome}<br/>
+        <strong>Devolução:</strong> ${dataFormatada}
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, emprestar',
+      cancelButtonText: 'Cancelar',
     });
 
-    // Exiba a confirmação do sucesso
-    Swal.fire({
-      title: '📚 Empréstimo Realizado!',
-      html: `Livro: "${this.bookSelecionado.titulo}"<br/>Usuário: ${this.userSelecionado.nome}<br/>Devolução até: ${dataFormatada}`,
-      icon: 'success',
-      confirmButtonText: 'Ok',
-    });
+    if (confirmacao.isConfirmed) {
+      await window.api.createEmprestimo({
+        BookId: this.bookSelecionado.id,
+        UserId: this.userSelecionado.id,
+        dataDevolucao: devolucao.toISOString().split('T')[0],
+        status: 'emprestado'
+      });
 
-    // Limpeza dos campos após o empréstimo ser realizado
-    this.bookSelecionado = null;
-    this.userSelecionado = null;
+      Swal.fire({
+        title: '📚 Empréstimo Realizado!',
+        html: `Livro: "${this.bookSelecionado.titulo}"<br/>Usuário: ${this.userSelecionado.nome}<br/>Devolução até: ${dataFormatada}`,
+        icon: 'success',
+        confirmButtonText: 'Ok',
+      });
 
-    // Recarregue os empréstimos, caso necessário
-    await this.carregarLoans();
+      this.bookSelecionado = null;
+      this.userSelecionado = null;
 
+      await this.carregarLoans();
+    }
   } catch (error) {
     console.error('Erro ao criar empréstimo:', error);
+    Swal.fire('Erro', 'Não foi possível realizar o empréstimo.', 'error');
   }
 },
 
 
-    async devolverLivro(book) {
-      try {
-        await window.api.updateEmprestimo({
-          id: book.emprestimoId,
-          LivroId: book.id,
-          dataDevolucao: new Date().toISOString().split('T')[0],
-          devolvido: true,
-          status: 'disponivel'
-        });
+async devolverLivro(book) {
+  const confirm = await Swal.fire({
+    title: 'Tem certeza?',
+    html: `Deseja marcar o livro <strong>"${book.titulo}"</strong> como devolvido?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sim, devolver',
+    cancelButtonText: 'Não',
+  });
 
-        Swal.fire({
-          title: '✅ Livro Devolvido!',
-          html: `<strong>Título:</strong> "${book.titulo}"<br/><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}`,
-          icon: 'info',
-          confirmButtonText: 'Ok',
-        });
+  if (confirm.isConfirmed) {
+    try {
+      await window.api.updateEmprestimo({
+        id: book.loanId,
+        LivroId: book.id,
+        dataDevolucao: new Date().toISOString().split('T')[0],
+        devolvido: true,
+        status: 'disponivel'
+      });
 
-        await this.carregarLoans();
-      } catch (error) {
-        console.error('Erro ao devolver livro:', error);
-      }
-    },
+      Swal.fire({
+        title: '✅ Livro Devolvido!',
+        html: `<strong>Título:</strong> "${book.titulo}"<br/><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}`,
+        icon: 'info',
+        confirmButtonText: 'Ok',
+      });
 
-    async aumentarPrazo(book) {
-      if (!book.dataDevolucao || !book.emprestimoId) return;
-      try {
-        const partes = book.dataDevolucao.split('/');
-        const dataISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
-        const novaData = new Date(dataISO);
-        novaData.setDate(novaData.getDate() + 7);
+      await this.carregarLoans();
+    } catch (error) {
+      console.error('Erro ao devolver livro:', error);
+    }
+  }
+},
 
-        await window.api.updateEmprestimo({
-          id: book.emprestimoId,
-          LivroId: book.id,
-          dataDevolucao: novaData.toISOString().split('T')[0],
-          status: 'emprestado'
-        });
 
-        Swal.fire({
-          title: '📅 Prazo Estendido!',
-          html: `Livro: "${book.titulo}"<br/>Nova data de devolução: ${novaData.toLocaleDateString('pt-BR')}`,
-          icon: 'success',
-          confirmButtonText: 'Entendido',
-        });
+async aumentarPrazo(book) {
+  if (!book.dataDevolucao || !book.loanId) return;
 
-        await this.carregarLoans();
-      } catch (error) {
-        console.error('Erro ao atualizar empréstimo:', error);
-      }
-    },
+  const confirm = await Swal.fire({
+    title: 'Aumentar prazo?',
+    html: `Deseja estender o prazo do livro <strong>"${book.titulo}"</strong> por mais 7 dias?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sim, estender',
+    cancelButtonText: 'Não',
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  try {
+    const partes = book.dataDevolucao.split('/');
+    const dataISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+    const novaData = new Date(dataISO);
+    novaData.setDate(novaData.getDate() + 7);
+
+    await window.api.updateEmprestimo({
+      id: book.loanId,
+      LivroId: book.id,
+      dataDevolucao: novaData.toISOString().split('T')[0],
+      status: 'emprestado'
+    });
+
+    Swal.fire({
+      title: '📅 Prazo Estendido!',
+      html: `Livro: "${book.titulo}"<br/>Nova data de devolução: ${novaData.toLocaleDateString('pt-BR')}`,
+      icon: 'success',
+      confirmButtonText: 'Entendido',
+    });
+
+    await this.carregarLoans();
+  } catch (error) {
+    console.error('Erro ao atualizar empréstimo:', error);
+  }
+},
 
     isAtrasado(dataDevolucao) {
       if (!dataDevolucao) return false;

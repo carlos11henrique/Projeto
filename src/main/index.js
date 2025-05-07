@@ -245,19 +245,14 @@ app.whenReady().then(() => {
       throw error;
     }
   });
-ipcMain.on('createEmprestimo', async (event, emprestimo) => {
-  try {
-    await EmprestimoModel.create({
-      dataEmprestimo: emprestimo.dataEmprestimo,
-      dataDevolucao: emprestimo.dataDevolucao,
-      status: emprestimo.status,
-      BookId: Books.bookId, // Certo: sem snake_case
-      UserId: Users.userId
-    });
-  } catch (error) {
-    handleError(event, error, 'createEmprestimo');
-  }
-});
+  ipcMain.on('createEmprestimo', async (event, loans) => {
+    try {
+      await EmprestimoModel.create(loans);
+      console.log('Empréstimo cadastrado com sucesso');
+    } catch (error) {
+      handleError(event, error, 'createEmprestimo');
+    }
+  });
 
 
 
@@ -287,7 +282,6 @@ ipcMain.on('createEmprestimo', async (event, emprestimo) => {
       event.reply('updateEmprestimoResponse', { sucesso: true });
     } catch (error) {
       console.error('Erro em updateEmprestimo:', error);
-      event.reply('updateEmprestimoResponse', { sucesso: false, erro: error.message });
     }
   });
   
