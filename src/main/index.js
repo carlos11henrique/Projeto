@@ -245,14 +245,20 @@ app.whenReady().then(() => {
       throw error;
     }
   });
- ipcMain.on('createEmprestimo', async (event, emprestimo) => {
-   try {
-     await EmprestimoModel.create(emprestimo);
-     console.log('Emprestimo cadastrado com sucesso');
-   } catch (error) {
-     handleError(event, error, 'createEmprestimo');
-   }
- }) 
+ipcMain.on('createEmprestimo', async (event, emprestimo) => {
+  try {
+    await EmprestimoModel.create({
+      dataEmprestimo: emprestimo.dataEmprestimo,
+      dataDevolucao: emprestimo.dataDevolucao,
+      status: emprestimo.status,
+      BookId: Books.bookId, // Certo: sem snake_case
+      UserId: Users.userId
+    });
+  } catch (error) {
+    handleError(event, error, 'createEmprestimo');
+  }
+});
+
 
 
   // Repetir padrão para Emprestimo
@@ -264,14 +270,18 @@ app.whenReady().then(() => {
         throw new Error('ID do empréstimo não fornecido.');
       }
   
-      await Emprestimo.update({
+      const emprestimo = await EmprestimoModel.findByPk(data.id);
+  
+      if (!emprestimo) {
+        throw new Error('Empréstimo não encontrado.');
+      }
+  
+      await emprestimo.update({
         dataEmprestimo: data.dataEmprestimo,
         dataDevolucao: data.dataDevolucao,
         status: data.status,
-        bookId: data.bookId,
-        userId: data.userId
-      }, {
-        where: { id: data.id }
+        BookId: data.bookId, // atenção: deve ser 'BookId' se for o nome da foreign key
+        UserId: data.userId
       });
   
       event.reply('updateEmprestimoResponse', { sucesso: true });
@@ -309,15 +319,21 @@ app.whenReady().then(() => {
   // 📌 Buscar todos os empréstimos
   ipcMain.handle('getEmprestimo', async () => {
     try {
-      const emprestimos = await EmprestimoModel.findAll();
-        return emprestimos.map(u => u.dataValues)
-
-      } catch (error) {
-        console.error('Erro em getEmprestimo:', error);
-        throw error;
-      }
-    });
-    
+      const emprestimos = await EmprestimoModel.findAll({
+        include: [
+          { model: LivroModel, as: 'Book' },
+          { model: UserModel, as: 'User' }
+        ]
+      });
+  
+      console.log(emprestimos);
+  
+      return emprestimos.map(e => e.toJSON());
+    } catch (error) {
+      console.error('Erro em getEmprestimo:', error);
+      throw error;
+    }
+  });
   
   
   // Repetir padrão para User

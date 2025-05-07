@@ -13,7 +13,7 @@
           <th class="px-6 py-3">Código</th>
           <th class="px-6 py-3">Título</th>
           <th class="px-6 py-3">Autor</th>
-          <th class="px-6 py-3">Genero</th>
+          <th class="px-6 py-3">Gênero</th>
           <th class="px-6 py-3">Exemplares</th>
           <th class="px-6 py-3">Usuário com Livro</th>
           <th class="px-6 py-3">Data de Devolução</th>
@@ -21,57 +21,51 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(livro, index) in filteredLivros" :key="index" class="border-b">
-          <td class="px-6 py-4">{{ livro.codigoLivro }}</td>
-          <td class="px-6 py-4">{{ livro.titulo }}</td>
-          <td class="px-6 py-4">{{ livro.autor }}</td>
-          <td class="px-6 py-4">{{ livro.genero }}</td>
-          <td class="px-6 py-4">{{ livro.exemplar }}</td>
-          <td class="px-6 py-4">{{ livro.emprestadoPara ? livro.emprestadoPara.nome : '-' }}</td>
-          <td
-            class="px-6 py-4"
-            :class="{ 'text-red-600 font-semibold': isAtrasado(livro.dataDevolucao) }"
-          >
-            {{ livro.dataDevolucao || '-' }}
+        <tr v-for="(book, index) in filteredBooks" :key="index" class="border-b">
+          <td class="px-6 py-4">{{ book.codigoLivro }}</td>
+          <td class="px-6 py-4">{{ book.titulo }}</td>
+          <td class="px-6 py-4">{{ book.autor }}</td>
+          <td class="px-6 py-4">{{ book.genero }}</td>
+          <td class="px-6 py-4">{{ book.exemplar }}</td>
+          <td class="px-6 py-4">{{ book.emprestadoPara ? book.emprestadoPara.nome : '-' }}</td>
+          <td class="px-6 py-4" :class="{ 'text-red-600 font-semibold': isAtrasado(book.dataDevolucao) }">
+            {{ book.dataDevolucao || '-' }}
           </td>
           <td class="px-6 py-4">
-            <button v-if="!livro.emprestadoPara" @click="iniciarEmprestimo(livro)" class="bg-blue-500 text-white px-3 py-1 rounded">Emprestar</button>
-            <button v-else @click="devolverLivro(livro)" class="bg-red-500 text-white px-3 py-1 rounded">Devolver</button>
-            <button v-if="livro.emprestadoPara" @click="aumentarPrazo(livro)" class="bg-yellow-500 text-white px-3 py-1 rounded ml-2">Aumentar Prazo</button>
+            <button v-if="!book.emprestadoPara" @click="iniciarEmprestimo(book)" class="bg-blue-500 text-white px-3 py-1 rounded">Emprestar</button>
+            <button v-else @click="devolverLivro(book)" class="bg-red-500 text-white px-3 py-1 rounded">Devolver</button>
+            <button v-if="book.emprestadoPara" @click="aumentarPrazo(book)" class="bg-yellow-500 text-white px-3 py-1 rounded ml-2">Aumentar Prazo</button>
           </td>
         </tr>
       </tbody>
     </table>
 
-    <div v-if="livroSelecionado" class="mt-6 p-4 border rounded bg-gray-100">
+    <!-- Detalhes do Livro Selecionado -->
+    <div v-if="bookSelecionado" class="mt-6 p-4 border rounded bg-gray-100">
       <h3 class="text-lg font-semibold">Livro Selecionado</h3>
-      <p><strong>Título:</strong> {{ livroSelecionado.titulo }}</p>
-      <p><strong>Autor:</strong> {{ livroSelecionado.autor }}</p>
-      <p><strong>Gênero:</strong> {{ livroSelecionado.genero }}</p>
-      <p><strong>Código:</strong> {{ livroSelecionado.codigoLivro }}</p>
-      <p><strong>Exemplares:</strong> {{ livroSelecionado.exemplar }}</p>
-      <p><strong>Data de Devolução:</strong> {{ livroSelecionado.dataDevolucao || 'Não Emprestado' }}</p>
-      <p><strong>Usuário:</strong> {{ livroSelecionado.emprestadoPara ? livroSelecionado.emprestadoPara.nome : 'Ninguém' }}</p>
-      <p><strong>Situação do Livro :</strong> {{ livroSelecionado.status || (livroSelecionado.emprestadoPara ? 'Emprestado' : 'Disponível') }}</p>
+      <p><strong>Título:</strong> {{ bookSelecionado.titulo }}</p>
+      <p><strong>Autor:</strong> {{ bookSelecionado.autor }}</p>
+      <p><strong>Gênero:</strong> {{ bookSelecionado.genero }}</p>
+      <p><strong>Código:</strong> {{ bookSelecionado.codigoLivro }}</p>
+      <p><strong>Exemplares:</strong> {{ bookSelecionado.exemplar }}</p>
+      <p><strong>Data de Devolução:</strong> {{ bookSelecionado.dataDevolucao || 'Não Emprestado' }}</p>
+      <p><strong>Usuário:</strong> {{ bookSelecionado.emprestadoPara ? bookSelecionado.emprestadoPara.nome : 'Ninguém' }}</p>
+      <p><strong>Situação do Livro:</strong> {{ bookSelecionado.status || (bookSelecionado.emprestadoPara ? 'Emprestado' : 'Disponível') }}</p>
 
+      <!-- Seleção de Usuário para Empréstimo -->
       <div class="mt-4">
         <h3 class="text-lg font-semibold">Selecionar Usuário</h3>
         <input v-model="searchUsuario" type="text" placeholder="Matrícula, nome ou CPF" class="mt-1 p-2 border rounded-md w-full" />
-
-        <ul v-if="filteredUsuarios.length" class="mt-2 border rounded bg-white max-h-32 overflow-y-auto">
-          <li v-for="usuario in filteredUsuarios" :key="usuario.matricula" @click="selecionarUsuario(usuario)" class="p-2 hover:bg-gray-200 cursor-pointer">
-            {{ usuario.nome }} ({{ usuario.matricula }})
+        <ul v-if="filteredUsers.length" class="mt-2 border rounded bg-white max-h-32 overflow-y-auto">
+          <li v-for="user in filteredUsers" :key="user.matricula" @click="selecionarUsuario(user)" class="p-2 hover:bg-gray-200 cursor-pointer">
+            {{ user.nome }} ({{ user.matricula }})
           </li>
         </ul>
-
-        <button v-if="usuarioSelecionado" @click="finalizarEmprestimo" class="mt-4 bg-green-500 text-white px-4 py-2 rounded">Confirmar Empréstimo</button>
+        <button v-if="userSelecionado" @click="finalizarEmprestimo" class="mt-4 bg-green-500 text-white px-4 py-2 rounded">Confirmar Empréstimo</button>
       </div>
     </div>
   </div>
 </template>
-
-
-
 
 <script>
 import Swal from 'sweetalert2';
@@ -79,23 +73,24 @@ import Swal from 'sweetalert2';
 export default {
   data() {
     return {
-      livros: [],
-      usuarios: [],
+      books: [],
+      users: [],
+      loans: [],
       searchQuery: "",
       searchUsuario: "",
-      livroSelecionado: null,
-      usuarioSelecionado: null,
+      bookSelecionado: null,
+      userSelecionado: null,
     };
   },
   computed: {
-    filteredLivros() {
+    filteredBooks() {
       const query = this.searchQuery.toLowerCase();
-      const livrosFiltrados = this.livros.filter(livro => {
-        const codigoLivro = livro.codigoLivro || '';
+      const livrosFiltrados = this.books.filter(livro => {
+        const codigo = livro.codigoLivro || '';
         const titulo = livro.titulo || '';
         const autor = livro.autor || '';
         return (
-          codigoLivro.toString().includes(this.searchQuery) ||
+          codigo.toString().includes(this.searchQuery) ||
           titulo.toLowerCase().includes(query) ||
           autor.toLowerCase().includes(query)
         );
@@ -103,219 +98,184 @@ export default {
 
       const emprestados = livrosFiltrados.filter(livro => livro.status === 'emprestado');
       const disponiveis = livrosFiltrados.filter(livro => livro.status !== 'emprestado');
-
       return [...emprestados, ...disponiveis];
     },
-    filteredUsuarios() {
-      return this.usuarios.filter(usuario =>
-        usuario.nome.toLowerCase().includes(this.searchUsuario.toLowerCase()) ||
-        usuario.matricula.toLowerCase().includes(this.searchUsuario.toLowerCase()) ||
-        usuario.cpf.includes(this.searchUsuario)
+    filteredUsers() {
+      return this.users.filter(user =>
+        user.nome.toLowerCase().includes(this.searchUsuario.toLowerCase()) ||
+        user.matricula.toLowerCase().includes(this.searchUsuario.toLowerCase()) ||
+        user.cpf.includes(this.searchUsuario)
       );
     }
   },
   methods: {
-
-    
-    async carregarLivro() {
+    async carregarBooks() {
       try {
         const livros = await window.api.getLivro();
-        this.livros = livros.map(livro => ({ ...livro, status: 'disponivel' }));
+        this.books = livros.map(livro => ({ ...livro, status: 'disponivel' }));
       } catch (error) {
         console.error('Erro ao carregar livros:', error);
       }
     },
 
-    async carregarUsuario() {
+    async carregarUsers() {
       try {
         const usuarios = await window.api.getUser();
-        this.usuarios = usuarios;
+        this.users = usuarios;
       } catch (error) {
         console.error('Erro ao carregar usuários:', error);
       }
     },
 
-    async carregarEmprestimos() {
-  try {
-    const emprestimos = await window.api.getEmprestimo();
+    async carregarLoans() {
+      try {
+        const loans = await window.api.getEmprestimo();
+        this.books.forEach(book => {
+          book.emprestadoPara = null;
+          book.dataDevolucao = null;
+          book.status = 'disponivel';
+          book.emprestimoId = null;
+        });
 
-    this.livros.forEach(livro => {
-      const emprestimoAtivo = emprestimos.find(e => e.LivroId === livro.id && e.status === 'emprestado');
-      if (emprestimoAtivo) {
-        const usuario = this.usuarios.find(u => u.id === emprestimoAtivo.UsuarioId);
-        livro.emprestadoPara = usuario || { nome: 'Desconhecido' };
-
-        // ✅ Formatar a data de devolução para o formato brasileiro
-        const dataFormatada = new Date(emprestimoAtivo.dataDevolucao).toLocaleDateString('pt-BR');
-        livro.dataDevolucao = dataFormatada;
-
-        livro.status = 'emprestado';
-        livro.emprestimoId = emprestimoAtivo.id;
-      } else {
-        livro.emprestadoPara = null;
-        livro.dataDevolucao = null;
-        livro.status = 'disponivel';
-        livro.emprestimoId = null;
+        loans.forEach(loan => {
+          if (loan.status === 'emprestado') {
+            const book = this.books.find(b => b.id === loan.LivroId);
+            const user = this.users.find(u => u.id === loan.UserId);
+            if (book) {
+              book.emprestadoPara = user || { nome: 'Desconhecido' };
+              book.dataDevolucao = new Date(loan.dataDevolucao).toLocaleDateString('pt-BR');
+              book.status = 'emprestado';
+              book.emprestimoId = loan.id;
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao carregar empréstimos:', error);
       }
-    });
-  } catch (error) {
-    console.error('Erro ao carregar empréstimos:', error);
-  }
-},
-
-
-
-    iniciarEmprestimo(livro) {
-      this.livroSelecionado = livro;
-      this.searchUsuario = '';
-      this.usuarioSelecionado = null;
-      this.carregarUsuario();
     },
 
-    selecionarUsuario(usuario) {
-      this.usuarioSelecionado = usuario;
+    iniciarEmprestimo(book) {
+      this.bookSelecionado = book;
+      this.searchUsuario = '';
+      this.userSelecionado = null;
+      this.carregarUsers();
+    },
+
+    selecionarUsuario(user) {
+      this.userSelecionado = user;
       this.searchUsuario = '';
     },
 
     async finalizarEmprestimo() {
-  if (this.livroSelecionado && this.usuarioSelecionado) {
-    const dataAtual = new Date();
-    const novaData = new Date();
-    novaData.setDate(dataAtual.getDate() + 14);
-    const dataFormatada = novaData.toLocaleDateString('pt-BR');
-
-    try {
-      await window.api.createEmprestimo({
-        LivroId: this.livroSelecionado.id,
-        UsuarioId: this.usuarioSelecionado.id,
-        dataDevolucao: novaData.toISOString().split('T')[0],
-        status: 'emprestado'
-      });
-
-      // ✅ SweetAlert2
-      Swal.fire({
-        title: '📚 Empréstimo Realizado!',
-        html: `
-          <div style="font-size: 16px;">
-            <strong>Livro:</strong> <span style="color: #3b82f6;">"${this.livroSelecionado.titulo}"</span><br/>
-            <strong>Usuário:</strong> ${this.usuarioSelecionado.nome}<br/>
-            <strong>Devolução até:</strong> <span style="color: #10b981;">${dataFormatada}</span>
-          </div>
-        `,
-        icon: 'success',
-        confirmButtonText: 'Ok',
-        confirmButtonColor: '#10b981',
-        background: '#f0fdf4',
-        customClass: {
-          popup: 'rounded-xl shadow-lg',
-        }
-      });
-
-      this.livroSelecionado = null;
-      this.usuarioSelecionado = null;
-
-      await this.carregarEmprestimos();
-    } catch (error) {
-      console.error('Erro ao criar empréstimo:', error);
+  try {
+    // Verifique se tanto o livro quanto o usuário estão selecionados
+    if (!this.bookSelecionado || !this.userSelecionado) {
+      console.error("É necessário selecionar um livro e um usuário.");
+      alert("Por favor, selecione um livro e um usuário.");
+      return;  // Impede o envio da requisição se algum campo estiver faltando
     }
-  }
-},
 
+    // Se ambos os campos estiverem preenchidos, continua com o processo de criação do empréstimo
+    const hoje = new Date();
+    const devolucao = new Date();
+    devolucao.setDate(hoje.getDate() + 14); // Defina o prazo de devolução para 14 dias a partir de hoje
+    const dataFormatada = devolucao.toLocaleDateString('pt-BR');
 
-async devolverLivro(livro) {
-  try {
-    await window.api.updateEmprestimo({
-      id: livro.emprestimoId,
-      LivroId: livro.id,
-      dataDevolucao: new Date().toISOString().split('T')[0],
-      devolvido: true,
-      status: 'disponivel'
-    });
-
-    Swal.fire({
-      title: '✅ Livro Devolvido!',
-      html: `
-        <div style="font-size: 16px;">
-          <strong>Título:</strong> <span style="color: #3b82f6;">"${livro.titulo}"</span><br/>
-          <strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}
-        </div>
-      `,
-      icon: 'info',
-      confirmButtonText: 'Ok',
-      confirmButtonColor: '#3b82f6',
-      background: '#eff6ff',
-      customClass: {
-        popup: 'rounded-xl shadow-lg',
-      }
-    });
-
-    await this.carregarEmprestimos();
-  } catch (error) {
-    console.error('Erro ao devolver livro:', error);
-  }
-},
-
-
-isAtrasado(dataDevolucao) {
-  if (!dataDevolucao) return false;
-
-  const partes = dataDevolucao.split('/');
-  const dataFormatada = new Date(`${partes[2]}-${partes[1]}-${partes[0]}`);
-  const hoje = new Date();
-
-  hoje.setHours(0, 0, 0, 0);
-  dataFormatada.setHours(0, 0, 0, 0);
-
-  return dataFormatada < hoje;
-},
-
-async aumentarPrazo(livro) {
-  if (!livro.dataDevolucao || !livro.emprestimoId) return;
-
-  try {
-    // ✅ Corrigir o formato "dd/mm/aaaa" para Date válida
-    const partes = livro.dataDevolucao.split('/');
-    const dataISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
-    const novaData = new Date(dataISO);
-
-    // ✅ Adicionar 7 dias
-    novaData.setDate(novaData.getDate() + 7);
-
-    await window.api.updateEmprestimo({
-      id: livro.emprestimoId,
-      LivroId: livro.id,
-      dataDevolucao: novaData.toISOString().split('T')[0],
+    // Crie o empréstimo via API
+    await window.api.createEmprestimo({
+      LivroId: this.bookSelecionado.id,
+      UsuarioId: this.userSelecionado.id,
+      dataDevolucao: devolucao.toISOString().split('T')[0], // Formato adequado para dataDevolucao
       status: 'emprestado'
     });
 
+    // Exiba a confirmação do sucesso
     Swal.fire({
-      title: '📅 Prazo Estendido!',
-      html: `
-        <div style="font-size: 16px;">
-          <strong>Livro:</strong> <span style="color: #3b82f6;">"${livro.titulo}"</span><br/>
-          <strong>Nova data de devolução:</strong> <span style="color: #10b981;">${novaData.toLocaleDateString('pt-BR')}</span>
-        </div>
-      `,
+      title: '📚 Empréstimo Realizado!',
+      html: `Livro: "${this.bookSelecionado.titulo}"<br/>Usuário: ${this.userSelecionado.nome}<br/>Devolução até: ${dataFormatada}`,
       icon: 'success',
-      confirmButtonText: 'Entendido',
-      confirmButtonColor: '#10b981',
-      background: '#ecfdf5',
-      customClass: {
-        popup: 'rounded-xl shadow-lg',
-      }
+      confirmButtonText: 'Ok',
     });
 
-    await this.carregarEmprestimos();
-  } catch (error) {
-    console.error('Erro ao atualizar empréstimo:', error);
-  }
-}
+    // Limpeza dos campos após o empréstimo ser realizado
+    this.bookSelecionado = null;
+    this.userSelecionado = null;
 
+    // Recarregue os empréstimos, caso necessário
+    await this.carregarLoans();
+
+  } catch (error) {
+    console.error('Erro ao criar empréstimo:', error);
+  }
+},
+
+
+    async devolverLivro(book) {
+      try {
+        await window.api.updateEmprestimo({
+          id: book.emprestimoId,
+          LivroId: book.id,
+          dataDevolucao: new Date().toISOString().split('T')[0],
+          devolvido: true,
+          status: 'disponivel'
+        });
+
+        Swal.fire({
+          title: '✅ Livro Devolvido!',
+          html: `<strong>Título:</strong> "${book.titulo}"<br/><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}`,
+          icon: 'info',
+          confirmButtonText: 'Ok',
+        });
+
+        await this.carregarLoans();
+      } catch (error) {
+        console.error('Erro ao devolver livro:', error);
+      }
+    },
+
+    async aumentarPrazo(book) {
+      if (!book.dataDevolucao || !book.emprestimoId) return;
+      try {
+        const partes = book.dataDevolucao.split('/');
+        const dataISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+        const novaData = new Date(dataISO);
+        novaData.setDate(novaData.getDate() + 7);
+
+        await window.api.updateEmprestimo({
+          id: book.emprestimoId,
+          LivroId: book.id,
+          dataDevolucao: novaData.toISOString().split('T')[0],
+          status: 'emprestado'
+        });
+
+        Swal.fire({
+          title: '📅 Prazo Estendido!',
+          html: `Livro: "${book.titulo}"<br/>Nova data de devolução: ${novaData.toLocaleDateString('pt-BR')}`,
+          icon: 'success',
+          confirmButtonText: 'Entendido',
+        });
+
+        await this.carregarLoans();
+      } catch (error) {
+        console.error('Erro ao atualizar empréstimo:', error);
+      }
+    },
+
+    isAtrasado(dataDevolucao) {
+      if (!dataDevolucao) return false;
+      const partes = dataDevolucao.split('/');
+      const data = new Date(`${partes[2]}-${partes[1]}-${partes[0]}`);
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      data.setHours(0, 0, 0, 0);
+      return data < hoje;
+    }
   },
+
   async mounted() {
-    await this.carregarLivro();
-    await this.carregarUsuario();
-    await this.carregarEmprestimos();
+    await this.carregarBooks();
+    await this.carregarUsers();
+    await this.carregarLoans();
   }
 };
 </script>
