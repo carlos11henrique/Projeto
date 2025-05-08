@@ -26,6 +26,10 @@ const api = {
 
   // Grafico
 
+  salvarImagemBuffer: (buffer, nomeImagem) => ipcRenderer.invoke('salvarImagemBuffer', buffer, nomeImagem),
+
+
+
 
   getEvolucaoEmprestimos: () => ipcRenderer.invoke('getEvolucaoEmprestimos'),
   getEmprestimosCategoria: () => ipcRenderer.invoke('getEmprestimosCategoria'),

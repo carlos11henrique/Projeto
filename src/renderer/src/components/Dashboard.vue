@@ -1,19 +1,21 @@
 <template>
   <div>
     <h2>Estatísticas da Biblioteca</h2>
-    <highcharts :options="pieChartOptions" />
-    <highcharts :options="barChartOptions" />
-    <highcharts :options="lineChartOptions" />
-    <highcharts :options="stepChartOptions" />
+    <Chart type="pie" :data="pieChartOptions.data" :options="pieChartOptions.options" />
+    <Chart type="bar" :data="barChartOptions.data" :options="barChartOptions.options" />
+    <Chart type="line" :data="lineChartOptions.data" :options="lineChartOptions.options" />
+    <Chart type="line" :data="stepChartOptions.data" :options="stepChartOptions.options" />
     <Chart type="bar" :data="chartDiasSemana.data" :options="chartDiasSemana.options" />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
-import Highcharts from "highcharts";
+import Highcharts from 'highcharts';
 import HighchartsVue from "highcharts-vue";
-import Chart from "primevue/chart";
+import Chart from 'primevue/chart'
+
+const highcharts = Highcharts;
 
 // Gráficos Highcharts
 const pieChartOptions = ref({});
@@ -150,7 +152,6 @@ onMounted(async () => {
   const devolucoesPrazo = await window.api.getDevolucoesPrazo();
   const evolucao = await window.api.getEvolucaoEmprestimos();
   const diasSemana = await window.api.getDiasSemanaMovimentados();
-  const percentuais = await window.api.getPercentuais();
   const maisEmprestados = await window.api.getLivrosMaisEmprestados();
   const tempoMedio = await window.api.getTempoMedio();
 
@@ -160,8 +161,7 @@ onMounted(async () => {
   createHighchartsLine(evolucao);
   createHighchartsBar(maisEmprestados);
   createHighchartsStep(tempoMedio);
-  createHighchartsDiasSemana(diasSemana);
-  createHighchartsPercentuais(percentuais);
+
 
 
   // Preencher gráfico de dias da semana

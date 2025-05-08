@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain,protocol } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -210,6 +210,28 @@ LIMIT 10;
   });
 
 
+
+  ipcMain.handle('salvarImagemBuffer', async (event, buffer, nomeImagem) => {
+    const fs = require('fs');
+    const path = require('path');
+  
+    const destino = path.join(__dirname, 'storage/imagens', nomeImagem);
+  
+    try {
+      fs.writeFileSync(destino, Buffer.from(buffer));
+      return destino; // retorna caminho salvo
+    } catch (err) {
+      console.error('Erro ao salvar imagem:', err);
+      return '';
+    }
+  });
+  
+  app.whenReady().then(() => {
+    protocol.handle('atom', (request) => {
+      const filePath = request.url.slice('atom:/'.length)
+      return net.fetch(url.pathToFileURL(path.join(__dirname, filePath)).toString())
+    })
+  });
   
   ipcMain.on('createLivro', async (event, book) => {
     try {

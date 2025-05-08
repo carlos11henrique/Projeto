@@ -68,7 +68,13 @@
     </div>
     <div class="md:col-span-2">
       <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">Upload Imagem</label>
-<input class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" id="file_input" type="file">
+      <input
+  ref="fileInput"
+  @change="handleImagemSelecionada"
+  class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50"
+  id="file_input"
+  type="file"
+/>
     </div>
   </div>
   <button type="submit"
@@ -104,10 +110,11 @@
     <td class="px-6 py-4">{{ livro.titulo }}</td>
     <td class="px-6 py-4">{{ livro.autor }}</td>
     <td class="px-6 py-4">{{ livro.editora }}</td>
-    <td class="px-6 py-4">{{ livro.categor }}</td>
+    <td class="px-6 py-4">{{ livro.categoriaId }}</td>
     <td class="px-6 py-4">
-      <img :src="livro.imagem" alt="Imagem do Livro" class="h-16 w-auto" />
-    </td>
+  <img v-if="livro.imagem" :src="'file://' + livro.imagem" alt="Imagem do Livro" class="h-16 w-auto" />
+</td>
+
     <td class="px-6 py-4">
       <button @click="editarLivro(index)" class="text-blue-600 hover:underline">Editar</button>
       <button @click="removerLivro(index)" class="text-red-600 hover:underline ml-3">Remover</button>
@@ -140,7 +147,6 @@ export default {
   exemplar: "",
   quantidade: 0,
   imagem: "",
-  categoriaId: '',
 },
 
     livros: [],
@@ -162,6 +168,27 @@ export default {
     }
   },
   methods: {
+   async handleImagemSelecionada(event) {
+    const file = event.target.files[0];
+if (file) {
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const buffer = e.target.result;
+    const nomeImagem = `${this.novoLivro.codigoLivro || 'livro'}_${Date.now()}${file.name.substring(file.name.lastIndexOf('.'))}`;
+    
+    // Envie para o main process
+    const caminhoSalvo = await window.api.salvarImagemBuffer(buffer, nomeImagem);
+
+    // Agora sim, salva o caminho salvo no livro
+    this.novoLivro.imagem = caminhoSalvo;
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+
+  },
+  
 
    async getNomeCategoria(id) {
   const cat = this.categorias.find(c => c.id === id);
@@ -175,6 +202,14 @@ export default {
       const quantidade = parseInt(livroBase.quantidade);
       const codigoBase = livroBase.codigoLivro.replace(/\d+$/, '') || livroBase.codigoLivro;
       const numeroInicial = parseInt(livroBase.codigoLivro.match(/\d+$/)) || 1;
+      if (livroBase.imagemOriginal) {
+  const nomeImagem = `${livroBase.codigoLivro}_${Date.now()}${path.extname(livroBase.imagemOriginal)}`;
+  const destino = `storage/imagens/${nomeImagem}`;
+
+  await window.api.salvarImagem(livroBase.imagemOriginal, nomeImagem);
+
+  livroBase.imagem = destino; 
+}
 
       if (
         livroBase.codigoLivro && livroBase.titulo && livroBase.autor &&
@@ -190,9 +225,13 @@ export default {
               codigoLivro: novoCodigo,
               exemplar: novoExemplar,
               quantidade: 1,
+              imagem: livroBase.imagem,
+
               categoriaId: livroBase.categoriaId
 
             };
+            console.log('Enviando livro para salvar:', novoLivro);
+
 
             await window.api.createLivro(novoLivro);
           }
