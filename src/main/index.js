@@ -8,6 +8,7 @@ import {UserModel} from './models'
 import { LivroModel } from './models'
 import { CategoriaModel } from './models'
 
+
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 900,
@@ -17,6 +18,8 @@ function createWindow() {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '..','preload','index.js'),
+      contextIsolation: true,
+      nodeIntegration: false, 
       sandbox: false
     }
   })
@@ -208,6 +211,7 @@ LIMIT 10;
       });
     });
   });
+
 
 
   

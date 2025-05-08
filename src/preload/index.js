@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer,webUtils } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 
@@ -30,7 +30,9 @@ const api = {
 
 
 
-
+    getPathInput: (input) =>  webUtils.getPathForFile(document.querySelector(input).files[0]),
+  
+  
   getEvolucaoEmprestimos: () => ipcRenderer.invoke('getEvolucaoEmprestimos'),
   getEmprestimosCategoria: () => ipcRenderer.invoke('getEmprestimosCategoria'),
   getPercentualUsuarios: () => ipcRenderer.invoke('getPercentualUsuarios'),
