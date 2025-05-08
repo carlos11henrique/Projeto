@@ -210,6 +210,15 @@ LIMIT 10;
   });
 
 
+  
+  app.whenReady().then(() => {
+    protocol.handle('atom', (request) => {
+      const filePath = request.url.slice('atom:/'.length)
+      return net.fetch(url.pathToFileURL(path.join(__dirname, filePath)).toString())
+    })
+  });
+  
+
 
   ipcMain.handle('salvarImagemBuffer', async (event, buffer, nomeImagem) => {
     const fs = require('fs');
@@ -225,14 +234,7 @@ LIMIT 10;
       return '';
     }
   });
-  
-  app.whenReady().then(() => {
-    protocol.handle('atom', (request) => {
-      const filePath = request.url.slice('atom:/'.length)
-      return net.fetch(url.pathToFileURL(path.join(__dirname, filePath)).toString())
-    })
-  });
-  
+
   ipcMain.on('createLivro', async (event, book) => {
     try {
       await LivroModel.create(book);

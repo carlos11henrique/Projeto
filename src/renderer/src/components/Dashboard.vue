@@ -1,10 +1,11 @@
 <template>
   <div>
     <h2>Estatísticas da Biblioteca</h2>
-    <Chart type="pie" :data="pieChartOptions.data" :options="pieChartOptions.options" />
-    <Chart type="bar" :data="barChartOptions.data" :options="barChartOptions.options" />
-    <Chart type="line" :data="lineChartOptions.data" :options="lineChartOptions.options" />
-    <Chart type="line" :data="stepChartOptions.data" :options="stepChartOptions.options" />
+    <highcharts :options="rankingChartOptions" />
+   <highcharts :options="pieChartOptions" />
+<highcharts :options="categoriaChartOptions" />
+<highcharts :options="devolucaoChartOptions" />
+
     <Chart type="bar" :data="chartDiasSemana.data" :options="chartDiasSemana.options" />
   </div>
 </template>
@@ -13,9 +14,6 @@
 import { ref, onMounted } from "vue";
 import Highcharts from 'highcharts';
 import HighchartsVue from "highcharts-vue";
-import Chart from 'primevue/chart'
-
-const highcharts = Highcharts;
 
 // Gráficos Highcharts
 const pieChartOptions = ref({});
@@ -152,6 +150,7 @@ onMounted(async () => {
   const devolucoesPrazo = await window.api.getDevolucoesPrazo();
   const evolucao = await window.api.getEvolucaoEmprestimos();
   const diasSemana = await window.api.getDiasSemanaMovimentados();
+  const percentuais = await window.api.getPercentuais();
   const maisEmprestados = await window.api.getLivrosMaisEmprestados();
   const tempoMedio = await window.api.getTempoMedio();
 

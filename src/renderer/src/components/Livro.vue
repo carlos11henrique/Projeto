@@ -169,23 +169,9 @@ export default {
   },
   methods: {
    async handleImagemSelecionada(event) {
-    const file = event.target.files[0];
-if (file) {
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const buffer = e.target.result;
-    const nomeImagem = `${this.novoLivro.codigoLivro || 'livro'}_${Date.now()}${file.name.substring(file.name.lastIndexOf('.'))}`;
+    console.log('Imagem selecionada:', event.target.files[0].path);
+    debugger;
     
-    // Envie para o main process
-    const caminhoSalvo = await window.api.salvarImagemBuffer(buffer, nomeImagem);
-
-    // Agora sim, salva o caminho salvo no livro
-    this.novoLivro.imagem = caminhoSalvo;
-  };
-
-  reader.readAsArrayBuffer(file);
-}
-
 
   },
   
