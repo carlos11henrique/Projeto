@@ -1,5 +1,6 @@
-import { app, shell, BrowserWindow, ipcMain,protocol } from 'electron'
-import { join } from 'path'
+import { app, shell, BrowserWindow, ipcMain,protocol, net } from 'electron'
+import { join, extname } from 'path'
+import fs from 'node:fs/promises'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { event } from 'jquery'
@@ -7,6 +8,7 @@ import {EmprestimoModel,sequelize} from './models'
 import {UserModel} from './models'
 import { LivroModel } from './models'
 import { CategoriaModel } from './models'
+import url from 'node:url'
 
 
 function createWindow() {
@@ -49,6 +51,11 @@ app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
+  protocol.handle('atom', (request) => {
+    const filePath = request.url.slice('atom:/'.length)
+    return net.fetch(url.pathToFileURL(join( filePath)).toString())
+    
+  })
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
@@ -214,14 +221,6 @@ LIMIT 10;
 
 
 
-  
-  app.whenReady().then(() => {
-    protocol.handle('atom', (request) => {
-      const filePath = request.url.slice('atom:/'.length)
-      return net.fetch(url.pathToFileURL(path.join(__dirname, filePath)).toString())
-    })
-  });
-  
 
 
   ipcMain.handle('salvarImagemBuffer', async (event, buffer, nomeImagem) => {
@@ -239,15 +238,38 @@ LIMIT 10;
     }
   });
 
+
+
+
   ipcMain.on('createLivro', async (event, book) => {
     try {
+      if (book.imagem) {
+        const picturesPath = app.getPath('pictures');
+        const imagesDir = join(picturesPath, 'livros_imagens');
+  
+        // Cria o diretório, se não existir
+        await fs.mkdir(imagesDir, { recursive: true });
+  
+        // Gera um nome único para a imagem
+        const ext = extname(book.imagem); // ex: '.jpg'
+        const uniqueName = `livro_${Date.now()}_${Math.floor(Math.random() * 10000)}${ext}`;
+        const finalimagem = join(imagesDir, uniqueName);
+  
+        // Copia a imagem para a nova localização com nome único
+        await fs.copyFile(book.imagem, finalimagem);
+  
+        // Atualiza o caminho no objeto antes de salvar
+        book.imagem = finalimagem;
+      }
+  
       await LivroModel.create(book);
-      console.log('Livro cadastrado com sucesso');
     } catch (error) {
       handleError(event, error, 'createLivro');
     }
   });
-  
+
+
+
   ipcMain.on('updateLivro', async (event, book) => {
     try {
       await LivroModel.update(book, { where: { id: book.id } });

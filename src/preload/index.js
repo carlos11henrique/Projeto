@@ -30,7 +30,7 @@ const api = {
 
 
 
-    getPathInput: (input) =>  webUtils.getPathForFile(document.querySelector(input).files[0]),
+    getPathInput: (input) =>  webUtils.getPathForFile(input.files[0]),
   
   
   getEvolucaoEmprestimos: () => ipcRenderer.invoke('getEvolucaoEmprestimos'),

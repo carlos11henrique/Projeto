@@ -112,7 +112,7 @@
     <td class="px-6 py-4">{{ livro.editora }}</td>
     <td class="px-6 py-4">{{ livro.categoriaId }}</td>
     <td class="px-6 py-4">
-  <img v-if="livro.imagem" :src="'file://' + livro.imagem" alt="Imagem do Livro" class="h-16 w-auto" />
+  <img v-if="livro.imagem" :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="h-16 w-auto" />
 </td>
 
     <td class="px-6 py-4">
@@ -168,10 +168,12 @@ export default {
     }
   },
   methods: {
-   async handleImagemSelecionada(event) {
-    console.log('Imagem selecionada:', event.target.files[0].path);
-    debugger;
-    
+  handleImagemSelecionada(event) {
+    this.novoLivro.imagem = window.api.getPathInput(event.target);
+    console.log(this.novoLivro);
+
+
+
 
   },
   
