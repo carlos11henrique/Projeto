@@ -86,11 +86,17 @@ app.whenReady().then(() => {
         GROUP BY Categories.nome
         ORDER BY total DESC;
       `, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
+        if (err) {
+          console.error('Erro na consulta:', err);
+          reject(err);
+        } else {
+          console.log('Dados obtidos:', rows);
+          resolve(rows);
+        }
       });
     });
   });
+  
 
   // Percentual de Empréstimos por Tipo de Usuário
   ipcMain.handle('getPercentualUsuarios', async () => {
@@ -111,15 +117,16 @@ app.whenReady().then(() => {
   ipcMain.handle('getDevolucoesPrazo', async () => {
     return new Promise((resolve, reject) => {
       sequelize.query(`
-        SELECT 
-          CASE 
-            WHEN dataDevolucao <= DATE_ADD(dataEmprestimo, INTERVAL 7 DAY) THEN 'No Prazo'
-            ELSE 'Em Atraso'
-          END AS status,
-          COUNT(*) AS total
-        FROM Loans
-        WHERE dataDevolucao IS NOT NULL
-        GROUP BY status;
+      SELECT 
+  CASE 
+    WHEN dataDevolucao <= DATE(dataEmprestimo, '+7 days') THEN 'No Prazo'
+    ELSE 'Em Atraso'
+  END AS status,
+  COUNT(*) AS total
+FROM Loans
+WHERE dataDevolucao IS NOT NULL
+GROUP BY status;
+
       `, (err, rows) => {
         if (err) reject(err);
         else resolve(rows);
@@ -132,11 +139,12 @@ app.whenReady().then(() => {
     return new Promise((resolve, reject) => {
       sequelize.query(`
         SELECT Users.tipo AS tipo_usuario,
-              AVG(DATEDIFF(dataDevolucao, dataEmprestimo)) AS media_dias
-        FROM Loans
-        JOIN Usuarios ON Loans.UsuarioId = Usuarios.id
-        WHERE dataDevolucao IS NOT NULL
-        GROUP BY Usuarios.tipo;
+       AVG(JULIANDAY(dataDevolucao) - JULIANDAY(dataEmprestimo)) AS media_dias
+FROM Loans
+JOIN Users ON Loans.userId = Users.id
+WHERE dataDevolucao IS NOT NULL
+GROUP BY Users.tipo;
+
       `, (err, rows) => {
         if (err) reject(err);
         else resolve(rows);
@@ -148,12 +156,13 @@ app.whenReady().then(() => {
   ipcMain.handle('getLivrosPopulares', async () => {
     return new Promise((resolve, reject) => {
       sequelize.query(`
-        SELECT Livro.titulo, COUNT(*) AS total
-        FROM Loans
-        JOIN Livro ON Loans.LivroId = Livro.id
-        GROUP BY Livro.id
-        ORDER BY total DESC
-        LIMIT 5;
+       SELECT Books.titulo, COUNT(*) AS total
+FROM Loans
+JOIN Books ON Loans.bookId = Books.id
+GROUP BY Books.id
+ORDER BY total DESC
+LIMIT 5;
+
       `, (err, rows) => {
         if (err) reject(err);
         else resolve(rows);
@@ -165,12 +174,13 @@ app.whenReady().then(() => {
   ipcMain.handle('getDiasSemanaMovimentados', async () => {
     return new Promise((resolve, reject) => {
       sequelize.query(`
-        SELECT 
-          DAYOFWEEK(dataEmprestimo) AS dia_semana,
-          COUNT(*) AS total
-        FROM Emprestimos
-        GROUP BY dia_semana
-        ORDER BY dia_semana;
+    SELECT 
+  strftime('%w', dataEmprestimo) AS dia_semana,
+  COUNT(*) AS total
+FROM Loans
+GROUP BY dia_semana
+ORDER BY dia_semana;
+
       `, (err, rows) => {
         if (err) reject(err);
         else resolve(rows);
@@ -183,14 +193,15 @@ app.whenReady().then(() => {
     return new Promise((resolve, reject) => {
       sequelize.query(`
         SELECT 
-          Livro.titulo,
-          YEAR(Loans.dataEmprestimo) AS ano,
-          COUNT(*) AS total_emprestimos
-        FROM Loans
-        JOIN Livro ON Loans.LivroId = Livro.id
-        GROUP BY Livro.titulo, ano
-        ORDER BY total_emprestimos DESC
-        LIMIT 10;
+  Books.titulo,
+  strftime('%Y', Loans.dataEmprestimo) AS ano,
+  COUNT(*) AS total_emprestimos
+FROM Loans
+JOIN Books ON Loans.BookId = Books.id
+GROUP BY Books.titulo, ano
+ORDER BY total_emprestimos DESC
+LIMIT 10;
+
       `, (err, rows) => {
         if (err) reject(err);
         else resolve(rows);
