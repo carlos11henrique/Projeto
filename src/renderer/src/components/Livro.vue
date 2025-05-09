@@ -165,8 +165,7 @@ export default {
     filteredLivro() {
       return this.livros.filter(livro =>
         livro.titulo.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        livro.autor.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        livro.genero.toLowerCase().includes(this.searchQuery.toLowerCase())
+        livro.autor.toLowerCase().includes(this.searchQuery.toLowerCase())
       );
     }
   },

@@ -92,7 +92,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(usuario, index) in usuarios" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+        <tr v-for="(usuario, index) in usuariosFiltrados" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
           <td class="px-6 py-4">{{ usuario?.nome || 'Nome não disponível' }}</td>
           <td class="px-6 py-4">{{ usuario?.cpf }}</td>
           <td v-if="tipoUsuario === 'Aluno'" class="px-6 py-4">{{ usuario.matricula || 'Matricula não disponível' }}</td>
