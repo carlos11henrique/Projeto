@@ -95,9 +95,9 @@
         <tr v-for="(usuario, index) in usuarios" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
           <td class="px-6 py-4">{{ usuario?.nome || 'Nome não disponível' }}</td>
           <td class="px-6 py-4">{{ usuario?.cpf }}</td>
-          <td v-if="tipoUsuario === 'Aluno'" class="px-6 py-4">{{ usuario.matricula }}</td>
-          <td v-if="tipoUsuario === 'Aluno'" class="px-6 py-4">{{ usuario.serie }}</td>
-          <td v-if="tipoUsuario === 'Aluno'" class="px-6 py-4">{{ usuario.turma }}</td>
+          <td v-if="tipoUsuario === 'Aluno'" class="px-6 py-4">{{ usuario.matricula || 'Matricula não disponível' }}</td>
+          <td v-if="tipoUsuario === 'Aluno'" class="px-6 py-4">{{ usuario.serie || 'Série não disponível' }}</td>
+          <td v-if="tipoUsuario === 'Aluno'" class="px-6 py-4">{{ usuario.turma  || 'Turma não disponível' }}</td>
           <td class="px-6 py-4">{{ usuario?.telefone }}</td>
           <td class="px-6 py-4">
             <button @click="editarUsuario(index)" class="text-blue-600 hover:underline">Editar</button>
@@ -178,32 +178,31 @@ resetForm() {
   },
   methods: {
     async adicionarUsuario() {
-  try {
-    const usuarioLimpo = JSON.parse(JSON.stringify(this.novoUsuario));
-    const result = await window.api.createUser(usuarioLimpo);
-    this.usuarios.push(result);
-    this.resetForm();
+    try {
+      const usuarioLimpo = JSON.parse(JSON.stringify(this.novoUsuario));
+      await window.api.createUser(usuarioLimpo);
+      await this.carregarUsuarios(); // <-- isso só funciona se o método for async
+      this.resetForm();
 
-    Swal.fire({
-      icon: 'success',
-      title: 'Usuário cadastrado!',
-      text: 'O usuário foi cadastrado com sucesso.',
-      confirmButtonColor: '#3085d6',
-      confirmButtonText: 'OK'
-    });
+      Swal.fire({
+        icon: 'success',
+        title: 'Usuário cadastrado!',
+        text: 'O usuário foi cadastrado com sucesso.',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'OK'
+      });
+    } catch (error) {
+      console.error("Erro ao criar usuário:", error);
 
-  } catch (error) {
-    console.error("Erro ao criar usuário:", error);
-
-    Swal.fire({
-      icon: 'error',
-      title: 'Erro ao cadastrar',
-      text: 'Não foi possível cadastrar o usuário. Tente novamente.',
-      confirmButtonColor: '#d33',
-      confirmButtonText: 'Fechar'
-    });
-  }
-},
+      Swal.fire({
+        icon: 'error',
+        title: 'Erro ao cadastrar',
+        text: 'Não foi possível cadastrar o usuário. Tente novamente.',
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Fechar'
+      });
+    }
+  },
 async atualizarUsuario() {
   try {
     const usuarioAtualizado = JSON.parse(JSON.stringify(this.novoUsuario));
@@ -276,13 +275,14 @@ async editarUsuario(index) {
       };
     }
   },
-  mounted() {
-    $(document).ready(() => {
-      $('#cpf').mask('000.000.000-00');
-      $('#telefone').mask('(00) 00000-0000');
-    });
+  async mounted() {
+  $(document).ready(() => {
+    $('#cpf').mask('000.000.000-00');
+    $('#telefone').mask('(00) 00000-0000');
+  });
 
-    this.carregarUsuarios();
-  }
+  await this.carregarUsuarios();
+  this.resetForm();
+}
 };
 </script>
