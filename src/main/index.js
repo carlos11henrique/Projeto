@@ -392,14 +392,16 @@ LIMIT 10;
   
   
   // Repetir padrão para User
-  ipcMain.on('createUser', async (event, user) => {
+  ipcMain.on('createLivro', async (event, livro) => {
+    console.log('Recebido livro com categoryId:', livro.categoryId); // <-- aqui
     try {
-      await UserModel.create(user);
-      console.log('User cadastrado com sucesso');
+      await LivroModel.create(livro);
+      console.log(livro);
     } catch (error) {
-      handleError(event, error, 'createUser');
+      handleError(event, error, 'createLivro');
     }
   });
+  
   
   ipcMain.on('updateUser', async (event, user) => {
     try {
@@ -409,6 +411,7 @@ LIMIT 10;
       handleError(event, error, 'updateUser');
     }
   });
+  
   
   ipcMain.on('deleteUser', async (event, id) => {
     if (!id) {

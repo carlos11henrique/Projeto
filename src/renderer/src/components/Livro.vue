@@ -26,20 +26,18 @@
     <div>
       <label for="genero" class="block mb-2 text-sm font-medium text-gray-900">Gênero</label>
       <select
-  v-model="novoLivro.categoryId
-  "
-  id="categoryId
-  "
+  v-model="novoLivro.categoryId"
+  id="categoryId"
   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-  >
-  <option disabled value="">Selecione um gênero</option>
-  <option 
-    v-for="categoria in categorias" 
-    :key="categoria.id" 
-    :value="categoria.id"
-  >
-    {{ categoria.nome }}
-  </option>
+>
+<option
+  v-for="categories in categorys" 
+  :key="categories.id" 
+  :value="categories.id"
+>
+  {{ categories.nome }}
+</option>
+
 </select>
 
 </div>
@@ -154,7 +152,7 @@ export default {
 
     livros: [],
     searchQuery: "",
-    categorias: [],  // Correção aqui
+    categorys: [],  // Correção aqui
     editando: false,
     indexEdicao: null
   };
@@ -180,8 +178,8 @@ export default {
   },
   
 
-   async getNomeCategoria(id) {
-  const cat = this.categorias.find(c => c.id === id);
+  getNomeCategoria(id) {
+  const cat = this.categorys.find(c => c.id === id);
   return cat ? cat.nome : 'Desconhecido';
 },
 
@@ -218,9 +216,7 @@ export default {
               quantidade: 1,
               imagem: livroBase.imagem,
 
-              categoryId
-              : livroBase.categoryId
-
+              categoryId: livroBase.categoryId
 
             };
             console.log('Enviando livro para salvar:', novoLivro);
@@ -308,10 +304,10 @@ export default {
 
     async carregarCategoria() {
   try {
-    const categorias = await window.api.getCategoria();
-    this.categorias = categorias;  // Armazenando as categorias na variável correta
+    const categorys = await window.api.getCategoria();
+    this.categorys = categorys;  // Armazenando as categorys na variável correta
   } catch (error) {
-    console.error('Erro ao carregar categorias:', error);
+    console.error('Erro ao carregar categorys:', error);
   }
 },
 
@@ -330,8 +326,7 @@ export default {
         titulo: "",
         autor: "",
         editora: "",
-        categoryId
-        : "",
+        categoryId: "",
         descricao: "",
         exemplar: "",
         quantidade: 0,
