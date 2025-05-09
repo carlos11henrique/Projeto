@@ -270,6 +270,7 @@ export default {
       await window.api.createEmprestimo({
         BookId: this.bookSelecionado.id,
         UserId: this.userSelecionado.id,
+        dataEmprestimo: hoje.toISOString().split('T')[0],
         dataDevolucao: devolucao.toISOString().split('T')[0],
         status: 'emprestado'
       });
