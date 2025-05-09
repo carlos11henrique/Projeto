@@ -240,8 +240,10 @@ LIMIT 10;
 
 
 
-
   ipcMain.on('createLivro', async (event, book) => {
+    console.log('Recebido livro:', book);
+    console.log('categoryId recebido:', book.categoryId);
+  
     try {
       if (book.imagem) {
         const picturesPath = app.getPath('pictures');
@@ -263,6 +265,7 @@ LIMIT 10;
       }
   
       await LivroModel.create(book);
+      console.log('Livro criado com sucesso!');
     } catch (error) {
       handleError(event, error, 'createLivro');
     }
@@ -392,15 +395,7 @@ LIMIT 10;
   
   
   // Repetir padrão para User
-  ipcMain.on('createLivro', async (event, livro) => {
-    console.log('Recebido livro com categoryId:', livro.categoryId); // <-- aqui
-    try {
-      await LivroModel.create(livro);
-      console.log(livro);
-    } catch (error) {
-      handleError(event, error, 'createLivro');
-    }
-  });
+
   
   
   ipcMain.on('updateUser', async (event, user) => {
