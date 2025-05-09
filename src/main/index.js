@@ -411,13 +411,18 @@ LIMIT 10;
   });
   
   ipcMain.on('deleteUser', async (event, id) => {
+    if (!id) {
+      return handleError(event, new Error('ID do usuário não fornecido'), 'deleteUser');
+    }
+  
     try {
-      await UserModel.destroy({ where: { id: id } });
+      await UserModel.destroy({ where: { id } });
       console.log('User deletado com sucesso');
     } catch (error) {
       handleError(event, error, 'deleteUser');
     }
   });
+  
   
   ipcMain.on('buscarUser', async (event, id) => {
     try {

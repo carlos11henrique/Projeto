@@ -4,7 +4,7 @@
     <form @submit.prevent="adicionarUsuario" class="mb-6">
       <!-- Dropdown para selecionar o tipo de usuário -->
       <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo do Usuário</label>
-      <select v-model="tipoUsuario" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+      <select v-model="novoUsuario.tipo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
         <option value="">Selecione...</option>
         <option value="Professor">Professor</option>
         <option value="Aluno">Aluno</option>
@@ -101,7 +101,7 @@
           <td class="px-6 py-4">{{ usuario?.telefone }}</td>
           <td class="px-6 py-4">
             <button @click="editarUsuario(index)" class="text-blue-600 hover:underline">Editar</button>
-            <button @click="removerUsuario(index)" class="text-red-600 hover:underline ml-4">Excluir</button>
+            <button @click="removerUsuario(usuario)" class="text-red-600 hover:underline ml-4">Excluir</button>
           </td>
         </tr>
       </tbody>
@@ -157,19 +157,34 @@ resetForm() {
   computed: {
     usuariosFiltrados() {
   let lista = this.usuarios;
+  
   if (this.tipoSelecionado) {
     lista = lista.filter(u => u.tipo === this.tipoSelecionado);
   }
+
   if (this.termoBusca.trim()) {
     const busca = this.termoBusca.toLowerCase();
-    lista = lista.filter(u =>
-      (u.nome && u.nome.toLowerCase().includes(busca)) ||
-      (u.cpf && u.cpf.includes(busca))
-    );
+
+    lista = lista.filter(u => {
+      const nome = u.nome?.toLowerCase() || "";
+      const matricula = u.matricula?.toLowerCase() || "";
+      const cpf = u.cpf?.replace(/\D/g, ""); // remove . e -
+      const telefone = u.telefone?.replace(/\D/g, ""); // remove ( ) e -
+      const buscaNumerica = this.termoBusca.replace(/\D/g, "");
+
+      return (
+        nome.includes(busca) ||
+        cpf.includes(buscaNumerica) ||
+        matricula.includes(buscaNumerica) ||
+        telefone.includes(buscaNumerica)
+      );
+    });
   }
+
   return lista;
 }
   },
+
 
   watch: {
     'novoUsuario.tipo'(val) {
@@ -243,18 +258,22 @@ async editarUsuario(index) {
   this.editando = true;
 },
 
+async removerUsuario(usuario) {
+  if (confirm("Tem certeza que deseja excluir?")) {
+    const userId = usuario.id; // pegar o ID corretamente
+    if (!userId) {
+      console.warn("ID não informado");
+      return;
+    }
+    try {
+      await window.api.deleteUser(userId);
+      console.log("Usuário removido com sucesso!");
+    } catch (err) {
+      console.error("Erro ao remover usuário:", err.message);
+    }
+  }
+},
 
-    async removerUsuario(usuario) {
-      if (confirm("Tem certeza que deseja excluir?")) {
-        try {
-          await window.api.deleteUser(usuario.id);
-          this.usuarios = this.usuarios.filter(u => u.id !== usuario.id);
-        } catch (error) {
-          console.error("Erro ao remover usuário:", error);
-        }
-      }
-    },
-   
     async carregarUsuarios() {
       try {
         const lista = await window.api.getUser();
