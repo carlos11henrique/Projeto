@@ -1,71 +1,134 @@
 <template>
-  <div>
-    <!-- Pesquisa de Livros -->
+  <div class="p-4">
+    <!-- Campo de busca -->
     <div class="mb-4">
       <label class="block text-sm font-medium text-gray-700">Pesquisar Livro</label>
-      <input v-model="searchQuery" type="text" placeholder="Código, título ou autor" class="mt-1 p-2 border border-gray-300 rounded-md w-full" />
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Código, título ou autor"
+        class="mt-1 p-2 border border-gray-300 rounded-md w-full"
+      />
     </div>
 
-    <!-- Lista de Livros -->
-    <table class="w-full text-sm text-left text-gray-500">
+    <!-- Tabela de livros -->
+    <table class="w-full text-sm text-left text-gray-700 border border-gray-300 rounded-md overflow-hidden">
       <thead class="bg-gray-100">
         <tr>
-          <th class="px-6 py-3">Código</th>
-          <th class="px-6 py-3">Título</th>
-          <th class="px-6 py-3">Autor</th>
-          <th class="px-6 py-3">Gênero</th>
-          <th class="px-6 py-3">Exemplares</th>
-          <th class="px-6 py-3">Usuário com Livro</th>
-          <th class="px-6 py-3">Data de Devolução</th>
-          <th class="px-6 py-3">Ações</th>
+          <th class="px-4 py-2">Código</th>
+          <th class="px-4 py-2">Título</th>
+          <th class="px-4 py-2">Autor</th>
+          <th class="px-4 py-2">Gênero</th>
+          <th class="px-4 py-2">Exemplares</th>
+          <th class="px-4 py-2">Usuário</th>
+          <th class="px-4 py-2">Devolução</th>
+          <th class="px-4 py-2">Ações</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(book, index) in filteredBooks" :key="index" class="border-b">
-          <td class="px-6 py-4">{{ book.codigoLivro }}</td>
-          <td class="px-6 py-4">{{ book.titulo }}</td>
-          <td class="px-6 py-4">{{ book.autor }}</td>
-          <td class="px-6 py-4">{{ book.genero }}</td>
-          <td class="px-6 py-4">{{ book.exemplar }}</td>
-          <td class="px-6 py-4">{{ book.emprestadoPara ? book.emprestadoPara.nome : '-' }}</td>
-          <td class="px-6 py-4" :class="{ 'text-red-600 font-semibold': isAtrasado(book.dataDevolucao) }">
-            {{ book.dataDevolucao || '-' }}
-          </td>
-          <td class="px-6 py-4">
-            <button v-if="!book.emprestadoPara" @click="iniciarEmprestimo(book)" class="bg-blue-500 text-white px-3 py-1 rounded">Emprestar</button>
-            <button v-else @click="devolverLivro(book)" class="bg-red-500 text-white px-3 py-1 rounded">Devolver</button>
-            <button v-if="book.emprestadoPara" @click="aumentarPrazo(book)" class="bg-yellow-500 text-white px-3 py-1 rounded ml-2">Aumentar Prazo</button>
-          </td>
-        </tr>
+        <template v-for="(book, index) in filteredBooks" :key="index">
+          <!-- Linha do livro -->
+          <tr class="border-t border-gray-200">
+            <td class="px-4 py-2">{{ book.codigoLivro }}</td>
+            <td class="px-4 py-2">{{ book.titulo }}</td>
+            <td class="px-4 py-2">{{ book.autor }}</td>
+            <td class="px-4 py-2">{{ book.genero }}</td>
+            <td class="px-4 py-2">{{ book.exemplar }}</td>
+            <td class="px-4 py-2">{{ book.emprestadoPara ? book.emprestadoPara.nome : '-' }}</td>
+            <td
+              class="px-4 py-2"
+              :class="{ 'text-red-600 font-semibold': isAtrasado(book.dataDevolucao) }"
+            >
+              {{ book.dataDevolucao || '-' }}
+            </td>
+            <td class="px-4 py-2 space-x-2">
+              <button
+                v-if="!book.emprestadoPara"
+                @click="iniciarEmprestimo(book)"
+                class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+              >
+                Emprestar
+              </button>
+              <button
+                v-else
+                @click="devolverLivro(book)"
+                class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+              >
+                Devolver
+              </button>
+              <button
+                v-if="book.emprestadoPara"
+                @click="aumentarPrazo(book)"
+                class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+              >
+                Aumentar Prazo
+              </button>
+            </td>
+          </tr>
+
+          <!-- Linha do formulário (só mostra se o livro for o selecionado) -->
+          <tr
+            v-if="bookSelecionado && bookSelecionado.codigoLivro === book.codigoLivro"
+            class="bg-gray-50 border-b border-gray-200"
+          >
+            <td colspan="8" class="px-4 py-4">
+              <div class="space-y-2">
+                <h3 class="text-lg font-semibold">Emprestar Livro: {{ book.titulo }}</h3>
+                <p><strong>Autor:</strong> {{ book.autor }}</p>
+                <p><strong>Gênero:</strong> {{ book.genero }}</p>
+                <p><strong>Exemplares:</strong> {{ book.exemplar }}</p>
+
+                <!-- Campo para busca de usuário -->
+                <div class="mt-2">
+                  <label class="block text-sm font-medium text-gray-700">Selecionar Usuário</label>
+                  <input
+                    v-model="searchUsuario"
+                    type="text"
+                    placeholder="Matrícula, nome ou CPF"
+                    class="mt-1 p-2 border border-gray-300 rounded-md w-full"
+                  />
+
+                  <!-- Lista de usuários filtrados -->
+                  <ul
+                    v-if="filteredUsers.length"
+                    class="mt-2 border border-gray-300 rounded bg-white max-h-32 overflow-y-auto"
+                  >
+                    <li
+                      v-for="user in filteredUsers"
+                      :key="user.matricula"
+                      @click="selecionarUsuario(user)"
+                      class="p-2 hover:bg-gray-100 cursor-pointer"
+                    >
+                      {{ user.nome }} ({{ user.matricula }})
+                    </li>
+                  </ul>
+
+                  <!-- Botão de confirmação -->
+                  <div class="mt-4 flex gap-2">
+                    <button
+                      v-if="userSelecionado"
+                      @click="finalizarEmprestimo"
+                      class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                    >
+                      Confirmar Empréstimo
+                    </button>
+                    <button
+                      @click="cancelarEmprestimo"
+                      class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </template>
       </tbody>
     </table>
-
-    <!-- Detalhes do Livro Selecionado -->
-    <div v-if="bookSelecionado" class="mt-6 p-4 border rounded bg-gray-100">
-      <h3 class="text-lg font-semibold">Livro Selecionado</h3>
-      <p><strong>Título:</strong> {{ bookSelecionado.titulo }}</p>
-      <p><strong>Autor:</strong> {{ bookSelecionado.autor }}</p>
-      <p><strong>Gênero:</strong> {{ bookSelecionado.genero }}</p>
-      <p><strong>Código:</strong> {{ bookSelecionado.codigoLivro }}</p>
-      <p><strong>Exemplares:</strong> {{ bookSelecionado.exemplar }}</p>
-      <p><strong>Data de Devolução:</strong> {{ bookSelecionado.dataDevolucao || 'Não Emprestado' }}</p>
-      <p><strong>Usuário:</strong> {{ bookSelecionado.emprestadoPara ? bookSelecionado.emprestadoPara.nome : 'Ninguém' }}</p>
-      <p><strong>Situação do Livro:</strong> {{ bookSelecionado.status || (bookSelecionado.emprestadoPara ? 'Emprestado' : 'Disponível') }}</p>
-
-      <!-- Seleção de Usuário para Empréstimo -->
-      <div class="mt-4">
-        <h3 class="text-lg font-semibold">Selecionar Usuário</h3>
-        <input v-model="searchUsuario" type="text" placeholder="Matrícula, nome ou CPF" class="mt-1 p-2 border rounded-md w-full" />
-        <ul v-if="filteredUsers.length" class="mt-2 border rounded bg-white max-h-32 overflow-y-auto">
-          <li v-for="user in filteredUsers" :key="user.matricula" @click="selecionarUsuario(user)" class="p-2 hover:bg-gray-200 cursor-pointer">
-            {{ user.nome }} ({{ user.matricula }})
-          </li>
-        </ul>
-        <button v-if="userSelecionado" @click="finalizarEmprestimo" class="mt-4 bg-green-500 text-white px-4 py-2 rounded">Confirmar Empréstimo</button>
-      </div>
-    </div>
   </div>
 </template>
+
 
 <script>
 import Swal from 'sweetalert2';
