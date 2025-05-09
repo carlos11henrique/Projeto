@@ -26,8 +26,10 @@
     <div>
       <label for="genero" class="block mb-2 text-sm font-medium text-gray-900">Gênero</label>
       <select
-  v-model="novoLivro.categoriaId"
-  id="categoriaId"
+  v-model="novoLivro.categoryId
+  "
+  id="categoryId
+  "
   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
   >
   <option disabled value="">Selecione um gênero</option>
@@ -110,7 +112,8 @@
     <td class="px-6 py-4">{{ livro.titulo }}</td>
     <td class="px-6 py-4">{{ livro.autor }}</td>
     <td class="px-6 py-4">{{ livro.editora }}</td>
-    <td class="px-6 py-4">{{ livro.categoriaId }}</td>
+    <td class="px-6 py-4">{{ livro.categoryId
+      }}</td>
     <td class="px-6 py-4">
   <img v-if="livro.imagem" :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="h-16 w-auto" />
 </td>
@@ -142,7 +145,7 @@ export default {
   titulo: "",
   autor: "",
   editora: "",
-  categoriaId: "", 
+  categoryId: "", 
   descricao: "",
   exemplar: "",
   quantidade: 0,
@@ -201,7 +204,8 @@ export default {
 
       if (
         livroBase.codigoLivro && livroBase.titulo && livroBase.autor &&
-        livroBase.editora && livroBase.categoriaId && quantidade > 0
+        livroBase.editora && livroBase.categoryId
+        && quantidade > 0
         ) {
         try {
           for (let i = 0; i < quantidade; i++) {
@@ -215,7 +219,9 @@ export default {
               quantidade: 1,
               imagem: livroBase.imagem,
 
-              categoriaId: livroBase.categoriaId
+              categoryId
+              : livroBase.categoryId
+
 
             };
             console.log('Enviando livro para salvar:', novoLivro);
@@ -325,7 +331,8 @@ export default {
         titulo: "",
         autor: "",
         editora: "",
-        categoriaId: "",
+        categoryId
+        : "",
         descricao: "",
         exemplar: "",
         quantidade: 0,
