@@ -318,7 +318,6 @@ ipcMain.handle('getLivro', async () => {
       include: CategoriaModel
       
     });
-    console.log(livros);
     return livros.map(l => l.dataValues);
   } catch (error) {
     console.error('Erro em getLivro:', error);

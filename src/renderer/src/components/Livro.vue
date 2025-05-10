@@ -169,7 +169,6 @@ export default {
   methods: {
   handleImagemSelecionada(event) {
     this.novoLivro.imagem = window.api.getPathInput(event.target);
-    console.log(this.novoLivro);
 
 
 
@@ -317,7 +316,6 @@ export default {
     const livros = await window.api.getLivro();
 
   this.livros = livros;
-  console.log('Livros:', this.livros);
   } catch (error) {
     console.error('Erro ao carregar livros:', error);
     Swal.fire('Erro', 'Não foi possível carregar os livros.', 'error');
