@@ -74,152 +74,154 @@ app.whenReady().then(() => {
   };
 
   
-  // Evolução dos Empréstimos por Mês
-  ipcMain.handle('getEvolucaoEmprestimos', async () => {
-    return  sequelize.query(`
-        SELECT strftime('%y-%m', 'dataEmprestimo') AS periodo, COUNT(*) AS total
-        FROM Loans
-        GROUP BY periodo
-        ORDER BY periodo;
-      `)
-  })
-
-
-  // Empréstimos por Categoria
-  ipcMain.handle('getEmprestimosCategoria', async () => {
-    return new Promise((resolve, reject) => {
-      sequelize.query(`
-        SELECT Categories.nome AS categoria, COUNT(*) AS total
-        FROM Loans
-        JOIN Books ON Loans.BookId = Books.id
-        JOIN Categories ON Books.CategoryId = Categories.id
-        GROUP BY Categories.nome
-        ORDER BY total DESC;
-      `, (err, rows) => {
-        if (err) {
-          console.error('Erro na consulta:', err);
-          reject(err);
-        } else {
-          console.log('Dados obtidos:', rows);
-          resolve(rows);
-        }
-      });
-    });
-  });
-  
-
-  // Percentual de Empréstimos por Tipo de Usuário
-  ipcMain.handle('getPercentualUsuarios', async () => {
-    return new Promise((resolve, reject) => {
-      sequelize.query(`
-         SELECT Users.tipo AS tipo_usuario, COUNT(*) AS total
-    FROM Loans
-    JOIN Users ON Loans.UserId = Users.id
-    GROUP BY Users.tipo;
-      `, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
-  });
-
-  // Devoluções no Prazo vs. Atrasadas
-  ipcMain.handle('getDevolucoesPrazo', async () => {
-    return new Promise((resolve, reject) => {
-      sequelize.query(`
+// Evolução dos Empréstimos por Mês
+ipcMain.handle('getEvolucaoEmprestimos', async () => {
+  try {
+    const [results] = await sequelize.query(`
       SELECT 
-  CASE 
-    WHEN dataDevolucao <= DATE(dataEmprestimo, '+7 days') THEN 'No Prazo'
-    ELSE 'Em Atraso'
-  END AS status,
-  COUNT(*) AS total
-FROM Loans
-WHERE dataDevolucao IS NOT NULL
-GROUP BY status;
+        strftime('%Y-%m', dataEmprestimo) AS periodo, 
+        COUNT(*) AS total
+      FROM Loans
+      GROUP BY periodo
+      ORDER BY periodo;
+    `);
+    return results;
+  } catch (err) {
+    console.error('Erro na consulta:', err);
+    throw err;
+  }
+});
 
-      `, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
-  });
+// Empréstimos por Categoria
+ipcMain.handle('getEmprestimosCategoria', async () => {
+  try {
+    const [results] = await sequelize.query(`
+      SELECT Categories.nome AS categoria, COUNT(*) AS total
+      FROM Loans
+      JOIN Books ON Loans.BookId = Books.id
+      JOIN Categories ON Books.CategoryId = Categories.id
+      GROUP BY Categories.nome
+      ORDER BY total DESC;
+    `);
+    return results;
+  } catch (err) {
+    console.error('Erro na consulta:', err);
+    throw err;
+  }
+});
 
-  // Tempo Médio de Empréstimo por Tipo de Usuário
-  ipcMain.handle('getTempoMedioUsuario', async () => {
-    return new Promise((resolve, reject) => {
-      sequelize.query(`
-        SELECT Users.tipo AS tipo_usuario,
-       AVG(JULIANDAY(dataDevolucao) - JULIANDAY(dataEmprestimo)) AS media_dias
-FROM Loans
-JOIN Users ON Loans.userId = Users.id
-WHERE dataDevolucao IS NOT NULL
-GROUP BY Users.tipo;
+// Percentual de Empréstimos por Tipo de Usuário
+ipcMain.handle('getPercentualUsuarios', async () => {
+  try {
+    const [results] = await sequelize.query(`
+      SELECT Users.tipo AS tipo_usuario, COUNT(*) AS total
+      FROM Loans
+      JOIN Users ON Loans.UserId = Users.id
+      GROUP BY Users.tipo;
+    `);
+    return results;
+  } catch (err) {
+    console.error('Erro na consulta:', err);
+    throw err;
+  }
+});
 
-      `, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
-  });
+// Devoluções no Prazo vs. Atrasadas
+ipcMain.handle('getDevolucoesPrazo', async () => {
+  try {
+    const [results] = await sequelize.query(`
+      SELECT 
+        CASE 
+          WHEN dataDevolucao <= DATE(dataEmprestimo, '+7 days') THEN 'No Prazo'
+          ELSE 'Em Atraso'
+        END AS status,
+        COUNT(*) AS total
+      FROM Loans
+      WHERE dataDevolucao IS NOT NULL
+      GROUP BY status;
+    `);
+    return results;
+  } catch (err) {
+    console.error('Erro na consulta:', err);
+    throw err;
+  }
+});
 
-  // Livros Mais Populares
-  ipcMain.handle('getLivrosPopulares', async () => {
-    return new Promise((resolve, reject) => {
-      sequelize.query(`
-       SELECT Books.titulo, COUNT(*) AS total
-FROM Loans
-JOIN Books ON Loans.bookId = Books.id
-GROUP BY Books.id
-ORDER BY total DESC
-LIMIT 5;
+// Tempo Médio de Empréstimo por Tipo de Usuário
+ipcMain.handle('getTempoMedioUsuario', async () => {
+  try {
+    const [results] = await sequelize.query(`
+      SELECT 
+        Users.tipo AS tipo_usuario,
+        ROUND(AVG(JULIANDAY(dataDevolucao) - JULIANDAY(dataEmprestimo)), 2) AS media_dias
+      FROM Loans
+      JOIN Users ON Loans.userId = Users.id
+      WHERE dataDevolucao IS NOT NULL
+      GROUP BY Users.tipo;
+    `);
+    return results;
+  } catch (err) {
+    console.error('Erro na consulta:', err);
+    throw err;
+  }
+});
 
-      `, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
-  });
+// Livros Mais Populares
+ipcMain.handle('getLivrosPopulares', async () => {
+  try {
+    const [results] = await sequelize.query(`
+      SELECT Books.titulo, COUNT(*) AS total
+      FROM Loans
+      JOIN Books ON Loans.bookId = Books.id
+      GROUP BY Books.id
+      ORDER BY total DESC
+      LIMIT 5;
+    `);
+    return results;
+  } catch (err) {
+    console.error('Erro na consulta:', err);
+    throw err;
+  }
+});
 
-  // Dias da Semana com Mais Empréstimos
-  ipcMain.handle('getDiasSemanaMovimentados', async () => {
-    return new Promise((resolve, reject) => {
-      sequelize.query(`
-    SELECT 
-  strftime('%w', dataEmprestimo) AS dia_semana,
-  COUNT(*) AS total
-FROM Loans
-GROUP BY dia_semana
-ORDER BY dia_semana;
+// Dias da Semana com Mais Empréstimos
+ipcMain.handle('getDiasSemanaMovimentados', async () => {
+  try {
+    const [results] = await sequelize.query(`
+      SELECT 
+        strftime('%w', dataEmprestimo) AS dia_semana,
+        COUNT(*) AS total
+      FROM Loans
+      GROUP BY dia_semana
+      ORDER BY dia_semana;
+    `);
+    return results;
+  } catch (err) {
+    console.error('Erro na consulta:', err);
+    throw err;
+  }
+});
 
-      `, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
-  });
-
-  // Ranking de Livros por Ano
-  ipcMain.handle('getRankingLivrosAno', async () => {
-    return new Promise((resolve, reject) => {
-      sequelize.query(`
-        SELECT 
-  Books.titulo,
-  strftime('%Y', Loans.dataEmprestimo) AS ano,
-  COUNT(*) AS total_emprestimos
-FROM Loans
-JOIN Books ON Loans.BookId = Books.id
-GROUP BY Books.titulo, ano
-ORDER BY total_emprestimos DESC
-LIMIT 10;
-
-      `, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
-  });
-
-
+// Ranking de Livros por Ano
+ipcMain.handle('getRankingLivrosAno', async () => {
+  try {
+    const [results] = await sequelize.query(`
+      SELECT 
+        Books.titulo,
+        strftime('%Y', Loans.dataEmprestimo) AS ano,
+        COUNT(*) AS total_emprestimos
+      FROM Loans
+      JOIN Books ON Loans.BookId = Books.id
+      GROUP BY Books.titulo, ano
+      ORDER BY total_emprestimos DESC
+      LIMIT 10;
+    `);
+    return results;
+  } catch (err) {
+    console.error('Erro na consulta SQL:', err);
+    throw err;
+  }
+});
 
 
 
@@ -321,7 +323,6 @@ LIMIT 10;
   // Repetir padrão para Emprestimo
   ipcMain.on('updateEmprestimo', async (event, data) => {
     try {
-      console.log('Dados recebidos para update:', data);
   
       if (!data.id) {
         throw new Error('ID do empréstimo não fornecido.');

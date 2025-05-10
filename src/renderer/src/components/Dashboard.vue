@@ -1,175 +1,300 @@
 <template>
-  <div>
-    <h2>Estatísticas da Biblioteca</h2>
-    <highcharts :options="rankingChartOptions" />
-   <highcharts :options="pieChartOptions" />
-<highcharts :options="categoriaChartOptions" />
-<highcharts :options="devolucaoChartOptions" />
+  <div class="p-6">
+    <h2 class="text-2xl font-semibold mb-6">Estatísticas da Biblioteca</h2>
 
-    <Chart type="bar" :data="chartDiasSemana.data" :options="chartDiasSemana.options" />
+    <!-- Container Grid com 2 colunas -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <!-- Gráfico Ranking de Livros -->
+      <div class="flex justify-center items-center">
+        <div class="w-full max-w-xl">
+          <Chart type="bar" :data="rankingChart.data" :options="rankingChart.options" />
+        </div>
+      </div>
+
+      <!-- Gráfico de Pizza -->
+      <div class="flex justify-center items-center">
+        <div class="w-full max-w-xl">
+          <Chart type="pie" :data="pieChart.data" :options="pieChart.options" />
+        </div>
+      </div>
+
+      <!-- Gráfico de Categorias -->
+      <div class="flex justify-center items-center">
+        <div class="w-full max-w-xl">
+          <Chart type="bar" :data="categoriaChart.data" :options="categoriaChart.options" />
+        </div>
+      </div>
+
+      <!-- Gráfico de Devoluções -->
+      <div class="flex justify-center items-center">
+        <div class="w-full max-w-xl">
+          <Chart type="bar" :data="devolucaoChart.data" :options="devolucaoChart.options" />
+        </div>
+      </div>
+
+      <!-- Gráfico de Evolução -->
+      <div class="flex justify-center items-center">
+        <div class="w-full max-w-xl">
+          <Chart type="line" :data="lineChart.data" :options="lineChart.options" />
+        </div>
+      </div>
+
+      <!-- Gráfico de Tempo Médio -->
+      <div class="flex justify-center items-center">
+        <div class="w-full max-w-xl">
+          <Chart type="line" :data="stepChart.data" :options="stepChart.options" />
+        </div>
+      </div>
+
+      <!-- Gráfico Dias da Semana -->
+      <div class="flex justify-center items-center">
+        <div class="w-full max-w-xl">
+          <Chart type="bar" :data="chartDiasSemana.data" :options="chartDiasSemana.options" />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
+
+
 <script setup>
-import { ref, onMounted } from "vue";
-import Highcharts from 'highcharts';
-import HighchartsVue from "highcharts-vue";
+import { ref, onMounted } from 'vue'
 
-// Gráficos Highcharts
-const pieChartOptions = ref({});
-const barChartOptions = ref({});
-const lineChartOptions = ref({});
-const stepChartOptions = ref({});
+// Função de animação avançada
+const animatedOptions = ({ displayLegend = false, position = 'top', type = 'default' } = {}) => {
+  const easing = type === 'pie' ? 'easeOutElastic' :
+                 type === 'line' ? 'easeInOutQuart' :
+                 type === 'bar' ? 'easeOutBounce' : 'easeInOutExpo';
 
-// Gráfico PrimeVue
-const chartDiasSemana = ref({
-  type: 'bar',
-  data: {
-    labels: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"],
-    datasets: [
-      {
-        label: 'Movimentações por Dia da Semana',
-        backgroundColor: '#42A5F5',
-        data: [0, 0, 0, 0, 0, 0, 0],
-      },
-    ],
-  },
-  options: {
+  return {
     responsive: true,
+    animation: {
+      duration: 2000,
+      easing,
+      delay: (ctx) => (ctx.dataIndex ?? 0) * 150,
+      onProgress: (animation) => {
+        const chart = animation.chart;
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, animation.currentStep / animation.numSteps);
+      },
+      onComplete: (animation) => {
+        const chart = animation.chart;
+        const ctx = chart.ctx;
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      }
+    },
+    elements: {
+      bar: {
+        borderRadius: 10,
+        borderSkipped: false,
+      },
+      point: {
+        radius: 6,
+        backgroundColor: '#42A5F5',
+        hoverRadius: 10,
+        hoverBorderColor: '#fff',
+        hoverBorderWidth: 2
+      },
+      line: {
+        borderWidth: 3,
+        tension: 0.4,
+      },
+      arc: {
+        borderWidth: 2
+      }
+    },
     plugins: {
       legend: {
-        display: true,
+        display: displayLegend,
+        position
       },
+      tooltip: {
+        enabled: true
+      }
     },
+    hover: {
+      mode: 'nearest',
+      intersect: true
+    },
+    scales: type === 'pie' ? {} : {
+      y: {
+        beginAtZero: true,
+        grace: '10%'
+      }
+    }
+  };
+}
+
+// Refs dos gráficos
+const rankingChart = ref({ data: {}, options: {} })
+const pieChart = ref({ data: {}, options: {} })
+const categoriaChart = ref({ data: {}, options: {} })
+const devolucaoChart = ref({ data: {}, options: {} })
+const lineChart = ref({ data: {}, options: {} })
+const stepChart = ref({ data: {}, options: {} })
+const chartDiasSemana = ref({
+  data: {
+    labels: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'],
+    datasets: [{
+      label: 'Movimentações por Dia da Semana',
+      backgroundColor: '#42A5F5',
+      data: [0, 0, 0, 0, 0, 0, 0],
+    }]
+  },
+  options: animatedOptions({ type: 'bar' })
+})
+
+// Setters com animações aplicadas
+const setRankingChart = (data) => {
+  rankingChart.value = {
+    data: {
+      labels: data.map(i => i.titulo),
+      datasets: [{
+        label: 'Empréstimos',
+        backgroundColor: '#42A5F5',
+        data: data.map(i => i.quantidade),
+      }]
+    },
+    options: animatedOptions({ type: 'bar' })
   }
-});
+}
 
-const createHighchartsPie = (data) => {
-  pieChartOptions.value = {
-    chart: { type: "pie" },
-    title: { text: "Percentual por Tipo de Usuário" },
-    series: [{
-      name: "Usuários",
-      colorByPoint: true,
-      data: data.map(item => ({
-        name: item.tipo,
-        y: item.percentual,
-      })),
-    }],
-  };
-};
+const setPieChart = (data) => {
+  pieChart.value = {
+    data: {
+      labels: data.map(i => i.tipo),
+      datasets: [{
+        data: data.map(i => i.percentual),
+        backgroundColor: ['#42A5F5', '#66BB6A', '#FFA726', '#EC407A', '#AB47BC'],
+      }]
+    },
+    options: animatedOptions({ displayLegend: true, position: 'right', type: 'pie' })
+  }
+}
 
-const createHighchartsBar = (data) => {
-  barChartOptions.value = {
-    chart: { type: "column" },
-    title: { text: "Livros Mais Emprestados" },
-    xAxis: { categories: data.map(item => item.titulo), title: { text: "Livros" }},
-    yAxis: { min: 0, title: { text: "Quantidade de Empréstimos" }},
-    series: [{
-      name: "Empréstimos",
-      data: data.map(item => item.quantidade),
-    }],
-  };
-};
+const setCategoriaChart = (data) => {
+  categoriaChart.value = {
+    data: {
+      labels: data.map(i => i.categoria),
+      datasets: [{
+        label: 'Empréstimos',
+        backgroundColor: '#66BB6A',
+        data: data.map(i => i.quantidade),
+      }]
+    },
+    options: animatedOptions({ type: 'bar' })
+  }
+}
 
-const createHighchartsLine = (data) => {
-  lineChartOptions.value = {
-    chart: { type: "line" },
-    title: { text: "Evolução dos Empréstimos ao Longo do Tempo" },
-    xAxis: { categories: data.map(item => item.mes), title: { text: "Mês" }},
-    yAxis: { title: { text: "Quantidade de Empréstimos" }},
-    series: [{
-      name: "Empréstimos",
-      data: data.map(item => item.quantidade),
-    }],
-  };
-};
+const setDevolucaoChart = (data) => {
+  devolucaoChart.value = {
+    data: {
+      labels: ['No Prazo', 'Fora do Prazo'],
+      datasets: [{
+        label: 'Devoluções',
+        backgroundColor: ['#42A5F5', '#EF5350'],
+        data: [data.noPrazo, data.foraPrazo],
+      }]
+    },
+    options: animatedOptions({ type: 'bar' })
+  }
+}
 
-const createHighchartsStep = (data) => {
-  stepChartOptions.value = {
-    chart: { type: "line" },
-    title: { text: "Tempo Médio de Empréstimo por Tipo de Usuário" },
-    xAxis: { categories: data.map(item => item.tipo), title: { text: "Tipo de Usuário" }},
-    yAxis: { title: { text: "Dias" }},
-    plotOptions: { series: { step: "left" }},
-    series: [{
-      name: "Tempo Médio",
-      data: data.map(item => item.media),
-    }],
-  };
-};
-const rankingChartOptions = ref({});
+const setLineChart = (data) => {
+  lineChart.value = {
+    data: {
+      labels: data.map(i => i.mes),
+      datasets: [{
+        label: 'Empréstimos',
+        borderColor: '#42A5F5',
+        backgroundColor: '#BBDEFB',
+        fill: true,
+        tension: 0.4,
+        data: data.map(i => i.quantidade),
+      }]
+    },
+    options: animatedOptions({ type: 'line' })
+  }
+}
 
-const createHighchartsRankingAno = (data) => {
-  rankingChartOptions.value = {
-    chart: { type: "column" },
-    title: { text: "Ranking de Empréstimos no Ano" },
-    xAxis: { categories: data.map(item => item.titulo), title: { text: "Livros" } },
-    yAxis: { min: 0, title: { text: "Quantidade" } },
-    series: [{
-      name: "Empréstimos",
-      data: data.map(item => item.quantidade),
-    }],
-  };
-};
+const setStepChart = (data) => {
+  stepChart.value = {
+    data: {
+      labels: data.map(i => i.tipo),
+      datasets: [{
+        label: 'Tempo Médio (dias)',
+        borderColor: '#AB47BC',
+        backgroundColor: '#E1BEE7',
+        fill: false,
+        stepped: true,
+        data: data.map(i => i.media),
+      }]
+    },
+    options: animatedOptions({ type: 'line' })
+  }
+}
 
-const categoriaChartOptions = ref({});
-
-const createHighchartsCategoria = (data) => {
-  categoriaChartOptions.value = {
-    chart: { type: "bar" },
-    title: { text: "Empréstimos por Categoria de Livro" },
-    xAxis: { categories: data.map(item => item.categoria), title: { text: "Categoria" } },
-    yAxis: { min: 0, title: { text: "Quantidade" } },
-    series: [{
-      name: "Empréstimos",
-      data: data.map(item => item.quantidade),
-    }],
-  };
-};
-const devolucaoChartOptions = ref({});
-
-const createHighchartsDevolucoes = (data) => {
-  devolucaoChartOptions.value = {
-    chart: { type: "column" },
-    title: { text: "Devoluções no Prazo vs. Fora do Prazo" },
-    xAxis: { categories: ["No Prazo", "Fora do Prazo"] },
-    yAxis: { min: 0, title: { text: "Quantidade" } },
-    series: [{
-      name: "Devoluções",
-      data: [data.noPrazo, data.foraPrazo],
-    }],
-  };
-};
-
-
-
+// Carregamento dos dados
 onMounted(async () => {
-  const rankingLivrosAno = await window.api.getRankingLivrosAno();
-  const emprestimosCategoria = await window.api.getEmprestimosCategoria();
-  const devolucoesPrazo = await window.api.getDevolucoesPrazo();
-  const evolucao = await window.api.getEvolucaoEmprestimos();
-  const diasSemana = await window.api.getDiasSemanaMovimentados();
-  const percentuais = await window.api.getPercentuais();
-  const maisEmprestados = await window.api.getLivrosMaisEmprestados();
-  const tempoMedio = await window.api.getTempoMedio();
+  try {
+    const rankingLivrosAno = await window.api.getRankingLivrosAno();
+    const emprestimosCategoria = await window.api.getEmprestimosCategoria();
+    const devolucoesPrazo = await window.api.getDevolucoesPrazo();
+    const evolucao = await window.api.getEvolucaoEmprestimos();
+    const diasSemana = await window.api.getDiasSemanaMovimentados();
+    const tempoMedio = await window.api.getTempoMedioUsuario();
+    const percentuais = await window.api.getPercentualUsuarios();
 
-  createHighchartsRankingAno(rankingLivrosAno);
-  createHighchartsCategoria(emprestimosCategoria);
-  createHighchartsDevolucoes(devolucoesPrazo);
-  createHighchartsLine(evolucao);
-  createHighchartsBar(maisEmprestados);
-  createHighchartsStep(tempoMedio);
+    if (rankingLivrosAno?.length)
+      setRankingChart(rankingLivrosAno.map(i => ({
+        titulo: i.titulo,
+        quantidade: i.total_emprestimos
+      })));
 
+    if (emprestimosCategoria?.length)
+      setCategoriaChart(emprestimosCategoria.map(i => ({
+        categoria: i.categoria,
+        quantidade: i.total
+      })));
 
+    if (devolucoesPrazo?.length)
+      setDevolucaoChart({
+        noPrazo: devolucoesPrazo.find(i => i.status === 'No Prazo')?.total || 0,
+        foraPrazo: devolucoesPrazo.find(i => i.status === 'Em Atraso')?.total || 0
+      });
 
-  // Preencher gráfico de dias da semana
-  const totais = [0, 0, 0, 0, 0, 0, 0]; // Segunda a Domingo
-  diasSemana.forEach(item => {
-    const index = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"].indexOf(item.dia);
-    if (index !== -1) totais[index] = item.quantidade;
-  });
+    if (evolucao?.length)
+      setLineChart(evolucao.map(i => ({
+        mes: i.periodo,
+        quantidade: i.total
+      })));
 
-  chartDiasSemana.value.data.datasets[0].data = totais;
+    if (tempoMedio?.length)
+      setStepChart(tempoMedio.map(i => ({
+        tipo: i.tipo_usuario,
+        media: i.media_dias
+      })));
+
+    if (percentuais?.length) {
+      const total = percentuais.reduce((sum, u) => sum + u.total, 0);
+      setPieChart(percentuais.map(i => ({
+        tipo: i.tipo_usuario,
+        percentual: parseFloat((i.total / total * 100).toFixed(2))
+      })));
+    }
+
+    const totais = [0, 0, 0, 0, 0, 0, 0];
+    diasSemana.forEach(item => {
+      const idx = parseInt(item.dia_semana);
+      if (idx >= 0 && idx <= 6) totais[idx] = item.total;
+    });
+    chartDiasSemana.value.data.datasets[0].data = totais;
+
+  } catch (error) {
+    console.error('Erro ao carregar os dados dos gráficos:', error);
+  }
 });
 </script>

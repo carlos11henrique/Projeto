@@ -1,7 +1,8 @@
 import './assets/main.css'
 import { createApp } from 'vue'
 import App from './App.vue'
-import HighchartsVue from 'highcharts-vue'
+import HighchartsVue from 'highcharts-vue';
+
 import { createRouter, createWebHistory } from 'vue-router'
 
 import Layout from './components/Layout.vue' 
@@ -26,7 +27,9 @@ const router = createRouter({
 })
 
 const app = createApp(App)
-app.use(router)
+
 app.use(HighchartsVue)
+app.use(router)
+
 app.component('Chart', Chart)
 app.mount('#app')
