@@ -188,12 +188,22 @@ ipcMain.handle('getLivrosPopulares', async () => {
 ipcMain.handle('getDiasSemanaMovimentados', async () => {
   try {
     const [results] = await sequelize.query(`
-      SELECT 
-        strftime('%w', dataEmprestimo) AS dia_semana,
-        COUNT(*) AS total
-      FROM Loans
-      GROUP BY dia_semana
-      ORDER BY dia_semana;
+SELECT 
+  strftime('%w', dataEmprestimo) AS dia_num,
+  COUNT(*) AS total
+FROM Loans
+GROUP BY dia_num
+ORDER BY 
+  CASE strftime('%w', dataEmprestimo)
+    WHEN '1' THEN 1  -- Segunda
+    WHEN '2' THEN 2  -- Terça
+    WHEN '3' THEN 3  -- Quarta
+    WHEN '4' THEN 4  -- Quinta
+    WHEN '5' THEN 5  -- Sexta
+    WHEN '6' THEN 6  -- Sábado
+    WHEN '0' THEN 7  -- Domingo
+  END;
+
     `);
     return results;
   } catch (err) {
