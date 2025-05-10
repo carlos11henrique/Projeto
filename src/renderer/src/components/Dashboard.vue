@@ -142,18 +142,30 @@ onMounted(async () => {
       if (idx >= 0 && idx <= 6) totais[idx] = item.total;
     });
 
-    renderHighchart('chartDiasSemana', {
-      chart: { type: 'column' },
-      title: { text: 'Movimentações por Dia da Semana' },
-      xAxis: { categories: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'] },
-      yAxis: { title: { text: 'Movimentações' } },
-      series: [{
-        name: 'Chamados',
-        data: totais,
-        color: '#5C6BC0'
-      }],
-      plotOptions: { series: { animation: { duration: 1500 } } }
-    });
+    if (diasSemana?.length) {
+      const totais = [0, 0, 0, 0, 0, 0, 0]; // Segunda a Domingo
+
+      diasSemana.forEach(item => {
+        const dia = item.dia_num;   // '0' a '6'
+        const total = item.total;
+        const indice = dia === '0' ? 6 : parseInt(dia) - 1;
+        totais[indice] = total;
+      });
+
+      renderHighchart('chartDiasSemana', {
+        chart: { type: 'column' },
+        title: { text: 'Movimentações por Dia da Semana' },
+        xAxis: { categories: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'] },
+        yAxis: { title: { text: 'Movimentações' } },
+        series: [{
+          name: 'Empréstimos',
+          data: totais,
+          color: '#5C6BC0'
+        }],
+        plotOptions: { series: { animation: { duration: 1500 } } }
+      });
+    }
+
 
   } catch (error) {
     console.error('Erro ao carregar os dados dos gráficos:', error);

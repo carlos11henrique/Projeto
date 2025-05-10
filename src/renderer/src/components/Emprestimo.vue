@@ -250,7 +250,7 @@ export default {
 
     const hoje = new Date();
     const devolucao = new Date();
-    devolucao.setDate(hoje.getDate() + 14);
+    devolucao.setDate(hoje.getDate() + 8);
     const dataFormatada = devolucao.toLocaleDateString('pt-BR');
 
     const confirmacao = await Swal.fire({
