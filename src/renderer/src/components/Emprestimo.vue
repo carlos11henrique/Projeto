@@ -32,7 +32,7 @@
             <td class="px-4 py-2">{{ book.codigoLivro }}</td>
             <td class="px-4 py-2">{{ book.titulo }}</td>
             <td class="px-4 py-2">{{ book.autor }}</td>
-            <td class="px-4 py-2">{{ book.genero }}</td>
+            <td class="px-4 py-2">{{ book.Category.dataValues.nome }}</td>
             <td class="px-4 py-2">{{ book.exemplar }}</td>
             <td class="px-4 py-2">{{ book.emprestadoPara ? book.emprestadoPara.nome : '-' }}</td>
             <td
@@ -175,8 +175,8 @@ export default {
     async carregarBooks() {
       try {
         const livros = await window.api.getLivro();
-        this.books = livros.map(livro => ({ ...livro, status: 'disponivel' }));
-      } catch (error) {
+        this.books = livros;
+            } catch (error) {
         console.error('Erro ao carregar livros:', error);
       }
     },
@@ -250,7 +250,7 @@ export default {
 
     const hoje = new Date();
     const devolucao = new Date();
-    devolucao.setDate(hoje.getDate() + 8);
+    devolucao.setDate(hoje.getDate() + 7);
     const dataFormatada = devolucao.toLocaleDateString('pt-BR');
 
     const confirmacao = await Swal.fire({

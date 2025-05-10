@@ -310,15 +310,23 @@ ipcMain.handle('getRankingLivrosAno', async () => {
     }
   });
   
-  ipcMain.handle('getLivro', async () => {
-    try {
-      const livros = await LivroModel.findAll();
-      return livros.map(l => l.dataValues);
-    } catch (error) {
-      console.error('Erro em getLivro:', error);
-      throw error;
-    }
-  });
+ipcMain.handle('getLivro', async () => {
+
+  try {
+    
+    const livros = await LivroModel.findAll({
+      include: CategoriaModel
+      
+    });
+    console.log(livros);
+    return livros.map(l => l.dataValues);
+  } catch (error) {
+    console.error('Erro em getLivro:', error);
+    throw error;
+  }
+});
+
+
   ipcMain.on('createEmprestimo', async (event, loans) => {
     try {
       await EmprestimoModel.create(loans);

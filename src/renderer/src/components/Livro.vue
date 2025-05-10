@@ -110,8 +110,7 @@
     <td class="px-6 py-4">{{ livro.titulo }}</td>
     <td class="px-6 py-4">{{ livro.autor }}</td>
     <td class="px-6 py-4">{{ livro.editora }}</td>
-    <td class="px-6 py-4">{{ livro.categoryId
-      }}</td>
+    <td class="px-6 py-4">{{ livro.Category.dataValues.nome || '-' }}</td>
     <td class="px-6 py-4">
   <img v-if="livro.imagem" :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="h-16 w-auto" />
 </td>
@@ -294,6 +293,7 @@ export default {
             await window.api.deleteLivro(livro.codigoLivro);
             this.carregarLivro();
 
+
             Swal.fire('Removido!', 'O livro foi removido.', 'success');
           } catch (error) {
             Swal.fire('Erro', 'Não foi possível remover o livro.', 'error');
@@ -311,14 +311,19 @@ export default {
   }
 },
 
-    async carregarLivro() {
-      try {
-        const livros = await window.api.getLivro();
-        this.livros = livros;
-      } catch (error) {
-        console.error('Erro ao carregar livros:', error);
-      }
-    },
+  async carregarLivro() {
+  try {
+    
+    const livros = await window.api.getLivro();
+
+  this.livros = livros;
+  console.log('Livros:', this.livros);
+  } catch (error) {
+    console.error('Erro ao carregar livros:', error);
+    Swal.fire('Erro', 'Não foi possível carregar os livros.', 'error');
+  }
+},
+
 
     resetarFormulario() {
       this.novoLivro = {
