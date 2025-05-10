@@ -216,7 +216,7 @@ export default {
               quantidade: 1,
               imagem: livroBase.imagem,
 
-              categoryId: livroBase.categoryId
+              CategoryId: livroBase.categoryId
 
             };
             console.log('Enviando livro para salvar:', novoLivro);
