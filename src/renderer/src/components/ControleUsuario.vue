@@ -141,35 +141,29 @@ export default {
     };
   },
   computed: {
-    usuariosFiltrados() {
-      let lista = this.usuarios;
-      
-      if (this.tipoSelecionado) {
-        lista = lista.filter(u => u.tipo === this.tipoSelecionado);
-      }
+  usuariosFiltrados() {
+  const busca = this.termoBusca.trim().toLowerCase();
+  const buscaNumerica = this.termoBusca.replace(/\D/g, "");
 
-      if (this.termoBusca.trim()) {
-        const busca = this.termoBusca.toLowerCase();
+  return this.usuarios.filter((u) => {
+    const nome = u.nome?.toLowerCase() || "";
+    const cpf = (u.cpf || "").replace(/\D/g, "");
+    const telefone = (u.telefone || "").replace(/\D/g, "");
+    const matricula = (u.matricula || "").toLowerCase();
 
-        lista = lista.filter(u => {
-          const nome = u.nome?.toLowerCase() || "";
-          const matricula = u.matricula?.toLowerCase() || "";
-          const cpf = u.cpf?.replace(/\D/g, "");
-          const telefone = u.telefone?.replace(/\D/g, "");
-          const buscaNumerica = this.termoBusca.replace(/\D/g, "");
-
-          return (
-            nome.includes(busca) ||
-            cpf.includes(buscaNumerica) ||
-            matricula.includes(buscaNumerica) ||
-            telefone.includes(buscaNumerica)
-          );
-        });
-      }
-
-      return lista;
+    if (/^\d+$/.test(this.termoBusca)) {
+      return (
+        cpf.includes(buscaNumerica) ||
+        telefone.includes(buscaNumerica) ||
+        matricula.includes(buscaNumerica)
+      );
     }
+    return nome.includes(busca) || matricula.includes(busca);
+  });
+}
+
   },
+
   watch: {
     'novoUsuario.tipo'(val) {
       this.tipoSelecionado = val;
@@ -232,7 +226,6 @@ export default {
       this.editando = true;
     },
     async removerUsuario(usuarioId) {
-  // Alerta de confirmação de exclusão
   const result = await Swal.fire({
     title: 'Tem certeza?',
     text: "Você não poderá reverter isso!",
@@ -245,15 +238,14 @@ export default {
   });
 
   if (result.isConfirmed) {
-    // Caso o usuário confirme, a exclusão será realizada
     try {
-      await window.api.deleteUser(usuarioId); // Passando apenas o id
+      await window.api.deleteUser(usuarioId); 
       Swal.fire(
         'Excluído!',
         'O usuário foi excluído com sucesso.',
         'success'
       );
-      // Atualizar a lista de usuários após a exclusão
+
       await this.carregarUsuarios();
     } catch (error) {
       console.error("Erro ao remover usuário:", error);
@@ -306,5 +298,4 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos adicionais podem ser aplicados aqui */
 </style>

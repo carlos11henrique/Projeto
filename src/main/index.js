@@ -392,6 +392,14 @@ LIMIT 10;
   
   
   // Repetir padrão para User
+  ipcMain.on('createUser', async (event, user) => {
+    try {
+      await UserModel.create(user);
+      console.log('User criado com sucesso');
+    } catch (error) {
+      handleError(event, error, 'createUser');
+    }
+  });
 
   
   
