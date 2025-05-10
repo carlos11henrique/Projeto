@@ -241,8 +241,6 @@ LIMIT 10;
 
 
   ipcMain.on('createLivro', async (event, book) => {
-    console.log('Recebido livro:', book);
-    console.log('categoryId recebido:', book.categoryId);
   
     try {
       if (book.imagem) {
@@ -384,7 +382,6 @@ LIMIT 10;
         ]
       });
   
-      console.log(emprestimos);
   
       return emprestimos.map(e => e.toJSON());
     } catch (error) {
