@@ -110,6 +110,8 @@ ipcMain.handle('getEvolucaoEmprestimos', async () => {
       FROM Loans
       GROUP BY periodo
       ORDER BY periodo;
+      LIMIT 5;
+
     `);
     return results;
   } catch (err) {
@@ -122,12 +124,15 @@ ipcMain.handle('getEvolucaoEmprestimos', async () => {
 ipcMain.handle('getEmprestimosCategoria', async () => {
   try {
     const [results] = await sequelize.query(`
-      SELECT Categories.nome AS categoria, COUNT(*) AS total
-      FROM Loans
-      JOIN Books ON Loans.BookId = Books.id
-      JOIN Categories ON Books.CategoryId = Categories.id
-      GROUP BY Categories.nome
-      ORDER BY total DESC;
+   SELECT Categories.nome AS categoria, COUNT(*) AS total
+FROM Loans
+JOIN Books ON Loans.BookId = Books.id
+JOIN Categories ON Books.CategoryId = Categories.id
+GROUP BY Categories.nome
+ORDER BY total DESC
+LIMIT 5;
+
+
     `);
     return results;
   } catch (err) {
@@ -144,6 +149,8 @@ ipcMain.handle('getPercentualUsuarios', async () => {
       FROM Loans
       JOIN Users ON Loans.UserId = Users.id
       GROUP BY Users.tipo;
+      LIMIT 5;
+
     `);
     return results;
   } catch (err) {
@@ -165,6 +172,7 @@ ipcMain.handle('getDevolucoesPrazo', async () => {
       FROM Loans
       WHERE dataDevolucao IS NOT NULL
       GROUP BY status;
+
     `);
     return results;
   } catch (err) {
@@ -250,7 +258,7 @@ ipcMain.handle('getRankingLivrosAno', async () => {
       JOIN Books ON Loans.BookId = Books.id
       GROUP BY Books.titulo, ano
       ORDER BY total_emprestimos DESC
-      LIMIT 10;
+      LIMIT 5;
     `);
     return results;
   } catch (err) {
