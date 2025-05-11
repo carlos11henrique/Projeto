@@ -73,6 +73,30 @@ app.whenReady().then(() => {
     }
   };
 
+  ipcMain.handle('getRankingUsuariosEmprestimos', async () => {
+  try {
+    const [results, metadata] = await sequelize.query(`
+      SELECT 
+        u.id,
+        u.nome,
+        COUNT(l.id) AS totalEmprestimos
+      FROM 
+        Users u
+      JOIN 
+        Loans l ON u.id = l.UserId
+      GROUP BY 
+        u.id, u.nome
+      ORDER BY 
+        totalEmprestimos DESC;
+    `);
+
+    return results; // já retorna como array de objetos [{ id, nome, totalEmprestimos }]
+  } catch (error) {
+    console.error('Erro ao buscar ranking de usuários:', error);
+    return { error: 'Erro ao buscar dados' };
+  }
+});
+
   
 // Evolução dos Empréstimos por Mês
 ipcMain.handle('getEvolucaoEmprestimos', async () => {

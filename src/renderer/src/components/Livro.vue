@@ -77,14 +77,34 @@
           />
         </div>
       </div>
-      <button type="submit"
-        class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center">
-        Cadastrar
-      </button>
-      <button v-if="editando" @click="salvarEdicaoLivro"
-        class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center mt-2">
-        Salvar Edição
-      </button>
+  <div class="flex flex-wrap gap-4 mt-4">
+  <button
+    v-if="!editando"
+    type="submit"
+    class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center"
+  >
+    Cadastrar
+  </button>
+
+  <div v-else class="flex flex-wrap gap-4">
+    <button
+      @click="salvarEdicaoLivro"
+      type="button"
+      class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center"
+    >
+      Salvar Edição
+    </button>
+
+    <button
+      @click="cancelarEdicao"
+      type="button"
+      class="text-white bg-gray-500 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center"
+    >
+      Cancelar
+    </button>
+  </div>
+</div>
+
     </form>
 
     <input v-model="searchQuery" type="text" placeholder="Pesquisar livro..." class="mt-4 mb-4 p-2 border border-gray-300 rounded-md w-full" />

@@ -18,6 +18,7 @@ import Highcharts from 'highcharts';
 
 const charts = reactive([
   { id: 'rankingChart' },
+  { id: 'rankingUsuariosChart' },
   { id: 'pieChart' },
   { id: 'categoriaChart' },
   { id: 'devolucaoChart' },
@@ -39,6 +40,7 @@ onMounted(async () => {
     const diasSemana = await window.api.getDiasSemanaMovimentados();
     const tempoMedio = await window.api.getTempoMedioUsuario();
     const percentuais = await window.api.getPercentualUsuarios();
+    const rankingUser = await window.api.getRankingUsuariosEmprestimos();
 
     if (rankingLivrosAno?.length) {
       renderHighchart('rankingChart', {
@@ -76,7 +78,7 @@ onMounted(async () => {
       renderHighchart('devolucaoChart', {
         chart: { type: 'column' },
         title: { text: 'Devoluções no Prazo vs Atrasadas' },
-        xAxis: { categories: ['No Prazo', 'Fora do Prazo'] },
+        xAxis: { categories: ['No Prazo', 'Não entrege ainda'] },
         yAxis: { title: { text: 'Quantidade' } },
         series: [{
           name: 'Devoluções',
@@ -164,11 +166,34 @@ onMounted(async () => {
         }],
         plotOptions: { series: { animation: { duration: 1500 } } }
       });
+
+
     }
+    if (rankingUser?.length) {
+  renderHighchart('rankingUsuariosChart', {
+    chart: { type: 'bar' },
+    title: { text: 'Ranking de Usuários com Mais Empréstimos' },
+    xAxis: { 
+      categories: rankingUser.map(i => i.nome),
+      title: { text: 'Usuários' }
+    },
+    yAxis: { 
+      title: { text: 'Total de Empréstimos' }
+    },
+    series: [{
+      name: 'Empréstimos',
+      data: rankingUser.map(i => parseInt(i.totalEmprestimos)),
+      color: '#F57C00'
+    }],
+    plotOptions: { series: { animation: { duration: 1500 } } }
+  });
+}
+    
 
 
   } catch (error) {
     console.error('Erro ao carregar os dados dos gráficos:', error);
   }
 });
+
 </script>

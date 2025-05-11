@@ -41,6 +41,7 @@ const api = {
   getLivrosPopulares: () => ipcRenderer.invoke('getLivrosPopulares'),
   getDiasSemanaMovimentados: () => ipcRenderer.invoke('getDiasSemanaMovimentados'),
   getRankingLivrosAno: () => ipcRenderer.invoke('getRankingLivrosAno'),
+  getRankingUsuariosEmprestimos: () => ipcRenderer.invoke('getRankingUsuariosEmprestimos'),
 
 }
 
