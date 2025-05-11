@@ -28,8 +28,11 @@
       </thead>
       <tbody>
         <template v-for="(book, index) in filteredBooks" :key="index">
-          <tr class="border-t border-gray-300 hover:bg-gray-50">
-            <td class="px-4 py-3">{{ book.codigoLivro }}</td>
+<tr
+  class="border-t border-gray-300 hover:bg-gray-50"
+  :class="{ 'bg-red-100': isAtrasado(book.dataDevolucao) }"
+>
+          <td class="px-4 py-3">{{ book.codigoLivro }}</td>
             <td class="px-4 py-3">{{ book.titulo }}</td>
             <td class="px-4 py-3">{{ book.autor }}</td>
             <td class="px-4 py-3">{{ book.Category.dataValues.nome }}</td>
@@ -266,7 +269,7 @@ export default {
 
     const hoje = new Date();
     const devolucao = new Date();
-    devolucao.setDate(hoje.getDate() + 7);
+    devolucao.setDate(hoje.getDate() + 8);
     const dataFormatada = devolucao.toLocaleDateString('pt-BR');
 
     const confirmacao = await Swal.fire({
