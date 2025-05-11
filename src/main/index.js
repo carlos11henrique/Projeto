@@ -76,18 +76,20 @@ app.whenReady().then(() => {
   ipcMain.handle('getRankingUsuariosEmprestimos', async () => {
   try {
     const [results, metadata] = await sequelize.query(`
-      SELECT 
-        u.id,
-        u.nome,
-        COUNT(l.id) AS totalEmprestimos
-      FROM 
-        Users u
-      JOIN 
-        Loans l ON u.id = l.UserId
-      GROUP BY 
-        u.id, u.nome
-      ORDER BY 
-        totalEmprestimos DESC;
+ SELECT 
+  u.id,
+  u.nome,
+  COUNT(l.id) AS totalEmprestimos
+FROM 
+  Users u
+JOIN 
+  Loans l ON u.id = l.UserId
+GROUP BY 
+  u.id, u.nome
+ORDER BY 
+  totalEmprestimos DESC
+LIMIT 5;
+
     `);
 
     return results; // já retorna como array de objetos [{ id, nome, totalEmprestimos }]
