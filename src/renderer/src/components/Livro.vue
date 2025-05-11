@@ -276,35 +276,37 @@ export default {
   }
 },
 
-    async removerLivro(index) {
-      const livro = this.livros[index];
+async removerLivro(index) {
+  const livro = this.livros[index];
 
-      Swal.fire({
-        title: 'Tem certeza?',
-        text: "Deseja remover este livro?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sim, remover!',
-        cancelButtonText: 'Cancelar'
-      }).then(async (result) => {
-        if (result.isConfirmed) {
-          try {
-            await window.api.deleteLivro(livro.codigoLivro);
-            this.carregarLivro();
+  Swal.fire({
+    title: 'Tem certeza?',
+    text: "Deseja remover este livro?",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sim, remover!',
+    cancelButtonText: 'Cancelar'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        await window.api.deleteLivro(livro.id);
 
+        // Remover o livro da lista local imediatamente
+        this.livros.splice(index, 1);
 
-            Swal.fire('Removido!', 'O livro foi removido.', 'success');
-          } catch (error) {
-            Swal.fire('Erro', 'Não foi possível remover o livro.', 'error');
-          }
-        }
-      });
-    },
+        Swal.fire('Removido!', 'O livro foi removido.', 'success');
+      } catch (error) {
+        Swal.fire('Erro', 'Não foi possível remover o livro.', 'error');
+      }
+    }
+  });
+},
+
 
     async carregarCategoria() {
   try {
     const categorys = await window.api.getCategoria();
-    this.categorys = categorys;  // Armazenando as categorys na variável correta
+    this.categorys = categorys; 
   } catch (error) {
     console.error('Erro ao carregar categorys:', error);
   }

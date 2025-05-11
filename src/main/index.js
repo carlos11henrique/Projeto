@@ -292,14 +292,37 @@ ipcMain.handle('getRankingLivrosAno', async () => {
     }
   });
   
-  ipcMain.on('deleteLivro', async (event, id) => {
-    try {
-      await LivroModel.destroy({ where: { id: id } });
-      console.log('Livro deletado com sucesso');
-    } catch (error) {
-      handleError(event, error, 'deleteLivro');
+ipcMain.on('deleteLivro', async (event, id) => {
+  try {
+    const livroId = parseInt(id);
+
+    if (isNaN(livroId)) {
+      throw new Error(`ID inválido: ${id}`);
     }
-  });
+
+    const livro = await LivroModel.findByPk(livroId);
+
+    if (!livro) {
+      throw new Error('Livro não encontrado.');
+    }
+
+    if (livro.imagem) {
+      try {
+        await fs.unlink(livro.imagem);
+        console.log('Imagem deletada com sucesso');
+      } catch (err) {
+        console.warn('Erro ao deletar imagem:', err.message);
+      }
+    }
+
+    await LivroModel.destroy({ where: { id: livroId } });
+    console.log('Livro deletado com sucesso');
+  } catch (error) {
+    handleError(event, error, 'deleteLivro');
+  }
+});
+
+
   
   ipcMain.on('buscarLivro', async (event, id) => {
     try {
