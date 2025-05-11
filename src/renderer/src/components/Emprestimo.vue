@@ -403,6 +403,8 @@ async aumentarPrazo(book) {
     await this.carregarBooks();
     await this.carregarUsers();
     await this.carregarLoans();
+
+
   }
 };
 </script>

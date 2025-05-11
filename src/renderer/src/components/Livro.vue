@@ -232,7 +232,6 @@ export default {
               CategoryId: livroBase.categoryId
 
             };
-            console.log('Enviando livro para salvar:', novoLivro);
 
 
             await window.api.createLivro(novoLivro);
