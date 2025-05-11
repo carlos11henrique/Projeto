@@ -1,57 +1,68 @@
 <template>
-  <div class="p-4">
+  <div class="p-6 bg-white rounded shadow overflow-x-auto text-[15px]">
     <!-- Campo de busca -->
     <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700">Pesquisar Livro</label>
+      <label class="block text-base font-medium text-gray-800">Pesquisar Livro</label>
       <input
         v-model="searchQuery"
         type="text"
         placeholder="Código, título ou autor"
-        class="mt-1 p-2 border border-gray-300 rounded-md w-full"
+        class="mt-1 p-2 border border-gray-300 rounded-md w-full text-base"
       />
     </div>
 
     <!-- Tabela de livros -->
-    <table class="w-full text-sm text-left text-gray-700 border border-gray-300 rounded-md overflow-hidden">
-      <thead class="bg-gray-100">
+    <table class="min-w-full text-base text-left text-gray-800 border border-gray-300 rounded-md overflow-hidden">
+      <thead class="bg-gray-100 font-semibold">
         <tr>
-          <th class="px-4 py-2">Código</th>
-          <th class="px-4 py-2">Título</th>
-          <th class="px-4 py-2">Autor</th>
-          <th class="px-4 py-2">Gênero</th>
-          <th class="px-4 py-2">Exemplares</th>
-          <th class="px-4 py-2">Usuário</th>
-          <th class="px-4 py-2">Devolução</th>
-          <th class="px-4 py-2">Ações</th>
+          <th class="px-4 py-3 border">Código</th>
+          <th class="px-4 py-3 border">Título</th>
+          <th class="px-4 py-3 border">Autor</th>
+          <th class="px-4 py-3 border">Gênero</th>
+          <th class="px-4 py-3 border">Exemplares</th>
+          <th class="px-4 py-3 border">Imagem</th>
+          <th class="px-4 py-3 border">Usuário</th>
+          <th class="px-4 py-3 border">Devolução</th>
+          <th class="px-4 py-3 border">Ações</th>
         </tr>
       </thead>
       <tbody>
         <template v-for="(book, index) in filteredBooks" :key="index">
-          <tr class="border-t border-gray-200">
-            <td class="px-4 py-2">{{ book.codigoLivro }}</td>
-            <td class="px-4 py-2">{{ book.titulo }}</td>
-            <td class="px-4 py-2">{{ book.autor }}</td>
-            <td class="px-4 py-2">{{ book.Category.dataValues.nome }}</td>
-            <td class="px-4 py-2">{{ book.exemplar }}</td>
-            <td class="px-4 py-2">{{ book.emprestadoPara ? book.emprestadoPara.nome : '-' }}</td>
+          <tr class="border-t border-gray-300 hover:bg-gray-50">
+            <td class="px-4 py-3">{{ book.codigoLivro }}</td>
+            <td class="px-4 py-3">{{ book.titulo }}</td>
+            <td class="px-4 py-3">{{ book.autor }}</td>
+            <td class="px-4 py-3">{{ book.Category.dataValues.nome }}</td>
+            <td class="px-4 py-3">{{ book.exemplar }}</td>
+            <td class="px-4 py-3 text-center">
+            <img
+  v-if="book.imagem"
+  :src="'atom:/' + book.imagem"
+  alt="Imagem do Livro"
+  class="h-36 w-auto mx-auto" 
+/>
+            </td>
+            <td class="px-4 py-3">
+              {{ book.emprestadoPara ? book.emprestadoPara.nome : '-' }}
+            </td>
             <td
-              class="px-4 py-2"
+              class="px-4 py-3"
               :class="{ 'text-red-600 font-semibold': isAtrasado(book.dataDevolucao) }"
             >
               {{ book.dataDevolucao || '-' }}
             </td>
-            <td class="px-4 py-2 space-x-2">
+            <td class="px-4 py-3 space-x-2 whitespace-nowrap">
               <button
                 v-if="!book.emprestadoPara"
                 @click="iniciarEmprestimo(book)"
-                class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
               >
                 Emprestar
               </button>
               <button
                 v-else
                 @click="devolverLivro(book)"
-                class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
               >
                 Devolver
               </button>
@@ -65,19 +76,21 @@
             </td>
           </tr>
 
+          <!-- Linha de Empréstimo -->
           <tr
             v-if="bookSelecionado && bookSelecionado.codigoLivro === book.codigoLivro"
-            class="bg-gray-50 border-b border-gray-200"
+            class="bg-gray-50 border-b border-gray-300"
           >
-            <td colspan="8" class="px-4 py-4">
-              <div class="space-y-2">
+            <td colspan="9" class="px-6 py-5">
+              <div class="space-y-3">
                 <h3 class="text-lg font-semibold">Emprestar Livro: {{ book.titulo }}</h3>
                 <p><strong>Autor:</strong> {{ book.autor }}</p>
                 <p><strong>Gênero:</strong> {{ book.genero }}</p>
                 <p><strong>Exemplares:</strong> {{ book.exemplar }}</p>
 
-                <div class="mt-2">
-                  <label class="block text-sm font-medium text-gray-700">Selecionar Usuário</label>
+                <!-- Campo de busca de usuários -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-800">Selecionar Usuário</label>
                   <input
                     v-model="searchUsuario"
                     type="text"
@@ -99,7 +112,7 @@
                     </li>
                   </ul>
 
-                  <div class="mt-4 flex gap-2">
+                  <div class="mt-4 flex gap-3 flex-wrap">
                     <button
                       v-if="userSelecionado"
                       @click="finalizarEmprestimo"
@@ -109,7 +122,7 @@
                     </button>
                     <button
                       @click="cancelarEmprestimo"
-                      class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                      class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
                     >
                       Cancelar
                     </button>
@@ -167,6 +180,14 @@ export default {
     }
   },
   methods: {
+     handleImagemSelecionada(event) {
+    this.novoLivro.imagem = window.api.getPathInput(event.target);
+
+
+
+
+  },
+  
     async carregarBooks() {
       try {
         const livros = await window.api.getLivro();

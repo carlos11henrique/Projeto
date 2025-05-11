@@ -1,131 +1,126 @@
 <template>
   <div>
     <form @submit.prevent="adicionarLivro" class="mb-6">
-  <div class="grid gap-6 mb-6 md:grid-cols-2">
-    <div>
-      <label for="titulo" class="block mb-2 text-sm font-medium text-gray-900">Título do Livro</label>
-      <input v-model="novoLivro.titulo" type="text" id="titulo"
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-        required />
-    </div>
-    <div>
-      <label for="autor" class="block mb-2 text-sm font-medium text-gray-900">Autor</label>
-      <input v-model="novoLivro.autor" type="text" id="autor"
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-        required />
-    </div>
-    <div>
-      <label for="editora" class="block mb-2 text-sm font-medium text-gray-900">Editora</label>
-      <input v-model="novoLivro.editora" type="text" id="editora"
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-        required />
-    </div>
+      <div class="grid gap-6 mb-6 md:grid-cols-2">
+        <div>
+          <label for="titulo" class="block mb-2 text-sm font-medium text-gray-900">Título do Livro</label>
+          <input v-model="novoLivro.titulo" type="text" id="titulo"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+            required />
+        </div>
+        <div>
+          <label for="autor" class="block mb-2 text-sm font-medium text-gray-900">Autor</label>
+          <input v-model="novoLivro.autor" type="text" id="autor"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+            required />
+        </div>
+        <div>
+          <label for="editora" class="block mb-2 text-sm font-medium text-gray-900">Editora</label>
+          <input v-model="novoLivro.editora" type="text" id="editora"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+            required />
+        </div>
 
+        <div>
+          <label for="genero" class="block mb-2 text-sm font-medium text-gray-900">Gênero</label>
+          <select
+            v-model="novoLivro.categoryId"
+            id="categoryId"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+          >
+            <option
+              v-for="categories in categorys" 
+              :key="categories.id" 
+              :value="categories.id"
+            >
+              {{ categories.nome }}
+            </option>
+          </select>
+        </div>
 
+        <div>
+          <label for="codigoLivro" class="block mb-2 text-sm font-medium text-gray-900">Código do Livro</label>
+          <input v-model="novoLivro.codigoLivro" type="text" id="codigoLivro"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+            required />
+        </div>
 
-    <div>
-      <label for="genero" class="block mb-2 text-sm font-medium text-gray-900">Gênero</label>
-      <select
-  v-model="novoLivro.categoryId"
-  id="categoryId"
-  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
->
-<option
-  v-for="categories in categorys" 
-  :key="categories.id" 
-  :value="categories.id"
->
-  {{ categories.nome }}
-</option>
+        <div>
+          <label for="descricao" class="block mb-2 text-sm font-medium text-gray-900">Descrição</label>
+          <input v-model="novoLivro.descricao" type="text" id="descricao"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+            required />
+        </div>
 
-</select>
+        <div>
+          <label for="exemplar" class="block mb-2 text-sm font-medium text-gray-900">Exemplar</label>
+          <input v-model="novoLivro.exemplar" type="text" id="exemplar"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+            required />
+        </div>
 
-</div>
-    <div>
-      <label for="codigoLivro" class="block mb-2 text-sm font-medium text-gray-900">Código do Livro</label>
-      <input v-model="novoLivro.codigoLivro" type="text" id="codigoLivro"
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-        required />
-    </div>
-    <div>
-      <label for="descricao" class="block mb-2 text-sm font-medium text-gray-900">Descrição</label>
-      <input v-model="novoLivro.descricao" type="text" id="descricao"
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-        required />
-    </div>
-    <div>
-      <label for="exemplar" class="block mb-2 text-sm font-medium text-gray-900">Exemplar</label>
-      <input v-model="novoLivro.exemplar" type="text" id="exemplar"
-        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-        required />
-    </div>
-    <div>
-      <label v-if="!editando" for="quantidade" class="block mb-2 text-sm font-medium text-gray-900">Quantidade</label>
-<input v-if="!editando" v-model="novoLivro.quantidade" type="number" id="quantidade"
-  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-  required />
+        <div>
+          <label v-if="!editando" for="quantidade" class="block mb-2 text-sm font-medium text-gray-900">Quantidade</label>
+          <input v-if="!editando" v-model="novoLivro.quantidade" type="number" id="quantidade"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+            required />
+        </div>
 
-    </div>
-    <div class="md:col-span-2">
-      <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">Upload Imagem</label>
-      <input
-  ref="fileInput"
-  @change="handleImagemSelecionada"
-  class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50"
-  id="file_input"
-  type="file"
-/>
-    </div>
-  </div>
-  <button type="submit"
-    class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center">
-    Cadastrar
-  </button>
-  <button v-if="editando" @click="salvarEdicaoLivro"
-  class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center mt-2">
-  Salvar Edição
-</button>
-
-</form>
-
+        <div class="md:col-span-2">
+          <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">Upload Imagem</label>
+          <input
+            ref="fileInput"
+            @change="handleImagemSelecionada"
+            class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50"
+            id="file_input"
+            type="file"
+          />
+        </div>
+      </div>
+      <button type="submit"
+        class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center">
+        Cadastrar
+      </button>
+      <button v-if="editando" @click="salvarEdicaoLivro"
+        class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center mt-2">
+        Salvar Edição
+      </button>
+    </form>
 
     <input v-model="searchQuery" type="text" placeholder="Pesquisar livro..." class="mt-4 mb-4 p-2 border border-gray-300 rounded-md w-full" />
     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-<thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-  <tr>
-    <th class="px-6 py-3">Código</th>
-    <th class="px-6 py-3">Exemplar</th>
-    <th class="px-6 py-3">Título</th>
-    <th class="px-6 py-3">Autor</th>
-    <th class="px-6 py-3">Editora</th>
-    <th class="px-6 py-3">Gênero</th>
-    <th class="px-6 py-3">Imagem</th>
-    <th class="px-6 py-3">Ações</th>
-  </tr>
-</thead>
-<tbody>
-  <tr v-for="(livro, index) in filteredLivro" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-    <td class="px-6 py-4">{{ livro.codigoLivro }}</td> 
-    <td class="px-6 py-4">{{ livro.exemplar }}</td>
-    <td class="px-6 py-4">{{ livro.titulo }}</td>
-    <td class="px-6 py-4">{{ livro.autor }}</td>
-    <td class="px-6 py-4">{{ livro.editora }}</td>
-    <td class="px-6 py-4">{{ livro.Category.dataValues.nome || '-' }}</td>
-    <td class="px-6 py-4">
-  <img v-if="livro.imagem" :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="h-16 w-auto" />
+      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+        <tr>
+          <th class="px-6 py-4">Código</th>
+          <th class="px-6 py-4">Exemplar</th>
+          <th class="px-6 py-4">Título</th>
+          <th class="px-6 py-4">Autor</th>
+          <th class="px-6 py-4">Editora</th>
+          <th class="px-6 py-4">Gênero</th>
+          <th class="px-6 py-4">Imagem</th>
+          <th class="px-6 py-4">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(livro, index) in filteredLivro" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+          <td class="px-6 py-4 text-lg">{{ livro.codigoLivro }}</td> 
+          <td class="px-6 py-4 text-lg">{{ livro.exemplar }}</td>
+          <td class="px-6 py-4 text-lg">{{ livro.titulo }}</td>
+          <td class="px-6 py-4 text-lg">{{ livro.autor }}</td>
+          <td class="px-6 py-4 text-lg">{{ livro.editora }}</td>
+          <td class="px-6 py-4 text-lg">{{ livro.Category.dataValues.nome || '-' }}</td>
+          <td class="px-6 py-4">
+  <img v-if="livro.imagem" :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="h-30 w-auto" />
 </td>
-
-    <td class="px-6 py-4">
-      <button @click="editarLivro(index)" class="text-blue-600 hover:underline">Editar</button>
-      <button @click="removerLivro(index)" class="text-red-600 hover:underline ml-3">Remover</button>
-    </td>
-  </tr>
-</tbody>
-
-</table>
+          <td class="px-6 py-4">
+            <button @click="editarLivro(index)" class="text-blue-600 hover:underline text-lg">Editar</button>
+            <button @click="removerLivro(index)" class="text-red-600 hover:underline ml-3 text-lg">Remover</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>
-
 
 
 

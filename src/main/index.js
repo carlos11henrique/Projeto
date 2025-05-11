@@ -275,7 +275,6 @@ ipcMain.handle('getRankingLivrosAno', async () => {
       }
   
       await LivroModel.create(book);
-      console.log('Livro criado com sucesso!');
     } catch (error) {
       handleError(event, error, 'createLivro');
     }
@@ -352,7 +351,6 @@ ipcMain.handle('getLivro', async () => {
   ipcMain.on('createEmprestimo', async (event, loans) => {
     try {
       await EmprestimoModel.create(loans);
-      console.log('Empréstimo cadastrado com sucesso');
     } catch (error) {
       handleError(event, error, 'createEmprestimo');
     }
@@ -436,7 +434,6 @@ ipcMain.handle('getLivro', async () => {
   ipcMain.on('createUser', async (event, user) => {
     try {
       await UserModel.create(user);
-      console.log('User criado com sucesso');
     } catch (error) {
       handleError(event, error, 'createUser');
     }
