@@ -27,7 +27,6 @@
       </thead>
       <tbody>
         <template v-for="(book, index) in filteredBooks" :key="index">
-          <!-- Linha do livro -->
           <tr class="border-t border-gray-200">
             <td class="px-4 py-2">{{ book.codigoLivro }}</td>
             <td class="px-4 py-2">{{ book.titulo }}</td>
@@ -66,7 +65,6 @@
             </td>
           </tr>
 
-          <!-- Linha do formulário (só mostra se o livro for o selecionado) -->
           <tr
             v-if="bookSelecionado && bookSelecionado.codigoLivro === book.codigoLivro"
             class="bg-gray-50 border-b border-gray-200"
@@ -78,7 +76,6 @@
                 <p><strong>Gênero:</strong> {{ book.genero }}</p>
                 <p><strong>Exemplares:</strong> {{ book.exemplar }}</p>
 
-                <!-- Campo para busca de usuário -->
                 <div class="mt-2">
                   <label class="block text-sm font-medium text-gray-700">Selecionar Usuário</label>
                   <input
@@ -88,7 +85,6 @@
                     class="mt-1 p-2 border border-gray-300 rounded-md w-full"
                   />
 
-                  <!-- Lista de usuários filtrados -->
                   <ul
                     v-if="filteredUsers.length"
                     class="mt-2 border border-gray-300 rounded bg-white max-h-32 overflow-y-auto"
@@ -103,7 +99,6 @@
                     </li>
                   </ul>
 
-                  <!-- Botão de confirmação -->
                   <div class="mt-4 flex gap-2">
                     <button
                       v-if="userSelecionado"

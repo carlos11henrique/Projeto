@@ -151,7 +151,7 @@ export default {
 
     livros: [],
     searchQuery: "",
-    categorys: [],  // Correção aqui
+    categorys: [], 
     editando: false,
     indexEdicao: null
   };
@@ -182,7 +182,7 @@ export default {
 },
 
     async adicionarLivro() {
-      if (this.editando) return; // bloqueia adicionar enquanto edita
+      if (this.editando) return; 
 
       const livroBase = this.novoLivro;
       const quantidade = parseInt(livroBase.quantidade);
@@ -291,7 +291,6 @@ async removerLivro(index) {
       try {
         await window.api.deleteLivro(livro.id);
 
-        // Remover o livro da lista local imediatamente
         this.livros.splice(index, 1);
 
         Swal.fire('Removido!', 'O livro foi removido.', 'success');

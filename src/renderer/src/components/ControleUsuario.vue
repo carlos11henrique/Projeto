@@ -40,7 +40,6 @@
         </div>
       </div>
       
-      <!-- Feedbacks de Sucesso ou Erro -->
       <div v-if="mensagem" :class="mensagem.tipo === 'sucesso' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="p-4 mb-4 rounded-lg">
         <p class="font-medium">{{ mensagem.texto }}</p>
       </div>
@@ -72,7 +71,6 @@
       </div>
     </form>
     
-    <!-- Tabela de Usuários -->
     <div class="mb-4">
       <input
         v-model="termoBusca"
@@ -104,7 +102,7 @@
           <td class="px-6 py-4">{{ usuario?.telefone }}</td>
           <td class="px-6 py-4">
             <button @click="editarUsuario(index)" class="text-blue-600 hover:underline">Editar</button>
-            <button @click="removerUsuario(index)" class="text-red-600 hover:underline ml-4">Excluir</button>
+<button @click="removerUsuario(usuario)" class="text-red-600 hover:underline ml-4">Excluir</button>
           </td>
         </tr>
       </tbody>
@@ -171,25 +169,30 @@ export default {
   },
   methods: {
     async adicionarUsuario() {
-      try {
-        const usuarioLimpo = JSON.parse(JSON.stringify(this.novoUsuario));
-        await window.api.createUser(usuarioLimpo);
-        await this.carregarUsuarios();
-        this.resetForm();
+  try {
+    const usuarioLimpo = JSON.parse(JSON.stringify(this.novoUsuario));
+    await window.api.createUser(usuarioLimpo);
+    await this.carregarUsuarios();
+    this.resetForm();
 
-        this.mensagem = {
-          tipo: 'sucesso',
-          texto: 'Usuário cadastrado com sucesso!'
-        };
-      } catch (error) {
-        console.error("Erro ao criar usuário:", error);
+    this.mensagem = {
+      tipo: 'sucesso',
+      texto: 'Usuário cadastrado com sucesso!'
+    };
 
-        this.mensagem = {
-          tipo: 'erro',
-          texto: 'Não foi possível cadastrar o usuário. Tente novamente.'
-        };
-      }
-    },
+    setTimeout(() => {
+      this.mensagem = null;
+    }, 5000);
+  } catch (error) {
+    console.error("Erro ao criar usuário:", error);
+
+    this.mensagem = {
+      tipo: 'erro',
+      texto: 'Não foi possível cadastrar o usuário. Tente novamente.'
+    };
+  }
+},
+
     async atualizarUsuario() {
       try {
         const usuarioAtualizado = JSON.parse(JSON.stringify(this.novoUsuario));
@@ -225,7 +228,9 @@ export default {
       this.usuarioEditandoId = usuario.id;
       this.editando = true;
     },
-    async removerUsuario(usuarioId) {
+async removerUsuario(User) {
+  console.log('ID do usuário a ser removido:', User.id); 
+
   const result = await Swal.fire({
     title: 'Tem certeza?',
     text: "Você não poderá reverter isso!",
@@ -239,14 +244,18 @@ export default {
 
   if (result.isConfirmed) {
     try {
-      await window.api.deleteUser(usuarioId); 
+      if (!User || !User.id) {
+        Swal.fire('Erro!', 'ID inválido.', 'error');
+        return;
+      }
+
+      await window.api.deleteUser(User.id);  
       Swal.fire(
         'Excluído!',
         'O usuário foi excluído com sucesso.',
         'success'
       );
-
-      await this.carregarUsuarios();
+      await this.carregarUsuarios();  
     } catch (error) {
       console.error("Erro ao remover usuário:", error);
       Swal.fire(
@@ -257,6 +266,9 @@ export default {
     }
   }
 },
+
+
+
 
 
     async carregarUsuarios() {

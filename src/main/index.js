@@ -453,20 +453,31 @@ ipcMain.handle('getLivro', async () => {
     }
   });
   
-  
-  ipcMain.on('deleteUser', async (event, id) => {
-    if (!id) {
-      return handleError(event, new Error('ID do usuário não fornecido'), 'deleteUser');
+ipcMain.on('deleteUser', async (event, id) => {
+  // Log para verificar o ID
+  console.log('ID recebido para exclusão:', id);
+
+  if (!id || id === 0) {
+    return handleError(event, new Error('ID do usuário não fornecido ou inválido'), 'deleteUser');
+  }
+
+  try {
+    const usuario = await UserModel.findByPk(id);  // findByPk usa o nome da chave primária configurada
+    if (!usuario) {
+      return event.reply('deleteUserError', 'Usuário não encontrado');
     }
-  
-    try {
-      await UserModel.destroy({ where: { id } });
-      console.log('User deletado com sucesso');
-    } catch (error) {
-      handleError(event, error, 'deleteUser');
-    }
-  });
-  
+
+    // Tentando excluir o usuário
+    await UserModel.destroy({ where: { id } });
+    event.reply('deleteUserSuccess', 'Usuário deletado com sucesso');
+  } catch (error) {
+    console.error("Erro ao excluir usuário:", error);
+    handleError(event, error, 'deleteUser');
+  }
+});
+
+
+
   
   ipcMain.on('buscarUser', async (event, id) => {
     try {
