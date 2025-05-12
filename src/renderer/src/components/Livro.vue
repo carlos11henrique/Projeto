@@ -21,22 +21,28 @@
             required />
         </div>
 
-        <div>
-          <label for="genero" class="block mb-2 text-sm font-medium text-gray-900">Gênero</label>
-          <select
-            v-model="novoLivro.categoryId"
-            id="categoryId"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-          >
-            <option
-              v-for="categories in categorys" 
-              :key="categories.id" 
-              :value="categories.id"
-            >
-              {{ categories.nome }}
-            </option>
-          </select>
-        </div>
+    <div>
+  <label for="genero" class="block mb-2 text-sm font-medium text-gray-900">Gênero</label>
+<input
+  :value="getNomeCategoria(novoLivro.categoryId)"
+  @input="atualizarCategoriaPorNome($event.target.value)"
+  list="listaCategorias"
+  id="genero"
+  name="genero"
+  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+  placeholder="Digite ou selecione um gênero"
+/>
+
+<datalist id="listaCategorias">
+  <option
+    v-for="cat in categorys"
+    :key="cat.id"
+    :value="cat.nome"
+  ></option>
+</datalist>
+
+</div>
+
 
         <div>
           <label for="codigoLivro" class="block mb-2 text-sm font-medium text-gray-900">Código do Livro</label>
@@ -152,17 +158,20 @@ export default {
   name: "Livro",
   data() {
   return {
-    novoLivro: {
+   novoLivro: {
   codigoLivro: "",
   titulo: "",
   autor: "",
   editora: "",
-  categoryId: 0, 
+  categoryId: 0,
   descricao: "",
   exemplar: "",
   quantidade: 0,
   imagem: "",
+  imagemOriginal: ""
 },
+categoriaSelecionada: "",
+
 
     livros: [],
     searchQuery: "",
@@ -179,7 +188,9 @@ export default {
         livro.titulo.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
         livro.autor.toLowerCase().includes(this.searchQuery.toLowerCase())
       );
-    }
+      
+    },
+    
   },
   methods: {
   handleImagemSelecionada(event) {
@@ -193,8 +204,13 @@ export default {
 
   getNomeCategoria(id) {
   const cat = this.categorys.find(c => c.id === id);
-  return cat ? cat.nome : 'Desconhecido';
+  return cat ? cat.nome : '';
 },
+atualizarCategoriaPorNome(nome) {
+  const categoria = this.categorys.find(cat => cat.nome === nome);
+  this.novoLivro.categoryId = categoria ? categoria.id : 0;
+},
+
 
     async adicionarLivro() {
       if (this.editando) return; 

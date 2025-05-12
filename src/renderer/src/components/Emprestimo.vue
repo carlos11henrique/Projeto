@@ -111,7 +111,7 @@
                       @click="selecionarUsuario(user)"
                       class="p-2 hover:bg-gray-100 cursor-pointer"
                     >
-                      {{ user.nome }} ({{ user.matricula }})
+                      {{ user.nome }} ({{ user.matricula }} - {{ user.cpf }})
                     </li>
                   </ul>
 
