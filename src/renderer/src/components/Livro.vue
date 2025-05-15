@@ -22,24 +22,21 @@
         </div>
 
     <div>
-  <label for="genero" class="block mb-2 text-sm font-medium text-gray-900">Gênero</label>
-<input
-  :value="getNomeCategoria(novoLivro.categoryId)"
-  @input="atualizarCategoriaPorNome($event.target.value)"
-  list="listaCategorias"
-  id="genero"
-  name="genero"
-  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-  placeholder="Digite ou selecione um gênero"
-/>
+ <label for="genero" class="block mb-2 text-sm font-medium text-gray-900">Gênero</label>
+  <select
+    v-model="novoLivro.categoryId"
+    id="genero"
+    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+  >
+    <option
+      v-for="categories in categorys" 
+      :key="categories.id" 
+      :value="categories.id"
+    >
+      {{ categories.nome }}
+    </option>
+  </select>
 
-<datalist id="listaCategorias">
-  <option
-    v-for="cat in categorys"
-    :key="cat.id"
-    :value="cat.nome"
-  ></option>
-</datalist>
 
 </div>
 
@@ -166,6 +163,8 @@ export default {
   categoryId: 0,
   descricao: "",
   exemplar: "",
+        categoryId: null,
+
   quantidade: 0,
   imagem: "",
   imagemOriginal: ""

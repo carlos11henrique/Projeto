@@ -60,7 +60,7 @@ onMounted(async () => {
     if (emprestimosCategoria?.length) {
       renderHighchart('categoriaChart', {
         chart: { type: 'bar' },
-        title: { text: 'Empréstimos por Categoria' },
+        title: { text: 'Empréstimos por Gênero' },
         xAxis: { categories: emprestimosCategoria.map(i => i.categoria) },
         yAxis: { title: { text: 'Quantidade' } },
         series: [{
