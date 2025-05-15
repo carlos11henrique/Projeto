@@ -42,7 +42,7 @@
   v-if="book.imagem"
   :src="'atom:/' + book.imagem"
   alt="Imagem do Livro"
-  class="h-36 w-auto mx-auto" 
+  class="h-40 w-auto mx-auto" 
 />
             </td>
             <td class="px-4 py-3">

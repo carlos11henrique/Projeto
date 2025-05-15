@@ -185,7 +185,8 @@ categoriaSelecionada: "",
     filteredLivro() {
       return this.livros.filter(livro =>
         livro.titulo.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        livro.autor.toLowerCase().includes(this.searchQuery.toLowerCase())
+        livro.autor.toLowerCase().includes(this.searchQuery.toLowerCase())||
+        livro.codigoLivro.toLowerCase().includes(this.searchQuery.toLowerCase())
       );
       
     },
