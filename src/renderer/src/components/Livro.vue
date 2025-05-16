@@ -145,6 +145,43 @@
         </tr>
       </tbody>
     </table>
+    <!-- Paginação Estilizada com Tailwind -->
+<div class="flex justify-center mt-6">
+  <nav class="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+    <!-- Botão anterior -->
+    <button
+      @click="prevPage"
+      :disabled="currentPage === 1"
+      class="relative inline-flex items-center px-3 py-2 text-sm font-medium border border-gray-300 rounded-l-md bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      Anterior
+    </button>
+
+    <!-- Botões de página -->
+    <button
+      v-for="page in totalPages"
+      :key="page"
+      @click="setPage(page)"
+      class="relative inline-flex items-center px-4 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700"
+      :class="{ 'z-10 bg-blue-600 text-white': currentPage === page }">
+      {{ page }}
+    </button>
+
+    <!-- Botão próxima -->
+    <button
+      @click="nextPage"
+      :disabled="currentPage === totalPages"
+      class="relative inline-flex items-center px-3 py-2 text-sm font-medium border border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
+      Próxima
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
+  </nav>
+</div>
+
   </div>
 </template>
 
@@ -157,61 +194,79 @@ import Swal from 'sweetalert2';
 export default {
   name: "Livro",
   data() {
-  return {
-   novoLivro: {
-  codigoLivro: "",
-  titulo: "",
-  autor: "",
-  editora: "",
-  categoryId: 0,
-  descricao: "",
-  exemplar: "",
-  quantidade: 0,
-  imagem: "",
-  imagemOriginal: ""
-},
-categoriaSelecionada: "",
-
-
-    livros: [],
-    searchQuery: "",
-    categorys: [], 
-    editando: false,
-    indexEdicao: null
-  };
-
-
+    return {
+      novoLivro: {
+        codigoLivro: "",
+        titulo: "",
+        autor: "",
+        editora: "",
+        categoryId: 0,
+        descricao: "",
+        exemplar: "",
+        quantidade: 0,
+        imagem: "",
+        imagemOriginal: ""
+      },
+      livros: [],
+      searchQuery: "",
+      categorys: [], 
+      editando: false,
+      indexEdicao: null,
+      
+      // Correção: currentPage e itemsPerPage fora do novoLivro
+      currentPage: 1,
+      itemsPerPage: 20,
+    };
+  },
+  watch: {
+    searchQuery() {
+      this.currentPage = 1;  // Reseta para página 1 sempre que o filtro mudar
+    }
   },
   computed: {
     filteredLivro() {
-      return this.livros.filter(livro =>
-        livro.titulo.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        livro.autor.toLowerCase().includes(this.searchQuery.toLowerCase())
+      // Filtro de livros pela searchQuery (título ou autor)
+      const query = this.searchQuery.toLowerCase();
+      const livrosFiltrados = this.livros.filter(livro =>
+        livro.titulo.toLowerCase().includes(query) ||
+        livro.autor.toLowerCase().includes(query)
       );
-      
+
+      // Paginação: fatiar array de livros filtrados
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return livrosFiltrados.slice(start, end);
     },
-    
+    totalPages() {
+      const query = this.searchQuery.toLowerCase();
+      const totalFiltrados = this.livros.filter(livro =>
+        livro.titulo.toLowerCase().includes(query) ||
+        livro.autor.toLowerCase().includes(query)
+      );
+      return Math.ceil(totalFiltrados.length / this.itemsPerPage) || 1;
+    },
   },
   methods: {
-  handleImagemSelecionada(event) {
-    this.novoLivro.imagem = window.api.getPathInput(event.target);
-
-
-
-
-  },
-  
-
-  getNomeCategoria(id) {
-  const cat = this.categorys.find(c => c.id === id);
-  return cat ? cat.nome : '';
-},
-atualizarCategoriaPorNome(nome) {
-  const categoria = this.categorys.find(cat => cat.nome === nome);
-  this.novoLivro.categoryId = categoria ? categoria.id : 0;
-},
-
-
+    nextPage() {
+      if (this.currentPage < this.totalPages) this.currentPage++;
+    },
+    prevPage() {
+      if (this.currentPage > 1) this.currentPage--;
+    },
+    setPage(page) {
+      this.currentPage = page;
+    },
+    handleImagemSelecionada(event) {
+      this.novoLivro.imagem = window.api.getPathInput(event.target);
+    },
+    getNomeCategoria(id) {
+      const cat = this.categorys.find(c => c.id === id);
+      return cat ? cat.nome : '';
+    },
+    atualizarCategoriaPorNome(nome) {
+      const categoria = this.categorys.find(cat => cat.nome === nome);
+      this.novoLivro.categoryId = categoria ? categoria.id : 0;
+    },
     async adicionarLivro() {
       if (this.editando) return; 
 
@@ -219,20 +274,12 @@ atualizarCategoriaPorNome(nome) {
       const quantidade = parseInt(livroBase.quantidade);
       const codigoBase = livroBase.codigoLivro.replace(/\d+$/, '') || livroBase.codigoLivro;
       const numeroInicial = parseInt(livroBase.codigoLivro.match(/\d+$/)) || 1;
-      if (livroBase.imagemOriginal) {
-  const nomeImagem = `${livroBase.codigoLivro}_${Date.now()}${path.extname(livroBase.imagemOriginal)}`;
-  const destino = `storage/imagens/${nomeImagem}`;
-
-  await window.api.salvarImagem(livroBase.imagemOriginal, nomeImagem);
-
-  livroBase.imagem = destino; 
-}
 
       if (
         livroBase.codigoLivro && livroBase.titulo && livroBase.autor &&
-        livroBase.editora && livroBase.categoryId
-        && quantidade > 0
-        ) {
+        livroBase.editora && livroBase.categoryId &&
+        quantidade > 0
+      ) {
         try {
           for (let i = 0; i < quantidade; i++) {
             const novoCodigo = `${codigoBase}${numeroInicial + i}`;
@@ -244,11 +291,8 @@ atualizarCategoriaPorNome(nome) {
               exemplar: novoExemplar,
               quantidade: 1,
               imagem: livroBase.imagem,
-
               CategoryId: livroBase.categoryId
-
             };
-
 
             await window.api.createLivro(novoLivro);
           }
@@ -267,6 +311,7 @@ atualizarCategoriaPorNome(nome) {
             title: 'Erro!',
             text: 'Não foi possível cadastrar os livros.'
           });
+          console.error(error);
         }
       } else {
         Swal.fire({
@@ -276,84 +321,72 @@ atualizarCategoriaPorNome(nome) {
         });
       }
     },
-
     editarLivro(index) {
       this.novoLivro = { ...this.livros[index] };
       this.editando = true;
       this.indexEdicao = index;
     },
-
     async salvarEdicaoLivro() {
-  try {
-    const livroParaSalvar = JSON.parse(JSON.stringify(this.novoLivro)); 
-    await window.api.updateLivro(livroParaSalvar);
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Livro atualizado!',
-      text: 'As informações foram alteradas com sucesso.'
-    });
-
-    this.resetarFormulario();
-    this.carregarLivro();
-  } catch (error) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Erro!',
-      text: 'Não foi possível atualizar o livro.'
-    });
-    console.error('Erro ao atualizar livro:', error);
-  }
-},
-
-async removerLivro(index) {
-  const livro = this.livros[index];
-
-  Swal.fire({
-    title: 'Tem certeza?',
-    text: "Deseja remover este livro?",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Sim, remover!',
-    cancelButtonText: 'Cancelar'
-  }).then(async (result) => {
-    if (result.isConfirmed) {
       try {
-        await window.api.deleteLivro(livro.id);
+        const livroParaSalvar = JSON.parse(JSON.stringify(this.novoLivro)); 
+        await window.api.updateLivro(livroParaSalvar);
 
-        this.livros.splice(index, 1);
+        Swal.fire({
+          icon: 'success',
+          title: 'Livro atualizado!',
+          text: 'As informações foram alteradas com sucesso.'
+        });
 
-        Swal.fire('Removido!', 'O livro foi removido.', 'success');
+        this.resetarFormulario();
+        this.carregarLivro();
       } catch (error) {
-        Swal.fire('Erro', 'Não foi possível remover o livro.', 'error');
+        Swal.fire({
+          icon: 'error',
+          title: 'Erro!',
+          text: 'Não foi possível atualizar o livro.'
+        });
+        console.error('Erro ao atualizar livro:', error);
       }
-    }
-  });
-},
+    },
+    async removerLivro(index) {
+      const livro = this.livros[index];
 
-
+      Swal.fire({
+        title: 'Tem certeza?',
+        text: "Deseja remover este livro?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, remover!',
+        cancelButtonText: 'Cancelar'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            await window.api.deleteLivro(livro.id);
+            this.livros.splice(index, 1);
+            Swal.fire('Removido!', 'O livro foi removido.', 'success');
+          } catch (error) {
+            Swal.fire('Erro', 'Não foi possível remover o livro.', 'error');
+          }
+        }
+      });
+    },
     async carregarCategoria() {
-  try {
-    const categorys = await window.api.getCategoria();
-    this.categorys = categorys; 
-  } catch (error) {
-    console.error('Erro ao carregar categorys:', error);
-  }
-},
-
-  async carregarLivro() {
-  try {
-    
-    const livros = await window.api.getLivro();
-
-  this.livros = livros;
-  } catch (error) {
-    console.error('Erro ao carregar livros:', error);
-    Swal.fire('Erro', 'Não foi possível carregar os livros.', 'error');
-  }
-},
-
-
+      try {
+        const categorys = await window.api.getCategoria();
+        this.categorys = categorys; 
+      } catch (error) {
+        console.error('Erro ao carregar categorys:', error);
+      }
+    },
+    async carregarLivro() {
+      try {
+        const livros = await window.api.getLivro();
+        this.livros = livros;
+      } catch (error) {
+        console.error('Erro ao carregar livros:', error);
+        Swal.fire('Erro', 'Não foi possível carregar os livros.', 'error');
+      }
+    },
     resetarFormulario() {
       this.novoLivro = {
         codigoLivro: "",
@@ -364,18 +397,20 @@ async removerLivro(index) {
         descricao: "",
         exemplar: "",
         quantidade: 0,
-        imagem: ""
+        imagem: "",
+        imagemOriginal: ""
       };
       this.editando = false;
       this.indexEdicao = null;
+      this.currentPage = 1; // reseta paginação ao limpar form
     }
   },
   mounted() {
     this.carregarLivro();
     this.carregarCategoria(); 
-
   }
 };
+
 </script>
 
 

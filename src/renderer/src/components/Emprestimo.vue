@@ -27,7 +27,7 @@
         </tr>
       </thead>
       <tbody>
-        <template v-for="(book, index) in filteredBooks" :key="index">
+<template v-for="(book, index) in paginatedBooks" :key="index">
 <tr
   class="border-t border-gray-300 hover:bg-gray-50"
   :class="{ 'bg-red-100': isAtrasado(book.dataDevolucao) }"
@@ -137,6 +137,41 @@
         </template>
       </tbody>
     </table>
+    <div class="flex justify-center mt-6">
+  <nav class="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+    <!-- Botão anterior -->
+    <button
+      @click="prevPage"
+      :disabled="currentPage === 1"
+      class="relative inline-flex items-center px-3 py-2 text-sm font-medium border border-gray-300 rounded-l-md bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      Anterior
+    </button>
+
+    <!-- Botões de página -->
+    <button
+      v-for="page in totalPages"
+      :key="page"
+      @click="setPage(page)"
+      class="relative inline-flex items-center px-4 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700"
+      :class="{ 'z-10 bg-blue-600 text-white': currentPage === page }">
+      {{ page }}
+    </button>
+
+    <!-- Botão próxima -->
+    <button
+      @click="nextPage"
+      :disabled="currentPage === totalPages"
+      class="relative inline-flex items-center px-3 py-2 text-sm font-medium border border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
+      Próxima
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
+  </nav>
+</div>
   </div>
 </template>
 
@@ -154,26 +189,43 @@ export default {
       searchUsuario: "",
       bookSelecionado: null,
       userSelecionado: null,
+      currentPage: 1,
+itemsPerPage: 20,
+
     };
   },
   computed: {
-    filteredBooks() {
-      const query = this.searchQuery.toLowerCase();
-      const livrosFiltrados = this.books.filter(livro => {
-        const codigo = livro.codigoLivro || '';
-        const titulo = livro.titulo || '';
-        const autor = livro.autor || '';
-        return (
-          codigo.toString().includes(this.searchQuery) ||
-          titulo.toLowerCase().includes(query) ||
-          autor.toLowerCase().includes(query)
-        );
-      });
+filteredBooks() {
+  const query = this.searchQuery.toLowerCase();
 
-      const emprestados = livrosFiltrados.filter(livro => livro.status === 'emprestado');
-      const disponiveis = livrosFiltrados.filter(livro => livro.status !== 'emprestado');
-      return [...emprestados, ...disponiveis];
-    },
+  const filtrados = this.books.filter(livro => {
+    const codigo = livro.codigoLivro || '';
+    const titulo = livro.titulo || '';
+    const autor = livro.autor || '';
+    const genero = livro.Category.dataValues.nome || '';
+    return (
+      codigo.toString().includes(this.searchQuery) ||
+      titulo.toLowerCase().includes(query) ||
+      autor.toLowerCase().includes(query)||
+      genero.toLowerCase().includes(query)
+    );
+  });
+
+  // Organiza: emprestados primeiro
+  const emprestados = filtrados.filter(l => l.status === 'emprestado');
+  const disponiveis = filtrados.filter(l => l.status !== 'emprestado');
+  const ordenados = [...emprestados, ...disponiveis];
+
+  return ordenados;
+},
+paginatedBooks() {
+  const start = (this.currentPage - 1) * this.itemsPerPage;
+  const end = start + this.itemsPerPage;
+  return this.filteredBooks.slice(start, end);
+},
+totalPages() {
+  return Math.ceil(this.filteredBooks.length / this.itemsPerPage);
+},
     filteredUsers() {
       return this.users.filter(user =>
         user.nome.toLowerCase().includes(this.searchUsuario.toLowerCase()) ||
@@ -183,11 +235,21 @@ export default {
     }
   },
   methods: {
+     nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  },
+  prevPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  },
+  setPage(page) {
+    this.currentPage = page;
+  },
      handleImagemSelecionada(event) {
     this.novoLivro.imagem = window.api.getPathInput(event.target);
-
-
-
 
   },
   

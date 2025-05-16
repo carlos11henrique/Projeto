@@ -31,16 +31,34 @@ function renderHighchart(id, config) {
   Highcharts.chart(id, config)
 }
 
+// Função utilitária para cache
+function cacheFetch(key, fetchFunction, expireInMs = 5 * 60 * 1000) {
+  const cached = localStorage.getItem(key);
+  const now = Date.now();
+
+  if (cached) {
+    const parsed = JSON.parse(cached);
+    if (now - parsed.timestamp < expireInMs) {
+      return Promise.resolve(parsed.data);
+    }
+  }
+
+  return fetchFunction().then(data => {
+    localStorage.setItem(key, JSON.stringify({ data, timestamp: now }));
+    return data;
+  });
+}
+
 onMounted(async () => {
   try {
-    const rankingLivrosAno = await window.api.getRankingLivrosAno();
-    const emprestimosCategoria = await window.api.getEmprestimosCategoria();
-    const devolucoesPrazo = await window.api.getDevolucoesPrazo();
-    const evolucao = await window.api.getEvolucaoEmprestimos();
-    const diasSemana = await window.api.getDiasSemanaMovimentados();
-    const tempoMedio = await window.api.getTempoMedioUsuario();
-    const percentuais = await window.api.getPercentualUsuarios();
-    const rankingUser = await window.api.getRankingUsuariosEmprestimos();
+    const rankingLivrosAno = await cacheFetch('rankingLivrosAno', () => window.api.getRankingLivrosAno());
+    const emprestimosCategoria = await cacheFetch('emprestimosCategoria', () => window.api.getEmprestimosCategoria());
+    const devolucoesPrazo = await cacheFetch('devolucoesPrazo', () => window.api.getDevolucoesPrazo());
+    const evolucao = await cacheFetch('evolucaoEmprestimos', () => window.api.getEvolucaoEmprestimos());
+    const diasSemana = await cacheFetch('diasSemanaMovimentados', () => window.api.getDiasSemanaMovimentados());
+    const tempoMedio = await cacheFetch('tempoMedioUsuario', () => window.api.getTempoMedioUsuario());
+    const percentuais = await cacheFetch('percentualUsuarios', () => window.api.getPercentualUsuarios());
+    const rankingUser = await cacheFetch('rankingUsuariosEmprestimos', () => window.api.getRankingUsuariosEmprestimos());
 
     if (rankingLivrosAno?.length) {
       renderHighchart('rankingChart', {
@@ -78,7 +96,7 @@ onMounted(async () => {
       renderHighchart('devolucaoChart', {
         chart: { type: 'column' },
         title: { text: 'Devoluções no Prazo vs Atrasadas' },
-        xAxis: { categories: ['No Prazo', 'Não entrege ainda'] },
+        xAxis: { categories: ['No Prazo', 'Não entregue ainda'] },
         yAxis: { title: { text: 'Quantidade' } },
         series: [{
           name: 'Devoluções',
@@ -138,17 +156,11 @@ onMounted(async () => {
       })
     }
 
-    const totais = [0, 0, 0, 0, 0, 0, 0];
-    diasSemana.forEach(item => {
-      const idx = parseInt(item.dia_semana);
-      if (idx >= 0 && idx <= 6) totais[idx] = item.total;
-    });
-
     if (diasSemana?.length) {
       const totais = [0, 0, 0, 0, 0, 0, 0]; // Segunda a Domingo
 
       diasSemana.forEach(item => {
-        const dia = item.dia_num;   // '0' a '6'
+        const dia = item.dia_num;
         const total = item.total;
         const indice = dia === '0' ? 6 : parseInt(dia) - 1;
         totais[indice] = total;
@@ -166,34 +178,30 @@ onMounted(async () => {
         }],
         plotOptions: { series: { animation: { duration: 1500 } } }
       });
-
-
     }
-    if (rankingUser?.length) {
-  renderHighchart('rankingUsuariosChart', {
-    chart: { type: 'bar' },
-    title: { text: 'Ranking de Usuários com Mais Empréstimos' },
-    xAxis: { 
-      categories: rankingUser.map(i => i.nome),
-      title: { text: 'Usuários' }
-    },
-    yAxis: { 
-      title: { text: 'Total de Empréstimos' }
-    },
-    series: [{
-      name: 'Empréstimos',
-      data: rankingUser.map(i => parseInt(i.totalEmprestimos)),
-      color: '#F57C00'
-    }],
-    plotOptions: { series: { animation: { duration: 1500 } } }
-  });
-}
-    
 
+    if (rankingUser?.length) {
+      renderHighchart('rankingUsuariosChart', {
+        chart: { type: 'bar' },
+        title: { text: 'Ranking de Usuários com Mais Empréstimos' },
+        xAxis: {
+          categories: rankingUser.map(i => i.nome),
+          title: { text: 'Usuários' }
+        },
+        yAxis: {
+          title: { text: 'Total de Empréstimos' }
+        },
+        series: [{
+          name: 'Empréstimos',
+          data: rankingUser.map(i => parseInt(i.totalEmprestimos)),
+          color: '#F57C00'
+        }],
+        plotOptions: { series: { animation: { duration: 1500 } } }
+      });
+    }
 
   } catch (error) {
     console.error('Erro ao carregar os dados dos gráficos:', error);
   }
 });
-
 </script>
