@@ -108,52 +108,43 @@
       </tbody>
     </table>
 
-<nav class="flex justify-center mt-6" aria-label="Paginação">
-  <ul class="inline-flex -space-x-px text-lg">
-    <!-- Botão Anterior -->
-    <li>
-      <button
-        @click="paginaAtual--"
-        :disabled="paginaAtual === 1"
-        class="px-4 py-2 border rounded-l-lg border-gray-300 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Anterior
-      </button>
-    </li>
+    <!-- Paginação -->
+   <div class="flex justify-center mt-6">
+  <nav class="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+    <!-- Botão anterior -->
+    <button
+      @click="prevPage"
+      :disabled="currentPage === 1"
+      class="relative inline-flex items-center px-3 py-2 text-sm font-medium border border-gray-300 rounded-l-md bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      Anterior
+    </button>
 
-    <!-- Páginas visíveis (3 por vez) -->
-    <li
-      v-for="page in paginasVisiveis"
+    <!-- Botões de página -->
+    <button
+      v-for="page in totalPages"
       :key="page"
-    >
-      <button
-        @click="paginaAtual = page"
-        :class="[
-          'px-4 py-2 border border-gray-300',
-          page === paginaAtual
-            ? 'bg-blue-600 text-white'
-            : 'bg-white text-gray-700 hover:bg-gray-100 hover:text-blue-600'
-        ]"
-      >
-        {{ page }}
-      </button>
-    </li>
+      @click="setPage(page)"
+      class="relative inline-flex items-center px-4 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700"
+      :class="{ 'z-10 bg-blue-600 text-white': currentPage === page }">
+      {{ page }}
+    </button>
 
-    <!-- Botão Próximo -->
-    <li>
-      <button
-        @click="paginaAtual++"
-        :disabled="paginaAtual === totalPaginas"
-        class="px-4 py-2 border rounded-r-lg border-gray-300 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Próximo
-      </button>
-    </li>
-  </ul>
-</nav>
-
-
-  </div>
+    <!-- Botão próxima -->
+    <button
+      @click="nextPage"
+      :disabled="currentPage === totalPages"
+      class="relative inline-flex items-center px-3 py-2 text-sm font-medium border border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
+      Próxima
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
+  </nav>
+</div>
+  </div>      
 </template>
 
 
@@ -163,6 +154,7 @@
 import $ from 'jquery';
 import 'jquery-mask-plugin';
 import Swal from 'sweetalert2';
+
 
 export default {
   name: "ControleUsuario",
@@ -183,162 +175,214 @@ export default {
         telefone: ""
       },
       mensagem: null,
-
-      // Paginação
       paginaAtual: 1,
-      usuariosPorPagina: 20
+      itensPorPagina: 20,
     };
   },
   computed: {
     usuariosFiltrados() {
-    return this.usuarios;
-  },
-  usuariosPaginados() {
-    const start = (this.paginaAtual - 1) * this.usuariosPorPagina;
-    return this.usuariosFiltrados.slice(start, start + this.usuariosPorPagina);
-  },
-  totalPaginas() {
-    return Math.ceil(this.usuariosFiltrados.length / this.usuariosPorPagina);
-  },
-  paginasVisiveis() {
-    const total = this.totalPaginas;
-    const atual = this.paginaAtual;
+      const busca = this.termoBusca.trim().toLowerCase();
+      const buscaNumerica = this.termoBusca.replace(/\D/g, "");
 
-    // Lógica para mostrar 3 páginas "deslizantes"
-    const inicio = Math.max(atual, 1);
-    const paginas = [];
+      // Filtra os usuários conforme o termo de busca
+      let filtrados = this.usuarios.filter((u) => {
+        const nome = u.nome?.toLowerCase() || "";
+        const cpf = (u.cpf || "").replace(/\D/g, "");
+        const telefone = (u.telefone || "").replace(/\D/g, "");
+        const matricula = (u.matricula || "").toLowerCase();
 
-    for (let i = inicio; i < inicio + 5 && i <= total; i++) {
-      paginas.push(i);
+        if (/^\d+$/.test(this.termoBusca)) {
+          return (
+            cpf.includes(buscaNumerica) ||
+            telefone.includes(buscaNumerica) ||
+            matricula.includes(buscaNumerica)
+          );
+        }
+        return nome.includes(busca) || matricula.includes(busca);
+      });
+
+      // Aplica paginação nos resultados filtrados
+      const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
+      const fim = inicio + this.itensPorPagina;
+      return filtrados.slice(inicio, fim);
+    },
+    totalPaginas() {
+      const busca = this.termoBusca.trim().toLowerCase();
+      const buscaNumerica = this.termoBusca.replace(/\D/g, "");
+
+      let filtrados = this.usuarios.filter((u) => {
+        const nome = u.nome?.toLowerCase() || "";
+        const cpf = (u.cpf || "").replace(/\D/g, "");
+        const telefone = (u.telefone || "").replace(/\D/g, "");
+        const matricula = (u.matricula || "").toLowerCase();
+
+        if (/^\d+$/.test(this.termoBusca)) {
+          return (
+            cpf.includes(buscaNumerica) ||
+            telefone.includes(buscaNumerica) ||
+            matricula.includes(buscaNumerica)
+          );
+        }
+        return nome.includes(busca) || matricula.includes(busca);
+      });
+
+      return Math.ceil(filtrados.length / this.itensPorPagina) || 1;
     }
-
-    return paginas;
-  }
-},
-
+  },
   watch: {
     termoBusca() {
-      this.paginaAtual = 1;
-    },
-    'novoUsuario.tipo'(val) {
-      this.tipoUsuario = val;
+      this.paginaAtual = 1; // Resetar para página 1 ao buscar
     }
   },
   methods: {
-    async adicionarUsuario() {
-      try {
-        const usuarioLimpo = JSON.parse(JSON.stringify(this.novoUsuario));
-        await window.api.createUser(usuarioLimpo);
-        await this.carregarUsuarios();
-        this.resetForm();
-
-        this.mensagem = {
-          tipo: 'sucesso',
-          texto: 'Usuário cadastrado com sucesso!'
-        };
-
-        setTimeout(() => {
-          this.mensagem = null;
-        }, 5000);
-      } catch (error) {
-        console.error("Erro ao criar usuário:", error);
-
-        this.mensagem = {
-          tipo: 'erro',
-          texto: 'Não foi possível cadastrar o usuário. Tente novamente.'
-        };
+    iniciarMascara() {
+      this.$nextTick(() => {
+        $('#cpf').mask('000.000.000-00');
+        $('#telefone').mask('(00) 00000-0000');
+      });
+    },
+    carregarUsuarios() {
+      const dados = localStorage.getItem('usuarios');
+      if (dados) {
+        this.usuarios = JSON.parse(dados);
       }
     },
+    salvarUsuarios() {
+      localStorage.setItem('usuarios', JSON.stringify(this.usuarios));
+    },
+    handleTipoUsuarioChange() {
+      this.tipoUsuario = this.novoUsuario.tipo;
+      // Limpar campos específicos se o tipo mudar
+      if (this.tipoUsuario !== 'Aluno') {
+        this.novoUsuario.matricula = "";
+        this.novoUsuario.serie = "";
+        this.novoUsuario.turma = "";
+      }
+    },
+    validarCPF(cpf) {
+      cpf = cpf.replace(/[^\d]+/g, '');
+      if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
 
-    async atualizarUsuario() {
-      try {
-        const usuarioAtualizado = JSON.parse(JSON.stringify(this.novoUsuario));
-        usuarioAtualizado.id = this.usuarioEditandoId;
+      let soma = 0;
+      for (let i = 0; i < 9; i++) soma += parseInt(cpf.charAt(i)) * (10 - i);
+      let resto = (soma * 10) % 11;
+      if (resto === 10 || resto === 11) resto = 0;
+      if (resto !== parseInt(cpf.charAt(9))) return false;
 
-        await window.api.updateUser(usuarioAtualizado);
+      soma = 0;
+      for (let i = 0; i < 10; i++) soma += parseInt(cpf.charAt(i)) * (11 - i);
+      resto = (soma * 10) % 11;
+      if (resto === 10 || resto === 11) resto = 0;
+      if (resto !== parseInt(cpf.charAt(10))) return false;
 
-        const index = this.usuarios.findIndex(u => u.id === usuarioAtualizado.id);
-        if (index !== -1) {
-          this.usuarios.splice(index, 1, usuarioAtualizado);
+      return true;
+    },
+    adicionarUsuario() {
+      // Validações
+      if (!this.novoUsuario.tipo) {
+        this.mensagem = { tipo: 'erro', texto: 'Selecione o tipo de usuário.' };
+        return;
+      }
+      if (!this.novoUsuario.nome) {
+        this.mensagem = { tipo: 'erro', texto: 'O nome é obrigatório.' };
+        return;
+      }
+      if (!this.novoUsuario.cpf || !this.validarCPF(this.novoUsuario.cpf)) {
+        this.mensagem = { tipo: 'erro', texto: 'CPF inválido.' };
+        return;
+      }
+      if (this.tipoUsuario === 'Aluno') {
+        if (!this.novoUsuario.matricula) {
+          this.mensagem = { tipo: 'erro', texto: 'Matrícula é obrigatória para alunos.' };
+          return;
         }
-
-        this.mensagem = {
-          tipo: 'sucesso',
-          texto: 'Usuário atualizado com sucesso!'
-        };
-
-        this.resetForm();
-        this.editando = false;
-        this.usuarioEditandoId = null;
-      } catch (error) {
-        console.error("Erro ao atualizar usuário:", error);
-        this.mensagem = {
-          tipo: 'erro',
-          texto: 'Não foi possível atualizar o usuário.'
-        };
+        if (!this.novoUsuario.serie) {
+          this.mensagem = { tipo: 'erro', texto: 'Série é obrigatória para alunos.' };
+          return;
+        }
+        if (!this.novoUsuario.turma) {
+          this.mensagem = { tipo: 'erro', texto: 'Turma é obrigatória para alunos.' };
+          return;
+        }
       }
-    },
+      if (!this.novoUsuario.telefone) {
+        this.mensagem = { tipo: 'erro', texto: 'Telefone é obrigatório.' };
+        return;
+      }
 
+      // Verifica CPF duplicado
+      const cpfLimpo = this.novoUsuario.cpf.replace(/\D/g, '');
+      const cpfExiste = this.usuarios.some(u => u.cpf.replace(/\D/g, '') === cpfLimpo);
+      if (cpfExiste) {
+        this.mensagem = { tipo: 'erro', texto: 'CPF já cadastrado.' };
+        return;
+      }
+
+      // Adiciona usuário
+      this.usuarios.push({...this.novoUsuario});
+      this.salvarUsuarios();
+
+      this.mensagem = { tipo: 'sucesso', texto: 'Usuário cadastrado com sucesso!' };
+      this.resetForm();
+    },
     editarUsuario(index) {
       const usuario = this.usuarios[index];
       this.novoUsuario = { ...usuario };
       this.tipoUsuario = usuario.tipo;
       this.usuarioEditandoId = usuario.id;
       this.editando = true;
+      this.usuarioEditandoId = index;
+      this.mensagem = null;
+      this.$nextTick(() => this.iniciarMascara());
     },
+    atualizarUsuario() {
+      if (this.usuarioEditandoId === null) return;
 
-    async removerUsuario(user) {
-      const result = await Swal.fire({
-        title: 'Tem certeza?',
-        text: "Você não poderá reverter isso!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sim, excluir!',
-        cancelButtonText: 'Cancelar'
-      });
-
-      if (result.isConfirmed) {
-        try {
-          if (!user || !user.id) {
-            Swal.fire('Erro!', 'ID inválido.', 'error');
-            return;
-          }
-
-          await window.api.deleteUser(user.id);
-          Swal.fire(
-            'Excluído!',
-            'O usuário foi excluído com sucesso.',
-            'success'
-          );
-          await this.carregarUsuarios();
-
-          if (this.usuariosPaginados.length === 0 && this.paginaAtual > 1) {
-            this.paginaAtual--;
-          }
-        } catch (error) {
-          console.error("Erro ao remover usuário:", error);
-          Swal.fire(
-            'Erro!',
-            'Não foi possível excluir o usuário.',
-            'error'
-          );
+      // Validações iguais ao adicionar
+      if (!this.novoUsuario.tipo) {
+        this.mensagem = { tipo: 'erro', texto: 'Selecione o tipo de usuário.' };
+        return;
+      }
+      if (!this.novoUsuario.nome) {
+        this.mensagem = { tipo: 'erro', texto: 'O nome é obrigatório.' };
+        return;
+      }
+      if (!this.novoUsuario.cpf || !this.validarCPF(this.novoUsuario.cpf)) {
+        this.mensagem = { tipo: 'erro', texto: 'CPF inválido.' };
+        return;
+      }
+      if (this.tipoUsuario === 'Aluno') {
+        if (!this.novoUsuario.matricula) {
+          this.mensagem = { tipo: 'erro', texto: 'Matrícula é obrigatória para alunos.' };
+          return;
+        }
+        if (!this.novoUsuario.serie) {
+          this.mensagem = { tipo: 'erro', texto: 'Série é obrigatória para alunos.' };
+          return;
+        }
+        if (!this.novoUsuario.turma) {
+          this.mensagem = { tipo: 'erro', texto: 'Turma é obrigatória para alunos.' };
+          return;
         }
       }
-    },
-
-    async carregarUsuarios() {
-      try {
-        const lista = await window.api.getUser();
-        this.usuarios = lista;
-      } catch (error) {
-        console.error("Erro ao carregar usuários:", error);
+      if (!this.novoUsuario.telefone) {
+        this.mensagem = { tipo: 'erro', texto: 'Telefone é obrigatório.' };
+        return;
       }
-    },
 
-    handleTipoUsuarioChange() {
-      this.tipoUsuario = this.novoUsuario.tipo;
+      // Verifica CPF duplicado (exceto o atual)
+      const cpfLimpo = this.novoUsuario.cpf.replace(/\D/g, '');
+      const cpfExiste = this.usuarios.some((u, i) => i !== this.usuarioEditandoId && u.cpf.replace(/\D/g, '') === cpfLimpo);
+      if (cpfExiste) {
+        this.mensagem = { tipo: 'erro', texto: 'CPF já cadastrado.' };
+        return;
+      }
+
+      this.usuarios.splice(this.usuarioEditandoId, 1, {...this.novoUsuario});
+      this.salvarUsuarios();
+
+      this.mensagem = { tipo: 'sucesso', texto: 'Usuário atualizado com sucesso!' };
+      this.resetForm();
     },
 
     resetForm() {
@@ -355,31 +399,42 @@ export default {
       this.usuarioEditandoId = null;
       this.tipoUsuario = "";
       this.mensagem = null;
+      this.paginaAtual = 1;
+      this.$nextTick(() => this.iniciarMascara());
     },
-
-    goNext() {
-      if (this.paginaAtual < this.totalPaginas) {
-        this.paginaAtual++;
-      }
+    removerUsuario(usuario) {
+      Swal.fire({
+        title: 'Tem certeza?',
+        text: `Deseja remover o usuário ${usuario.nome}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sim, excluir',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.usuarios = this.usuarios.filter(u => u !== usuario);
+          this.salvarUsuarios();
+          Swal.fire('Excluído!', 'Usuário removido com sucesso.', 'success');
+          this.paginaAtual = 1;
+        }
+      });
     },
-
-    goPrevious() {
+    paginaAnterior() {
       if (this.paginaAtual > 1) {
         this.paginaAtual--;
       }
     },
-
-    goToPage(page) {
-      this.paginaAtual = page;
+    proximaPagina() {
+      if (this.paginaAtual < this.totalPaginas) {
+        this.paginaAtual++;
+      }
     }
-  },
-  mounted() {
-    $(document).ready(() => {
-      $('#cpf').mask('000.000.000-00');
-      $('#telefone').mask('(00) 00000-0000');
-    });
-
-    this.carregarUsuarios();
   }
-};
+}
 </script>
+
+<style scoped>
+
+</style>
