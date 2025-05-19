@@ -161,7 +161,7 @@
 
     <!-- Botões de página -->
     <button
-      v-for="page in totalPages"
+      v-for="page in paginasVisiveis"
       :key="page"
       @click="setPage(page)"
       class="relative inline-flex items-center px-4 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700"
@@ -213,17 +213,34 @@ export default {
       editando: false,
       indexEdicao: null,
       
-      // Correção: currentPage e itemsPerPage fora do novoLivro
-      currentPage: 1,
+       currentPage: 1,
       itemsPerPage: 20,
     };
   },
   watch: {
     searchQuery() {
-      this.currentPage = 1;  // Reseta para página 1 sempre que o filtro mudar
+      this.currentPage = 1; 
     }
   },
   computed: {
+      paginasVisiveis() {
+    const total = this.totalPages;
+    const atual = this.currentPage;
+    const paginas = [];
+
+    let inicio = Math.max(atual - 2, 1);
+    let fim = Math.min(inicio + 4, total);
+
+    if (fim - inicio < 4) {
+      inicio = Math.max(fim - 4, 1);
+    }
+
+    for (let i = inicio; i <= fim; i++) {
+      paginas.push(i);
+    }
+
+    return paginas;
+  },
     filteredLivro() {
       // Filtro de livros pela searchQuery (título ou autor)
       const query = this.searchQuery.toLowerCase();

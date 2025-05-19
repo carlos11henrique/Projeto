@@ -141,7 +141,7 @@
   <nav class="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
     <!-- Botão anterior -->
     <button
-      @click="prevPage"
+      @click="prevPage "
       :disabled="currentPage === 1"
       class="relative inline-flex items-center px-3 py-2 text-sm font-medium border border-gray-300 rounded-l-md bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -152,7 +152,7 @@
 
     <!-- Botões de página -->
     <button
-      v-for="page in totalPages"
+      v-for="page in paginasVisiveis"
       :key="page"
       @click="setPage(page)"
       class="relative inline-flex items-center px-4 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700"
@@ -195,6 +195,24 @@ itemsPerPage: 20,
     };
   },
   computed: {
+  paginasVisiveis() {
+    const total = this.totalPages;
+    const atual = this.currentPage;
+    const paginas = [];
+
+    let inicio = Math.max(atual - 2, 1);
+    let fim = Math.min(inicio + 4, total);
+
+    if (fim - inicio < 4) {
+      inicio = Math.max(fim - 4, 1);
+    }
+
+    for (let i = inicio; i <= fim; i++) {
+      paginas.push(i);
+    }
+
+    return paginas;
+  },
 filteredBooks() {
   const query = this.searchQuery.toLowerCase();
 
@@ -210,6 +228,7 @@ filteredBooks() {
       genero.toLowerCase().includes(query)
     );
   });
+  
 
   // Organiza: emprestados primeiro
   const emprestados = filtrados.filter(l => l.status === 'emprestado');
@@ -226,6 +245,8 @@ paginatedBooks() {
 totalPages() {
   return Math.ceil(this.filteredBooks.length / this.itemsPerPage);
 },
+
+
     filteredUsers() {
       return this.users.filter(user =>
         user.nome.toLowerCase().includes(this.searchUsuario.toLowerCase()) ||
@@ -234,6 +255,7 @@ totalPages() {
       );
     }
   },
+  
   methods: {
      nextPage() {
     if (this.currentPage < this.totalPages) {
@@ -245,6 +267,8 @@ totalPages() {
       this.currentPage--;
     }
   },
+
+
   setPage(page) {
     this.currentPage = page;
   },

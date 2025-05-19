@@ -19,7 +19,7 @@ module.exports = {
 
     const emprestimos = [];
 
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 600; i++) {
       const user =faker.helpers.randomize(users);
       const book = faker.helpers.randomize(books);
 

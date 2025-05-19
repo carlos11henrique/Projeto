@@ -1,9 +1,8 @@
 <template>
   <div class="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
     <!-- Navbar -->
- <nav class="bg-gray-800 text-white p-4 flex items-center justify-between shadow-md">
-  <div class="flex items-center space-x-3">
-    <img src="../assets/logo.png" alt="Logo" class="w-8 h-8 rounded" />
+ <nav class="bg-gray-800 text-white p-4 flex items-center justify-between shadow-md margin-20 ml-62 ">
+  <div class="flex items-center space-x-3 ">
     <span class="text-xl font-semibold">Biblioteca</span>
   </div>
 
