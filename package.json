@@ -24,13 +24,13 @@
     "buildResources": "resources"
   },
   "win": {
-    "icon": "resources/assets/icon.png"
+    "icon": "resources/logo.png"
   },
   "linux": {
-    "icon": "resources/assets/icon.png"
+    "icon": "resources/logo.png"
   },
   "mac": {
-    "icon": "resources/assets/icon.png"
+    "icon": "resources/logo.png"
   }
 },
   "dependencies": {

@@ -10,22 +10,27 @@ import { CategoriaModel } from './models'
 import url from 'node:url'
 
 
-const icon = join(__dirname, '..', 'renderer/assets', 'logo.png')
+const icon = join(__dirname, '..', 'renderer/assets', 'logo-Bg3gurC2.jpg')
 function createWindow() {
   const mainWindow = new BrowserWindow({
       title: 'Biblioteca',
     width: 900,
     height: 670,
     show: false,
-    autoHideMenuBar: true,
+    autoHideMenuBar: false,
     icon, 
     webPreferences: {
       preload: join(__dirname, '..','preload','index.js'),
       contextIsolation: true,
       nodeIntegration: false, 
       sandbox: false
+      
+
+      
     }
+    
   })
+
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
