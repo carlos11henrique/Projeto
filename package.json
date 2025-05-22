@@ -19,12 +19,12 @@
   },
   "build": {
   "appId": "com.example.app",
-  "productName": "Projeto",
+  "productName": "Biblioteca",
   "directories": {
     "buildResources": "resources"
   },
   "win": {
-    "icon": "resources/assets/icon.ico"
+    "icon": "resources/assets/icon.png"
   },
   "linux": {
     "icon": "resources/assets/icon.png"

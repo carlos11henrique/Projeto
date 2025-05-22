@@ -6,25 +6,7 @@
     <span class="text-xl font-semibold">Biblioteca</span>
   </div>
 
-  <div class="flex items-center space-x-4">
-    <!-- Botão de alternar tema -->
-    <button @click="toggleDarkMode" class="text-white" aria-label="Toggle Theme">
-      <svg v-if="!darkMode" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m8.66-12.34l-.71.71M4.05 19.95l-.71-.71M21 12h-1M4 12H3m16.95 4.95l-.71-.71M6.34 4.34l-.71.71M12 5a7 7 0 1 1-7 7"/>
-      </svg>
-      <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>
-      </svg>
-    </button>
-
-    <!-- Ícone de menu para mobile -->
-    <button class="sm:hidden text-white" @click="toggleSidebar" aria-label="Toggle Sidebar">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-      </svg>
-    </button>
-  </div>
-</nav>
+  </nav>
 
 
     <div class="flex flex-1">

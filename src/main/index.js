@@ -11,9 +11,9 @@ import url from 'node:url'
 
 
 const icon = join(__dirname, '..', 'renderer/assets', 'logo.png')
-console.log(icon)
 function createWindow() {
   const mainWindow = new BrowserWindow({
+      title: 'Biblioteca',
     width: 900,
     height: 670,
     show: false,
@@ -30,6 +30,8 @@ function createWindow() {
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
+    mainWindow.setTitle('Biblioteca')
+
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
