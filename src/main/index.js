@@ -2,7 +2,6 @@ import { app, shell, BrowserWindow, ipcMain,protocol, net } from 'electron'
 import { join, extname } from 'path'
 import fs from 'node:fs/promises'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
 import { event } from 'jquery'
 import {EmprestimoModel,sequelize} from './models'
 import {UserModel} from './models'
@@ -11,13 +10,15 @@ import { CategoriaModel } from './models'
 import url from 'node:url'
 
 
+const icon = join(__dirname, '..', 'renderer/assets', 'logo.png')
+console.log(icon)
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
-    autoHideMenuBar: false,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    autoHideMenuBar: true,
+    icon, 
     webPreferences: {
       preload: join(__dirname, '..','preload','index.js'),
       contextIsolation: true,
@@ -51,7 +52,7 @@ app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
-  protocol.handle('atom', (request) => {
+  protocol.handle('atom', (request) => { 
     const filePath = request.url.slice('atom:/'.length)
     return net.fetch(url.pathToFileURL(join( filePath)).toString())
     

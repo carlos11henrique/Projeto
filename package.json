@@ -17,6 +17,22 @@
     "build:mac": "npm run build && electron-builder --mac",
     "build:linux": "npm run build && electron-builder --linux"
   },
+  "build": {
+  "appId": "com.example.app",
+  "productName": "Projeto",
+  "directories": {
+    "buildResources": "resources"
+  },
+  "win": {
+    "icon": "resources/assets/icon.ico"
+  },
+  "linux": {
+    "icon": "resources/assets/icon.png"
+  },
+  "mac": {
+    "icon": "resources/assets/icon.png"
+  }
+},
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
