@@ -24,13 +24,7 @@
     "buildResources": "resources"
   },
   "win": {
-    "icon": "resources/logo.png"
-  },
-  "linux": {
-    "icon": "resources/logo.png"
-  },
-  "mac": {
-    "icon": "resources/logo.png"
+    "icon": "src/resources/favicon.ico"
   }
 },
   "dependencies": {

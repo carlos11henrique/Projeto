@@ -5,12 +5,17 @@ import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin()],
+    build: {
+      assetsDir: 'resources'
+    }
+    
   },
   preload: {
     plugins: [externalizeDepsPlugin()]
   },
   renderer: {
+
     resolve: {
       alias: {
         '@renderer': resolve('src/renderer/src')
