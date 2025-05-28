@@ -114,12 +114,24 @@
     </form>
 
  <input v-model="searchQuery" type="text" placeholder="Pesquisar livro..." class="mt-4 mb-4 p-2 border border-gray-300 rounded-md w-full" />
- 
- <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-  <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+ <table class="w-full text-[16px] text-gray-700 dark:text-gray-300">
+  <thead class="text-base uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
     <tr>
-      <th class="px-6 py-4">
-        <input type="checkbox" v-model="selectAll" @change="toggleSelectAll" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+      <th class="px-6 py-4 w-56">
+        <div class="flex items-center justify-center gap-2">
+          <input 
+            type="checkbox" 
+            v-model="selectAll" 
+            @change="toggleSelectAll" 
+            class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <button 
+            @click="gerarExcelEtiquetasEmMassa()" 
+            class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md shadow text-sm"
+          >
+            Etiquetas
+          </button>
+        </div>
       </th>
       <th class="px-6 py-4">Código</th>
       <th class="px-6 py-4">Exemplar</th>
@@ -130,32 +142,60 @@
       <th class="px-6 py-4">Imagem</th>
       <th class="px-6 py-4">Ações</th>
     </tr>
-    <tr>
-      <td colspan="9" class="px-6 py-3 bg-white dark:bg-gray-800">
-       <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center" @click="gerarExcelEtiquetasEmMassa()" >Gerar Etiquetas em Massa</button>
-
-      </td>
-    </tr>
   </thead>
 
   <tbody>
-    <tr v-for="(livro, index) in filteredLivro" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-      <td class="px-6 py-4">
-        <input type="checkbox" v-model="livro.selecionado" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+    <tr 
+      v-for="(livro, index) in filteredLivro" 
+      :key="index" 
+      class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+    >
+      <td class="px-6 py-4 w-56">
+        <div class="flex items-center justify-center gap-2">
+          <input 
+            type="checkbox" 
+            v-model="livro.selecionado" 
+            class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <!-- Espaço reservado para manter alinhamento, pode ser oculto se não quiser -->
+          <span class="invisible">
+            <button class="px-3 py-1">Etiquetas</button>
+          </span>
+        </div>
       </td>
-      <td class="px-6 py-4 text-lg">{{ livro.codigoLivro }}</td>
-      <td class="px-6 py-4 text-lg">{{ livro.exemplar }}</td>
-      <td class="px-6 py-4 text-lg">{{ livro.titulo }}</td>
-      <td class="px-6 py-4 text-lg">{{ livro.autor }}</td>
-      <td class="px-6 py-4 text-lg">{{ livro.editora }}</td>
-      <td class="px-6 py-4 text-lg">{{ livro.Category?.dataValues?.nome || '-' }}</td>
+      <td class="px-6 py-4">{{ livro.codigoLivro }}</td>
+      <td class="px-6 py-4">{{ livro.exemplar }}</td>
+      <td class="px-6 py-4">{{ livro.titulo }}</td>
+      <td class="px-6 py-4">{{ livro.autor }}</td>
+      <td class="px-6 py-4">{{ livro.editora }}</td>
+      <td class="px-6 py-4">{{ livro.Category?.dataValues?.nome || '-' }}</td>
       <td class="px-6 py-4">
-        <img v-if="livro.imagem" :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="h-20 w-auto rounded shadow">
+        <img 
+          v-if="livro.imagem" 
+          :src="'atom:/' + livro.imagem" 
+          alt="Imagem do Livro" 
+          class="h-24 w-auto rounded shadow-md object-contain"
+        />
       </td>
-      <td class="px-6 py-4">
-        <button @click="editarLivro(index)" class="text-blue-600 hover:underline text-lg">Editar</button>
-        <button @click="removerLivro(index)" class="text-red-600 hover:underline ml-3 text-lg">Remover</button>
-        <button @click="gerarExcelEtiquetas(index)" class="text-green-600 hover:underline ml-3 text-lg">Etiqueta</button>
+      <td class="px-6 py-4 space-x-3">
+        <button 
+          @click="editarLivro(index)" 
+          class="text-blue-600 hover:underline"
+        >
+          Editar
+        </button>
+        <button 
+          @click="removerLivro(index)" 
+          class="text-red-600 hover:underline"
+        >
+          Remover
+        </button>
+        <button 
+          @click="gerarExcelEtiquetas(index)" 
+          class="text-green-600 hover:underline"
+        >
+          Etiqueta
+        </button>
       </td>
     </tr>
   </tbody>
@@ -380,7 +420,27 @@ async gerarExcelEtiquetasEmMassa() {
   ];
 
   const coresGenero = {
-    // ... (mesma lista de cores do exemplo anterior)
+    'Administração e Negócios': 'FFB6C1',
+    'Agricultura e Meio Ambiente': '98FB98',
+    'Artes e Design': 'FFD700',
+    'Ciência e Tecnologia': '87CEEB',
+    'Educação e Didáticos': 'FF69B4',
+    'Engenharia e Arquitetura': 'FFA07A',
+    'Espiritualidade e Religião': '9370DB',
+    'Filosofia e Psicologia': '40E0D0',
+    'História e Sociedade': 'F4A460',
+    'Direito e Política': 'DC143C',
+    'Literatura Clássica e Movimentos Literários': '8B4513',
+    'Literatura Brasileira e Estrangeira': 'FF8C00',
+    'Ficção e Fantasia': 'FFFF00',
+    'Romance e Relacionamentos': 'FF0000',
+    'Suspense, Terror e Policial': '2F4F4F',
+    'Autoajuda e Espiritualidade Pessoal': '9ACD32',
+    'Infantil e Juvenil': 'FFB347',
+    'Quadrinhos e Cultura Pop': '00CED1',
+    'Biografias e Memórias': 'D2691E',
+    'Turismo e Viagens': '1E90FF',
+    'Outro': 'D3D3D3',
   };
 
   selecionados.forEach(livro => {
