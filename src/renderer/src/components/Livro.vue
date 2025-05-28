@@ -113,38 +113,46 @@
 
     </form>
 
-    <input v-model="searchQuery" type="text" placeholder="Pesquisar livro..." class="mt-4 mb-4 p-2 border border-gray-300 rounded-md w-full" />
-    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-        <tr>
-          <th class="px-6 py-4">Código</th>
-          <th class="px-6 py-4">Exemplar</th>
-          <th class="px-6 py-4">Título</th>
-          <th class="px-6 py-4">Autor</th>
-          <th class="px-6 py-4">Editora</th>
-          <th class="px-6 py-4">Gênero</th>
-          <th class="px-6 py-4">Imagem</th>
-          <th class="px-6 py-4">Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(livro, index) in filteredLivro" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-          <td class="px-6 py-4 text-lg">{{ livro.codigoLivro }}</td> 
-          <td class="px-6 py-4 text-lg">{{ livro.exemplar }}</td>
-          <td class="px-6 py-4 text-lg">{{ livro.titulo }}</td>
-          <td class="px-6 py-4 text-lg">{{ livro.autor }}</td>
-          <td class="px-6 py-4 text-lg">{{ livro.editora }}</td>
-          <td class="px-6 py-4 text-lg">{{ livro.Category.dataValues.nome || '-' }}</td>
-          <td class="px-6 py-4">
-  <img v-if="livro.imagem" :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="h-30 w-auto" />
-</td>
-          <td class="px-6 py-4">
-            <button @click="editarLivro(index)" class="text-blue-600 hover:underline text-lg">Editar</button>
-            <button @click="removerLivro(index)" class="text-red-600 hover:underline ml-3 text-lg">Remover</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+ <input v-model="searchQuery" type="text" placeholder="Pesquisar livro..." class="mt-4 mb-4 p-2 border border-gray-300 rounded-md w-full" />
+
+<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+  <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+    <tr>
+      <th class="px-6 py-4">
+        <input type="checkbox" v-model="selectAll" @change="toggleSelectAll" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+      </th>
+      <th class="px-6 py-4">Código</th>
+      <th class="px-6 py-4">Exemplar</th>
+      <th class="px-6 py-4">Título</th>
+      <th class="px-6 py-4">Autor</th>
+      <th class="px-6 py-4">Editora</th>
+      <th class="px-6 py-4">Gênero</th>
+      <th class="px-6 py-4">Imagem</th>
+      <th class="px-6 py-4">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr v-for="(livro, index) in filteredLivro" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+      <td class="px-6 py-4">
+        <input type="checkbox" v-model="livro.selecionado" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+      </td>
+      <td class="px-6 py-4 text-lg">{{ livro.codigoLivro }}</td>
+      <td class="px-6 py-4 text-lg">{{ livro.exemplar }}</td>
+      <td class="px-6 py-4 text-lg">{{ livro.titulo }}</td>
+      <td class="px-6 py-4 text-lg">{{ livro.autor }}</td>
+      <td class="px-6 py-4 text-lg">{{ livro.editora }}</td>
+      <td class="px-6 py-4 text-lg">{{ livro.Category?.dataValues?.nome || '-' }}</td>
+      <td class="px-6 py-4">
+        <img v-if="livro.imagem" :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="h-20 w-auto rounded shadow">
+      </td>
+      <td class="px-6 py-4">
+        <button @click="editarLivro(index)" class="text-blue-600 hover:underline text-lg">Editar</button>
+        <button @click="removerLivro(index)" class="text-red-600 hover:underline ml-3 text-lg">Remover</button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
     <!-- Paginação Estilizada com Tailwind -->
 <div class="flex justify-center mt-6">
   <nav class="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
@@ -208,6 +216,7 @@ export default {
         imagemOriginal: ""
       },
       livros: [],
+      livrosSelecionados: [],
       searchQuery: "",
       categorys: [], 
       editando: false,
@@ -264,6 +273,13 @@ export default {
     },
   },
   methods: {
+
+      toggleSelecionarTodos(event) {
+      this.selecionarTodos = event.target.checked;
+      this.livrosSelecionados = this.selecionarTodos
+        ? [...this.livrosFiltrados]
+        : [];
+    },
     nextPage() {
       if (this.currentPage < this.totalPages) this.currentPage++;
     },
