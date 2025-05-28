@@ -132,12 +132,8 @@
     </tr>
     <tr>
       <td colspan="9" class="px-6 py-3 bg-white dark:bg-gray-800">
-        <button
-          @click="gerarEtiquetasSelecionadas"
-          class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded shadow"
-        >
-          Gerar Etiquetas
-        </button>
+       <button class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center" @click="gerarExcelEtiquetasEmMassa()" >Gerar Etiquetas em Massa</button>
+
       </td>
     </tr>
   </thead>
@@ -292,6 +288,7 @@ export default {
     },
   },
   methods: {
+    
   async gerarExcelEtiquetas() {
   const livros = this.livros;
 
@@ -361,6 +358,56 @@ if (selecionados.length === 0) {
   const a = document.createElement('a');
   a.href = url;
   a.download = 'etiquetas_livros.xlsx';
+  a.click();
+  URL.revokeObjectURL(url);
+},
+
+async gerarExcelEtiquetasEmMassa() {
+  const selecionados = this.livros.filter(livro => livro.selecionado);
+
+  if (selecionados.length === 0) {
+    Swal.fire('Atenção', 'Nenhum livro selecionado!', 'warning');
+    return;
+  }
+
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Etiquetas');
+
+  worksheet.columns = [
+    { header: 'Código', key: 'codigo', width: 15 },
+    { header: 'Exemplar', key: 'exemplar', width: 10 },
+    { header: 'Gênero', key: 'genero', width: 30 },
+  ];
+
+  const coresGenero = {
+    // ... (mesma lista de cores do exemplo anterior)
+  };
+
+  selecionados.forEach(livro => {
+    const genero = livro.Category?.dataValues?.nome || 'Outro';
+    const cor = coresGenero[genero] || 'FFFFFF';
+
+    const row = worksheet.addRow({
+      codigo: livro.codigoLivro,
+      exemplar: livro.exemplar,
+      genero,
+    });
+
+    const cellGenero = row.getCell(3);
+    cellGenero.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: cor },
+    };
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `etiquetas_livros.xlsx`;
   a.click();
   URL.revokeObjectURL(url);
 },
