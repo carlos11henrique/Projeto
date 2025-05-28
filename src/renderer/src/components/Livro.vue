@@ -114,8 +114,8 @@
     </form>
 
  <input v-model="searchQuery" type="text" placeholder="Pesquisar livro..." class="mt-4 mb-4 p-2 border border-gray-300 rounded-md w-full" />
-
-<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+ 
+ <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
   <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
     <tr>
       <th class="px-6 py-4">
@@ -130,7 +130,18 @@
       <th class="px-6 py-4">Imagem</th>
       <th class="px-6 py-4">Ações</th>
     </tr>
+    <tr>
+      <td colspan="9" class="px-6 py-3 bg-white dark:bg-gray-800">
+        <button
+          @click="gerarEtiquetasSelecionadas"
+          class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded shadow"
+        >
+          Gerar Etiquetas
+        </button>
+      </td>
+    </tr>
   </thead>
+
   <tbody>
     <tr v-for="(livro, index) in filteredLivro" :key="index" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
       <td class="px-6 py-4">
@@ -148,10 +159,12 @@
       <td class="px-6 py-4">
         <button @click="editarLivro(index)" class="text-blue-600 hover:underline text-lg">Editar</button>
         <button @click="removerLivro(index)" class="text-red-600 hover:underline ml-3 text-lg">Remover</button>
+        <button @click="gerarExcelEtiquetas(index)" class="text-green-600 hover:underline ml-3 text-lg">Etiqueta</button>
       </td>
     </tr>
   </tbody>
 </table>
+
 
     <!-- Paginação Estilizada com Tailwind -->
 <div class="flex justify-center mt-6">
@@ -198,6 +211,10 @@
 
 <script>
 import Swal from 'sweetalert2';
+import ExcelJS from 'exceljs';
+
+import * as XLSX from 'xlsx';
+
 
 export default {
   name: "Livro",
@@ -213,7 +230,9 @@ export default {
         exemplar: "",
         quantidade: 0,
         imagem: "",
+        selectAll: false,
         imagemOriginal: ""
+        
       },
       livros: [],
       livrosSelecionados: [],
@@ -273,13 +292,84 @@ export default {
     },
   },
   methods: {
+  async gerarExcelEtiquetas() {
+  const livros = this.livros;
 
-      toggleSelecionarTodos(event) {
-      this.selecionarTodos = event.target.checked;
-      this.livrosSelecionados = this.selecionarTodos
-        ? [...this.livrosFiltrados]
-        : [];
-    },
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Etiquetas');
+
+
+  const selecionados = this.livros.filter(livro => livro.selecionado);
+if (selecionados.length === 0) {
+    Swal.fire('Atenção', 'Nenhum livro selecionado!', 'warning');
+    return;
+  }
+    worksheet.columns = [
+    { header: 'Código', key: 'codigo', width: 15 },
+    { header: 'Exemplar', key: 'exemplar', width: 10 },
+    { header: 'Gênero', key: 'genero', width: 30 },
+  ];
+
+  const coresGenero = {
+    'Administração e Negócios': 'FFB6C1',
+    'Agricultura e Meio Ambiente': '98FB98',
+    'Artes e Design': 'FFD700',
+    'Ciência e Tecnologia': '87CEEB',
+    'Educação e Didáticos': 'FF69B4',
+    'Engenharia e Arquitetura': 'FFA07A',
+    'Espiritualidade e Religião': '9370DB',
+    'Filosofia e Psicologia': '40E0D0',
+    'História e Sociedade': 'F4A460',
+    'Direito e Política': 'DC143C',
+    'Literatura Clássica e Movimentos Literários': '8B4513',
+    'Literatura Brasileira e Estrangeira': 'FF8C00',
+    'Ficção e Fantasia': 'FFFF00',
+    'Romance e Relacionamentos': 'FF0000',
+    'Suspense, Terror e Policial': '2F4F4F',
+    'Autoajuda e Espiritualidade Pessoal': '9ACD32',
+    'Infantil e Juvenil': 'FFB347',
+    'Quadrinhos e Cultura Pop': '00CED1',
+    'Biografias e Memórias': 'D2691E',
+    'Turismo e Viagens': '1E90FF',
+    'Outro': 'D3D3D3',
+  };
+
+  livros.forEach(livro => {
+    const genero = livro.Category?.dataValues?.nome || 'Outro';
+    const cor = coresGenero[genero] || 'FFFFFF';
+
+    const row = worksheet.addRow({
+      codigo: livro.codigoLivro,
+      exemplar: livro.exemplar,
+      genero,
+    });
+
+    // Aplica a cor de fundo na célula de gênero (coluna 3)
+    const cellGenero = row.getCell(3);
+    cellGenero.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: cor },
+    };
+  });
+
+  // Salvar arquivo
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'etiquetas_livros.xlsx';
+  a.click();
+  URL.revokeObjectURL(url);
+},
+
+     toggleSelectAll() {
+    this.filteredLivro.forEach(livro => {
+      livro.selecionado = this.selectAll;
+    });
+  },
     nextPage() {
       if (this.currentPage < this.totalPages) this.currentPage++;
     },
