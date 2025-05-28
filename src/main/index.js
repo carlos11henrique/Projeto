@@ -10,7 +10,7 @@ import { CategoriaModel } from './models'
 import url from 'node:url'
 
 
-const icon = join(__dirname, '..', 'renderer/assets', 'logo.jpg')
+const icon = join(__dirname, '..', 'renderer/assets', 'logo.png')
 function createWindow() {
   const mainWindow = new BrowserWindow({
       title: 'Biblioteca',
