@@ -329,89 +329,16 @@ export default {
   },
   methods: {
     
-  async gerarExcelEtiquetas() {
+async gerarExcelEtiquetas() {
   const livros = this.livros;
-
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Etiquetas');
 
-
   const selecionados = this.livros.filter(livro => livro.selecionado);
-if (selecionados.length === 0) {
-    Swal.fire('Atenção', 'Nenhum livro selecionado!', 'warning');
-    return;
-  }
-    worksheet.columns = [
-    { header: 'Código', key: 'codigo', width: 15 },
-    { header: 'Exemplar', key: 'exemplar', width: 10 },
-    { header: 'Gênero', key: 'genero', width: 30 },
-  ];
-
-  const coresGenero = {
-    'Administração e Negócios': 'FFB6C1',
-    'Agricultura e Meio Ambiente': '98FB98',
-    'Artes e Design': 'FFD700',
-    'Ciência e Tecnologia': '87CEEB',
-    'Educação e Didáticos': 'FF69B4',
-    'Engenharia e Arquitetura': 'FFA07A',
-    'Espiritualidade e Religião': '9370DB',
-    'Filosofia e Psicologia': '40E0D0',
-    'História e Sociedade': 'F4A460',
-    'Direito e Política': 'DC143C',
-    'Literatura Clássica e Movimentos Literários': '8B4513',
-    'Literatura Brasileira e Estrangeira': 'FF8C00',
-    'Ficção e Fantasia': 'FFFF00',
-    'Romance e Relacionamentos': 'FF0000',
-    'Suspense, Terror e Policial': '2F4F4F',
-    'Autoajuda e Espiritualidade Pessoal': '9ACD32',
-    'Infantil e Juvenil': 'FFB347',
-    'Quadrinhos e Cultura Pop': '00CED1',
-    'Biografias e Memórias': 'D2691E',
-    'Turismo e Viagens': '1E90FF',
-    'Outro': 'D3D3D3',
-  };
-
-  livros.forEach(livro => {
-    const genero = livro.Category?.dataValues?.nome || 'Outro';
-    const cor = coresGenero[genero] || 'FFFFFF';
-
-    const row = worksheet.addRow({
-      codigo: livro.codigoLivro,
-      exemplar: livro.exemplar,
-      genero,
-    });
-
-    // Aplica a cor de fundo na célula de gênero (coluna 3)
-    const cellGenero = row.getCell(3);
-    cellGenero.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: cor },
-    };
-  });
-
-  // Salvar arquivo
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/octet-stream' });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'etiquetas_livros.xlsx';
-  a.click();
-  URL.revokeObjectURL(url);
-},
-
-async gerarExcelEtiquetasEmMassa() {
-  const selecionados = this.livros.filter(livro => livro.selecionado);
-
   if (selecionados.length === 0) {
     Swal.fire('Atenção', 'Nenhum livro selecionado!', 'warning');
     return;
   }
-
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Etiquetas');
 
   worksheet.columns = [
     { header: 'Código', key: 'codigo', width: 15 },
@@ -419,8 +346,7 @@ async gerarExcelEtiquetasEmMassa() {
     { header: 'Gênero', key: 'genero', width: 30 },
   ];
 
-  const coresGenero = {
-    'Administração e Negócios': 'FFB6C1',
+  const coresGenero = { 'Administração e Negócios': 'FFB6C1',
     'Agricultura e Meio Ambiente': '98FB98',
     'Artes e Design': 'FFD700',
     'Ciência e Tecnologia': '87CEEB',
@@ -448,8 +374,77 @@ async gerarExcelEtiquetasEmMassa() {
     const cor = coresGenero[genero] || 'FFFFFF';
 
     const row = worksheet.addRow({
-      codigo: livro.codigoLivro,
-      exemplar: livro.exemplar,
+      codigo: `C. ${livro.codigoLivro}`,
+      exemplar: `EX.${livro.exemplar}`,
+      genero,
+    });
+
+    const cellGenero = row.getCell(3);
+    cellGenero.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: cor },
+    };
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'etiquetas_livros.xlsx';
+  a.click();
+  URL.revokeObjectURL(url);
+},
+
+
+async gerarExcelEtiquetasEmMassa() {
+  const selecionados = this.livros.filter(livro => livro.selecionado);
+
+  if (selecionados.length === 0) {
+    Swal.fire('Atenção', 'Nenhum livro selecionado!', 'warning');
+    return;
+  }
+
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Etiquetas');
+
+  worksheet.columns = [
+    { header: 'Código', key: 'codigo', width: 15 },
+    { header: 'Exemplar', key: 'exemplar', width: 10 },
+    { header: 'Gênero', key: 'genero', width: 30 },
+  ];
+
+  const coresGenero = {  'Administração e Negócios': 'FFB6C1',
+    'Agricultura e Meio Ambiente': '98FB98',
+    'Artes e Design': 'FFD700',
+    'Ciência e Tecnologia': '87CEEB',
+    'Educação e Didáticos': 'FF69B4',
+    'Engenharia e Arquitetura': 'FFA07A',
+    'Espiritualidade e Religião': '9370DB',
+    'Filosofia e Psicologia': '40E0D0',
+    'História e Sociedade': 'F4A460',
+    'Direito e Política': 'DC143C',
+    'Literatura Clássica e Movimentos Literários': '8B4513',
+    'Literatura Brasileira e Estrangeira': 'FF8C00',
+    'Ficção e Fantasia': 'FFFF00',
+    'Romance e Relacionamentos': 'FF0000',
+    'Suspense, Terror e Policial': '2F4F4F',
+    'Autoajuda e Espiritualidade Pessoal': '9ACD32',
+    'Infantil e Juvenil': 'FFB347',
+    'Quadrinhos e Cultura Pop': '00CED1',
+    'Biografias e Memórias': 'D2691E',
+    'Turismo e Viagens': '1E90FF',
+    'Outro': 'D3D3D3',};
+
+  selecionados.forEach(livro => {
+    const genero = livro.Category?.dataValues?.nome || 'Outro';
+    const cor = coresGenero[genero] || 'FFFFFF';
+
+    const row = worksheet.addRow({
+      codigo: `C. ${livro.codigoLivro}`,
+      exemplar: `EX.${livro.exemplar}`,
       genero,
     });
 
@@ -471,6 +466,7 @@ async gerarExcelEtiquetasEmMassa() {
   a.click();
   URL.revokeObjectURL(url);
 },
+
 
      toggleSelectAll() {
     this.filteredLivro.forEach(livro => {
