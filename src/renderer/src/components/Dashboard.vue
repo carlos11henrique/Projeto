@@ -25,6 +25,9 @@ const charts = reactive([
   { id: 'lineChart' },
   { id: 'stepChart' },
   { id: 'chartDiasSemana' },
+  { id: 'renderHighchart' },
+    { id: 'alunosLivrosEmprestimoChart' },
+
 ])
 
 function renderHighchart(id, config) {
@@ -59,6 +62,50 @@ onMounted(async () => {
     const tempoMedio = await cacheFetch('tempoMedioUsuario', () => window.api.getTempoMedioUsuario());
     const percentuais = await cacheFetch('percentualUsuarios', () => window.api.getPercentualUsuarios());
     const rankingUser = await cacheFetch('rankingUsuariosEmprestimos', () => window.api.getRankingUsuariosEmprestimos());
+    const totalUsuarios = await cacheFetch('totalUsuarios', () => window.api.getQuantidadeUsuarios());
+    const totalLivros = await cacheFetch('totalLivros', () => window.api.getQuantidadeLivros());
+    const totalEmprestimos = await cacheFetch('totalEmprestimos', () => window.api.getQuantidadeEmprestimos());
+
+
+
+  
+renderHighchart('alunosLivrosEmprestimoChart', {
+  chart: { type: 'column' }, // <- alterado de 'line' para 'column'
+  title: { text: 'Quantidade' },
+  xAxis: {
+    categories: ['Livros', 'Usuários', 'Empréstimos'],
+    title: { text: 'Tipo' }
+  },
+  yAxis: {
+    title: { text: 'Quantidade' },
+    allowDecimals: false
+  },
+  series: [{
+    name: 'Total',
+  data: [
+  totalLivros?.totalLivros ?? 0,
+  totalUsuarios?.Usuarios ?? 0,
+  totalEmprestimos?.Emprestimos ?? 0
+],
+
+    color: '#8E24AA'
+  }],
+  plotOptions: {
+    column: {
+      animation: { duration: 1500 },
+      dataLabels: {
+        enabled: true,
+        format: '{point.y}'
+      }
+    },
+    series: {
+      marker: { enabled: true }
+    }
+  }
+});
+
+console.log('Dados do gráfico:', { totalLivros, totalUsuarios, totalEmprestimos });
+
 
     if (rankingLivrosAno?.length) {
       renderHighchart('rankingChart', {

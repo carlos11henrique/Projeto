@@ -31,8 +31,9 @@ createLivrosEmMassa: (livros) => ipcRenderer.send('createLivrosEmMassa', livros)
 
 
     getPathInput: (input) =>  webUtils.getPathForFile(input.files[0]),
-  
-  
+  getQuantidadeEmprestimos: () => ipcRenderer.invoke('getQuantidadeEmprestimos'),
+  getQuantidadeUsuarios: () => ipcRenderer.invoke('getQuantidadeUsuarios'),
+  getQuantidadeLivros: () => ipcRenderer.invoke('getQuantidadeLivros'),
   getEvolucaoEmprestimos: () => ipcRenderer.invoke('getEvolucaoEmprestimos'),
   getEmprestimosCategoria: () => ipcRenderer.invoke('getEmprestimosCategoria'),
   getPercentualUsuarios: () => ipcRenderer.invoke('getPercentualUsuarios'),

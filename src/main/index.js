@@ -81,6 +81,50 @@ app.whenReady().then(() => {
     }
   };
 
+ipcMain.handle('getQuantidadeUsuarios', async () => {
+  try {
+    const [results] = await sequelize.query(`
+   SELECT COUNT(*) AS Usuarios
+      FROM Users
+    `);
+    return results[0]; // { totalLivros: Y }
+  } catch (error) {
+    console.error('Erro ao buscar quantidade de users:', error);
+    return { error: 'Erro ao buscar dados' };
+  }
+});
+
+
+
+
+ipcMain.handle('getQuantidadeEmprestimos', async () => {
+  try {
+    const [results] = await sequelize.query(`
+     SELECT COUNT(*) AS Emprestimos
+      FROM Loans
+    `);
+    return results[0]; // { totalLivros: Y }
+  } catch (error) {
+    console.error('Erro ao buscar quantidade de Emprestimo:', error);
+    return { error: 'Erro ao buscar dados' };
+  }
+});
+
+
+ipcMain.handle('getQuantidadeLivros', async () => {
+  try {
+    const [results] = await sequelize.query(`
+      SELECT COUNT(*) AS totalLivros
+      FROM Books
+    `);
+    return results[0]; // { totalLivros: Y }
+  } catch (error) {
+    console.error('Erro ao buscar quantidade de livros:', error);
+    return { error: 'Erro ao buscar dados' };
+  }
+});
+
+
   ipcMain.handle('getRankingUsuariosEmprestimos', async () => {
   try {
     const [results, metadata] = await sequelize.query(`
