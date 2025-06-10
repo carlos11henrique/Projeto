@@ -104,7 +104,6 @@ renderHighchart('alunosLivrosEmprestimoChart', {
   }
 });
 
-console.log('Dados do gráfico:', { totalLivros, totalUsuarios, totalEmprestimos });
 
 
     if (rankingLivrosAno?.length) {
