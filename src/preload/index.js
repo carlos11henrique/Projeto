@@ -9,7 +9,7 @@ const api = {
   deleteLivro: (id) => ipcRenderer.send('deleteLivro', id),
   getLivro: () => ipcRenderer.invoke('getLivro'),
 
-
+createLivrosEmMassa: (livros) => ipcRenderer.send('createLivrosEmMassa', livros),
   createEmprestimo: (emprestimo) => ipcRenderer.send('createEmprestimo', emprestimo),
   updateEmprestimo: (emprestimo) => ipcRenderer.send('updateEmprestimo', emprestimo),
   deleteEmprestimo: (id) => ipcRenderer.send('deleteEmprestimo', id),

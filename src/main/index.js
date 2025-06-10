@@ -293,34 +293,94 @@ ipcMain.handle('getRankingLivrosAno', async () => {
   });
 
 
+ipcMain.on('createLivro', async (event, book) => {
+  try {
+    // Trata a imagem
+    if (book.imagem) {
+      const picturesPath = app.getPath('pictures');
+      const imagesDir = join(picturesPath, 'livros_imagens');
 
-  ipcMain.on('createLivro', async (event, book) => {
-  
-    try {
+      await fs.mkdir(imagesDir, { recursive: true });
+
+      const ext = extname(book.imagem); // ex: '.jpg'
+      const uniqueName = `livro_${Date.now()}_${Math.floor(Math.random() * 10000)}${ext}`;
+      const finalimagem = join(imagesDir, uniqueName);
+      await fs.copyFile(book.imagem, finalimagem);
+
+      book.imagem = finalimagem;
+    }
+
+    if (!book.codigoLivro) {
+      let codigoUnico;
+      let codigoExiste = true;
+
+      while (codigoExiste) {    
+ codigoUnico = `L${new Date().getFullYear()}${Math.floor(Math.random() * 10000)}`;
+
+        // Verifica se já existe no banco
+        const livroExistente = await LivroModel.findOne({ where: { codigoLivro: codigoUnico } });
+        if (!livroExistente) {
+          codigoExiste = false;
+        }
+      }
+
+      book.codigoLivro = codigoUnico;
+    }
+
+    await LivroModel.create(book);
+    event.reply('createLivroSuccess', { message: 'Livro criado com sucesso!' });
+
+  } catch (error) {
+    handleError(event, error, 'createLivro');
+  }
+});
+
+
+ipcMain.on('createLivrosEmMassa', async (event, livros) => {
+  try {
+    const picturesPath = app.getPath('pictures');
+    const imagesDir = join(picturesPath, 'livros_imagens');
+    await fs.mkdir(imagesDir, { recursive: true });
+
+    const livrosProcessados = [];
+
+    for (const book of livros) {
+      // Trata imagem
       if (book.imagem) {
-        const picturesPath = app.getPath('pictures');
-        const imagesDir = join(picturesPath, 'livros_imagens');
-  
-        // Cria o diretório, se não existir
-        await fs.mkdir(imagesDir, { recursive: true });
-  
-        // Gera um nome único para a imagem
         const ext = extname(book.imagem); // ex: '.jpg'
         const uniqueName = `livro_${Date.now()}_${Math.floor(Math.random() * 10000)}${ext}`;
         const finalimagem = join(imagesDir, uniqueName);
-  
-        // Copia a imagem para a nova localização com nome único
         await fs.copyFile(book.imagem, finalimagem);
-  
-        // Atualiza o caminho no objeto antes de salvar
         book.imagem = finalimagem;
       }
-  
-      await LivroModel.create(book);
-    } catch (error) {
-      handleError(event, error, 'createLivro');
+
+      // Gera código único se não houver
+      if (!book.codigoLivro) {
+        let codigoUnico;
+        let codigoExiste = true;
+
+        while (codigoExiste) {
+          codigoUnico = `L${new Date().getFullYear()}${Math.floor(Math.random() * 10000)}`;
+          const livroExistente = await LivroModel.findOne({ where: { codigoLivro: codigoUnico } });
+          if (!livroExistente) {
+            codigoExiste = false;
+          }
+        }
+
+        book.codigoLivro = codigoUnico;
+      }
+
+      livrosProcessados.push(book);
     }
-  });
+
+    await LivroModel.bulkCreate(livrosProcessados);
+    event.reply('createLivrosEmMassaSuccess', { message: 'Livros cadastrados com sucesso!' });
+
+  } catch (error) {
+    handleError(event, error, 'createLivrosEmMassa');
+  }
+});
+
 
 
 

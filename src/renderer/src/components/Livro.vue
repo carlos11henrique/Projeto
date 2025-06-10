@@ -44,12 +44,6 @@
 </div>
 
 
-        <div>
-          <label for="codigoLivro" class="block mb-2 text-sm font-medium text-gray-900">Código do Livro</label>
-          <input v-model="novoLivro.codigoLivro" type="text" id="codigoLivro"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-            required />
-        </div>
 
         <div>
           <label for="descricao" class="block mb-2 text-sm font-medium text-gray-900">Descrição</label>
@@ -257,7 +251,6 @@ export default {
   data() {
     return {
       novoLivro: {
-        codigoLivro: "",
         titulo: "",
         autor: "",
         editora: "",
@@ -493,60 +486,78 @@ async gerarExcelEtiquetasEmMassa() {
       const categoria = this.categorys.find(cat => cat.nome === nome);
       this.novoLivro.categoryId = categoria ? categoria.id : 0;
     },
-    async adicionarLivro() {
-      if (this.editando) return; 
 
-      const livroBase = this.novoLivro;
-      const quantidade = parseInt(livroBase.quantidade);
-      const codigoBase = livroBase.codigoLivro.replace(/\d+$/, '') || livroBase.codigoLivro;
-      const numeroInicial = parseInt(livroBase.codigoLivro.match(/\d+$/)) || 1;
+    async cadastrarEmMassa() {
+  if (this.livrosParaCadastrar.length === 0) {
+    return Swal.fire("Atenção", "Nenhum livro para cadastrar.", "warning");
+  }
 
-      if (
-        livroBase.codigoLivro && livroBase.titulo && livroBase.autor &&
-        livroBase.editora && livroBase.categoryId &&
-        quantidade > 0
-      ) {
-        try {
-          for (let i = 0; i < quantidade; i++) {
-            const novoCodigo = `${codigoBase}${numeroInicial + i}`;
-            const novoExemplar = `${numeroInicial + i}`;
+  try {
+    // Envio para backend via Electron IPC, fetch, ou Axios
+    await window.api.cadastrarLivrosEmMassa(this.livrosParaCadastrar);
 
-            const novoLivro = {
-              ...livroBase,
-              codigoLivro: novoCodigo,
-              exemplar: novoExemplar,
-              quantidade: 1,
-              imagem: livroBase.imagem,
-              CategoryId: livroBase.categoryId
-            };
+    Swal.fire("Sucesso", "Livros cadastrados com sucesso!", "success");
 
-            await window.api.createLivro(novoLivro);
-          }
+    this.livrosParaCadastrar = [];
+    this.carregarLivros(); // Atualiza lista principal
+  } catch (error) {
+    Swal.fire("Erro", "Erro ao cadastrar os livros.", "error");
+  }
+},
+async adicionarLivro() {
+  if (this.editando) return; 
 
-          Swal.fire({
-            icon: 'success',
-            title: 'Livros cadastrados!',
-            text: 'Todos os exemplares foram adicionados com sucesso.'
-          });
+  const livroBase = this.novoLivro;
+  const quantidade = parseInt(livroBase.quantidade);
 
-          this.resetarFormulario();
-          this.carregarLivro();
-        } catch (error) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Erro!',
-            text: 'Não foi possível cadastrar os livros.'
-          });
-          console.error(error);
-        }
-      } else {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Campos obrigatórios!',
-          text: 'Preencha todos os campos corretamente.'
-        });
+  const codigoOriginal = livroBase.codigoLivro || '';
+  const numeroInicial = parseInt(codigoOriginal.match(/\d+$/)) || 1;
+
+  if (
+    livroBase.titulo && livroBase.autor &&
+    livroBase.editora && livroBase.categoryId &&
+    quantidade > 0
+  ) {
+    try {
+      for (let i = 0; i < quantidade; i++) {
+        const novoExemplar = `${numeroInicial + i}`;
+
+        const novoLivro = {
+          ...livroBase,
+          exemplar: novoExemplar,
+          quantidade: 1,
+          imagem: livroBase.imagem,
+          CategoryId: livroBase.categoryId
+        };
+
+        await window.api.createLivro(novoLivro);
       }
-    },
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Livros cadastrados!',
+        text: 'Todos os exemplares foram adicionados com sucesso.'
+      });
+
+      this.resetarFormulario();
+      this.carregarLivro();
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Erro!',
+        text: 'Não foi possível cadastrar os livros.'
+      });
+      console.error(error);
+    }
+  } else {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Campos obrigatórios!',
+      text: 'Preencha todos os campos corretamente.'
+    });
+  }
+},
+
     editarLivro(index) {
       this.novoLivro = { ...this.livros[index] };
       this.editando = true;
@@ -615,7 +626,6 @@ async gerarExcelEtiquetasEmMassa() {
     },
     resetarFormulario() {
       this.novoLivro = {
-        codigoLivro: "",
         titulo: "",
         autor: "",
         editora: "",
