@@ -338,6 +338,8 @@ async gerarExcelEtiquetas() {
     { header: 'Exemplar', key: 'exemplar', width: 10 },
     { header: 'Gênero', key: 'genero', width: 30 },
   ];
+  worksheet.getRow(2).height = 25;
+
 
   const coresGenero = { 'Administração e Negócios': 'FFB6C1',
     'Agricultura e Meio Ambiente': '98FB98',
@@ -361,24 +363,43 @@ async gerarExcelEtiquetas() {
     'Turismo e Viagens': '1E90FF',
     'Outro': 'D3D3D3',
   };
+selecionados.forEach(livro => {
+  const genero = livro.Category?.dataValues?.nome || 'Outro';
+  const cor = coresGenero[genero] || 'FFFFFF';
 
-  selecionados.forEach(livro => {
-    const genero = livro.Category?.dataValues?.nome || 'Outro';
-    const cor = coresGenero[genero] || 'FFFFFF';
+  const row = worksheet.addRow({
+    codigo: `C. ${livro.codigoLivro}`,
+    exemplar: `EX.${livro.exemplar}`,
+    genero,
+  });
 
-    const row = worksheet.addRow({
-      codigo: `C. ${livro.codigoLivro}`,
-      exemplar: `EX.${livro.exemplar}`,
-      genero,
-    });
+  // Aumenta a altura da linha
+  row.height = 40;
 
-    const cellGenero = row.getCell(3);
-    cellGenero.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: cor },
+  // Estilo individual de cada célula da linha
+  row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+    // Centraliza o conteúdo
+    cell.alignment = {
+      vertical: 'middle',
+      horizontal: 'center',
+      wrapText: true,
+    };
+
+    // Aplica borda superior grossa e preta
+    cell.border = {
+      top: { style: 'thick', color: { argb: '000000' } },
     };
   });
+
+  // Aplica cor de fundo ao gênero (coluna 3)
+  const cellGenero = row.getCell(3);
+  cellGenero.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: cor },
+  };
+});
+
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/octet-stream' });
@@ -431,23 +452,44 @@ async gerarExcelEtiquetasEmMassa() {
     'Turismo e Viagens': '1E90FF',
     'Outro': 'D3D3D3',};
 
-  selecionados.forEach(livro => {
-    const genero = livro.Category?.dataValues?.nome || 'Outro';
-    const cor = coresGenero[genero] || 'FFFFFF';
+selecionados.forEach(livro => {
+  const genero = livro.Category?.dataValues?.nome || 'Outro';
+  const cor = coresGenero[genero] || 'FFFFFF';
 
-    const row = worksheet.addRow({
-      codigo: `C. ${livro.codigoLivro}`,
-      exemplar: `EX.${livro.exemplar}`,
-      genero,
-    });
+  const row = worksheet.addRow({
+    codigo: `C. ${livro.codigoLivro}`,
+    exemplar: `EX.${livro.exemplar}`,
+    genero,
+  });
 
-    const cellGenero = row.getCell(3);
-    cellGenero.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: cor },
+  // Aumenta a altura da linha
+  row.height = 40;
+
+  // Estilo individual de cada célula da linha
+  row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+    // Centraliza o conteúdo
+    cell.alignment = {
+      vertical: 'middle',
+      horizontal: 'center',
+      wrapText: true,
+    };
+
+    // Aplica borda superior grossa e preta
+    cell.border = {
+      top: { style: 'thick', color: { argb: '000000' } },
     };
   });
+
+  // Aplica cor de fundo ao gênero (coluna 3)
+  const cellGenero = row.getCell(3);
+  cellGenero.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: cor },
+  };
+});
+
+
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/octet-stream' });
@@ -459,6 +501,7 @@ async gerarExcelEtiquetasEmMassa() {
   a.click();
   URL.revokeObjectURL(url);
 },
+
 
 
      toggleSelectAll() {
