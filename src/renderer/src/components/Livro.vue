@@ -279,8 +279,26 @@ export default {
       this.currentPage = 1; 
     }
   },
-  computed: {
-      paginasVisiveis() {
+computed: {
+  livrosComFiltro() {
+    const query = this.searchQuery.toLowerCase();
+    return this.livros.filter(livro =>
+      livro.titulo.toLowerCase().includes(query) ||
+      livro.autor.toLowerCase().includes(query)
+    );
+  },
+
+  filteredLivro() {
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    return this.livrosComFiltro.slice(start, end); // depende dele aqui também
+  },
+
+  totalPages() {
+    return Math.ceil(this.livrosComFiltro.length / this.itemsPerPage) || 1;
+  },
+
+  paginasVisiveis() {
     const total = this.totalPages;
     const atual = this.currentPage;
     const paginas = [];
@@ -297,29 +315,9 @@ export default {
     }
 
     return paginas;
-  },
-    filteredLivro() {
-      // Filtro de livros pela searchQuery (título ou autor)
-      const query = this.searchQuery.toLowerCase();
-      const livrosFiltrados = this.livros.filter(livro =>
-        livro.titulo.toLowerCase().includes(query) ||
-        livro.autor.toLowerCase().includes(query)
-      );
+  }
+},
 
-      // Paginação: fatiar array de livros filtrados
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      return livrosFiltrados.slice(start, end);
-    },
-    totalPages() {
-      const query = this.searchQuery.toLowerCase();
-      const totalFiltrados = this.livros.filter(livro =>
-        livro.titulo.toLowerCase().includes(query) ||
-        livro.autor.toLowerCase().includes(query)
-      );
-      return Math.ceil(totalFiltrados.length / this.itemsPerPage) || 1;
-    },
-  },
   methods: {
     
 async gerarExcelEtiquetas() {
@@ -385,13 +383,11 @@ selecionados.forEach(livro => {
       wrapText: true,
     };
 
-    // Aplica borda superior grossa e preta
     cell.border = {
       top: { style: 'thick', color: { argb: '000000' } },
     };
   });
 
-  // Aplica cor de fundo ao gênero (coluna 3)
   const cellGenero = row.getCell(3);
   cellGenero.fill = {
     type: 'pattern',
@@ -601,11 +597,13 @@ async adicionarLivro() {
   }
 },
 
-    editarLivro(index) {
-      this.novoLivro = { ...this.livros[index] };
-      this.editando = true;
-      this.indexEdicao = index;
-    },
+editarLivro(index) {
+  const indexReal = (this.currentPage - 1) * this.itemsPerPage + index;
+  this.novoLivro = { ...this.livrosComFiltro[indexReal] };
+  this.editando = true;
+  this.indexEdicao = indexReal;
+},
+
     async salvarEdicaoLivro() {
       try {
         const livroParaSalvar = JSON.parse(JSON.stringify(this.novoLivro)); 
@@ -628,28 +626,33 @@ async adicionarLivro() {
         console.error('Erro ao atualizar livro:', error);
       }
     },
-    async removerLivro(index) {
-      const livro = this.livros[index];
+ async removerLivro(index) {
+  const indexReal = (this.currentPage - 1) * this.itemsPerPage + index;
+  const livro = this.livrosComFiltro[indexReal];
 
-      Swal.fire({
-        title: 'Tem certeza?',
-        text: "Deseja remover este livro?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sim, remover!',
-        cancelButtonText: 'Cancelar'
-      }).then(async (result) => {
-        if (result.isConfirmed) {
-          try {
-            await window.api.deleteLivro(livro.id);
-            this.livros.splice(index, 1);
-            Swal.fire('Removido!', 'O livro foi removido.', 'success');
-          } catch (error) {
-            Swal.fire('Erro', 'Não foi possível remover o livro.', 'error');
-          }
-        }
-      });
-    },
+  Swal.fire({
+    title: 'Tem certeza?',
+    text: "Deseja remover este livro?",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sim, remover!',
+    cancelButtonText: 'Cancelar'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        await window.api.deleteLivro(livro.id);
+        this.livrosComFiltro.splice(indexReal, 1); // atualiza lista
+        Swal.fire('Removido!', 'O livro foi removido.', 'success');
+        this.carregarLivro();
+      } catch (error) {
+        Swal.fire('Erro', 'Não foi possível remover o livro.', 'error');
+        console.error(error);
+      }
+    }
+  });
+},
+
+
     async carregarCategoria() {
       try {
         const categorys = await window.api.getCategoria();
