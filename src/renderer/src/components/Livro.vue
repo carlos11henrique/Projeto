@@ -252,6 +252,7 @@ export default {
     return {
       novoLivro: {
         titulo: "",
+        codigoLivro: "",
         autor: "",
         editora: "",
         categoryId: 0,
@@ -286,6 +287,7 @@ computed: {
       livro.titulo.toLowerCase().includes(query) ||
       livro.autor.toLowerCase().includes(query) ||
       livro.codigoLivro.toLowerCase().includes(query)
+      
     );
   },
 
