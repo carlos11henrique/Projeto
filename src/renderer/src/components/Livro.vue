@@ -96,7 +96,7 @@
     </button>
 
     <button
-      @click="cancelarEdicao"
+      @click="resetarFormulario"
       type="button"
       class="text-white bg-gray-500 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center"
     >
@@ -284,7 +284,8 @@ computed: {
     const query = this.searchQuery.toLowerCase();
     return this.livros.filter(livro =>
       livro.titulo.toLowerCase().includes(query) ||
-      livro.autor.toLowerCase().includes(query)
+      livro.autor.toLowerCase().includes(query) ||
+      livro.codigoLivro.toLowerCase().includes(query)
     );
   },
 
@@ -383,18 +384,20 @@ selecionados.forEach(livro => {
       wrapText: true,
     };
 
+    // Aplica a borda superior
     cell.border = {
       top: { style: 'thick', color: { argb: '000000' } },
     };
-  });
 
-  const cellGenero = row.getCell(3);
-  cellGenero.fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: cor },
-  };
+    // Aplica o fundo colorido baseado no gênero
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: cor },
+    };
+  });
 });
+
 
 
   const buffer = await workbook.xlsx.writeBuffer();
@@ -470,19 +473,18 @@ selecionados.forEach(livro => {
       wrapText: true,
     };
 
-    // Aplica borda superior grossa e preta
+    // Aplica a borda superior
     cell.border = {
       top: { style: 'thick', color: { argb: '000000' } },
     };
-  });
 
-  // Aplica cor de fundo ao gênero (coluna 3)
-  const cellGenero = row.getCell(3);
-  cellGenero.fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: cor },
-  };
+    // Aplica o fundo colorido baseado no gênero
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: cor },
+    };
+  });
 });
 
 

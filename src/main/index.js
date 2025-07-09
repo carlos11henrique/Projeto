@@ -10,7 +10,7 @@ import { CategoriaModel } from './models'
 import url from 'node:url'
 
 
-const icon = join(__dirname, '..', 'renderer/assets', 'logo.png')
+const icon = join(__dirname, '..', 'renderer/assets', 'logo-Bg3gurC2.jpg')
 function createWindow() {
   const mainWindow = new BrowserWindow({
       title: 'Biblioteca',
@@ -404,7 +404,7 @@ ipcMain.on('createLivrosEmMassa', async (event, livros) => {
         let codigoExiste = true;
 
         while (codigoExiste) {
-          codigoUnico = `L${new Date().getFullYear()}${Math.floor(Math.random() * 10000)}`;
+          codigoUnico = `L${Math.floor(Math.random() * 10000)}`;
           const livroExistente = await LivroModel.findOne({ where: { codigoLivro: codigoUnico } });
           if (!livroExistente) {
             codigoExiste = false;
