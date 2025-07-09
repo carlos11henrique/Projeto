@@ -342,28 +342,33 @@ async gerarExcelEtiquetas() {
   worksheet.getRow(2).height = 25;
 
 
-  const coresGenero = { 'Administração e Negócios': 'FFB6C1',
-    'Agricultura e Meio Ambiente': '98FB98',
-    'Artes e Design': 'FFD700',
-    'Ciência e Tecnologia': '87CEEB',
-    'Educação e Didáticos': 'FF69B4',
-    'Engenharia e Arquitetura': 'FFA07A',
-    'Espiritualidade e Religião': '9370DB',
-    'Filosofia e Psicologia': '40E0D0',
-    'História e Sociedade': 'F4A460',
-    'Direito e Política': 'DC143C',
-    'Literatura Clássica e Movimentos Literários': '8B4513',
-    'Literatura Brasileira e Estrangeira': 'FF8C00',
-    'Ficção e Fantasia': 'FFFF00',
-    'Romance e Relacionamentos': 'FF0000',
-    'Suspense, Terror e Policial': '2F4F4F',
-    'Autoajuda e Espiritualidade Pessoal': '9ACD32',
-    'Infantil e Juvenil': 'FFB347',
-    'Quadrinhos e Cultura Pop': '00CED1',
-    'Biografias e Memórias': 'D2691E',
-    'Turismo e Viagens': '1E90FF',
-    'Outro': 'D3D3D3',
-  };
+const coresGenero = {
+  'Administração e Negócios': 'FFB6C1',
+  'Agricultura e Meio Ambiente': '98FB98',
+  'Artes e Design': 'FFD700',
+  'Ciência e Tecnologia': '87CEEB',
+  'Educação e Didáticos': 'FF69B4',
+  'Engenharia e Arquitetura': 'FFA07A',
+  'Espiritualidade e Religião': '9370DB',
+  'Filosofia e Psicologia': '40E0D0',
+  'História e Sociedade': 'F4A460',
+  'Direito e Política': 'DC143C',
+  'Literatura Clássica e Movimentos Literários': '8B4513',
+  'Literatura Brasileira e Estrangeira': 'FF8C00',
+  'Ficção e Fantasia': 'FFFF00',
+  'Romance e Relacionamentos': 'FF0000',
+  'Suspense, Terror e Policial': '2F4F4F',
+  'Autoajuda e Espiritualidade Pessoal': '9ACD32',
+  'Infantil e Juvenil': 'FFB347',
+  'Quadrinhos e Cultura Pop': '00CED1',
+  'Biografias e Memórias': 'D2691E',
+  'Turismo e Viagens': '1E90FF',
+  'Poesia': 'DA70D6',
+  'Peça Teatral': 'A0522D',
+  'Comédia': 'FFA500',             
+  'Outro': 'D3D3D3'
+};
+
 selecionados.forEach(livro => {
   const genero = livro.Category?.dataValues?.nome || 'Outro';
   const cor = coresGenero[genero] || 'FFFFFF';
@@ -431,27 +436,34 @@ async gerarExcelEtiquetasEmMassa() {
     { header: 'Gênero', key: 'genero', width: 30 },
   ];
 
-  const coresGenero = {  'Administração e Negócios': 'FFB6C1',
-    'Agricultura e Meio Ambiente': '98FB98',
-    'Artes e Design': 'FFD700',
-    'Ciência e Tecnologia': '87CEEB',
-    'Educação e Didáticos': 'FF69B4',
-    'Engenharia e Arquitetura': 'FFA07A',
-    'Espiritualidade e Religião': '9370DB',
-    'Filosofia e Psicologia': '40E0D0',
-    'História e Sociedade': 'F4A460',
-    'Direito e Política': 'DC143C',
-    'Literatura Clássica e Movimentos Literários': '8B4513',
-    'Literatura Brasileira e Estrangeira': 'FF8C00',
-    'Ficção e Fantasia': 'FFFF00',
-    'Romance e Relacionamentos': 'FF0000',
-    'Suspense, Terror e Policial': '2F4F4F',
-    'Autoajuda e Espiritualidade Pessoal': '9ACD32',
-    'Infantil e Juvenil': 'FFB347',
-    'Quadrinhos e Cultura Pop': '00CED1',
-    'Biografias e Memórias': 'D2691E',
-    'Turismo e Viagens': '1E90FF',
-    'Outro': 'D3D3D3',};
+const coresGenero = {
+  'Administração e Negócios': 'FFB6C1',
+  'Agricultura e Meio Ambiente': '98FB98',
+  'Artes e Design': 'FFD700',
+  'Ciência e Tecnologia': '87CEEB',
+  'Educação e Didáticos': 'FF69B4',
+  'Engenharia e Arquitetura': 'FFA07A',
+  'Espiritualidade e Religião': '9370DB',
+  'Filosofia e Psicologia': '40E0D0',
+  'História e Sociedade': 'F4A460',
+  'Direito e Política': 'DC143C',
+  'Literatura Clássica e Movimentos Literários': '8B4513',
+  'Literatura Brasileira e Estrangeira': 'FF8C00',
+  'Ficção e Fantasia': 'FFFF00',
+  'Romance e Relacionamentos': 'FF0000',
+  'Suspense, Terror e Policial': '2F4F4F',
+  'Autoajuda e Espiritualidade Pessoal': '9ACD32',
+  'Infantil e Juvenil': 'FFB347',
+  'Quadrinhos e Cultura Pop': '00CED1',
+  'Biografias e Memórias': 'D2691E',
+  'Turismo e Viagens': '1E90FF',
+  'Poesia': 'DA70D6',
+  'Peça Teatral': 'A0522D',
+  'Comédia': 'FFA500',             
+  'Outro': 'D3D3D3'
+};
+
+
 
 selecionados.forEach(livro => {
   const genero = livro.Category?.dataValues?.nome || 'Outro';
