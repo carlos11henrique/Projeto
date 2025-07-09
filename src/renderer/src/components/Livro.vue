@@ -365,9 +365,10 @@ const coresGenero = {
   'Turismo e Viagens': '1E90FF',
   'Poesia': 'DA70D6',
   'Peça Teatral': 'A0522D',
-  'Comédia': 'FFA500',             
+  'Comédia': 'FF6F61',  // Coral, cor nova para diferenciar
   'Outro': 'D3D3D3'
 };
+
 
 selecionados.forEach(livro => {
   const genero = livro.Category?.dataValues?.nome || 'Outro';
@@ -436,72 +437,75 @@ async gerarExcelEtiquetasEmMassa() {
     { header: 'Gênero', key: 'genero', width: 30 },
   ];
 
-const coresGenero = {
-  'Administração e Negócios': 'FFB6C1',
-  'Agricultura e Meio Ambiente': '98FB98',
-  'Artes e Design': 'FFD700',
-  'Ciência e Tecnologia': '87CEEB',
-  'Educação e Didáticos': 'FF69B4',
-  'Engenharia e Arquitetura': 'FFA07A',
-  'Espiritualidade e Religião': '9370DB',
-  'Filosofia e Psicologia': '40E0D0',
-  'História e Sociedade': 'F4A460',
-  'Direito e Política': 'DC143C',
-  'Literatura Clássica e Movimentos Literários': '8B4513',
-  'Literatura Brasileira e Estrangeira': 'FF8C00',
-  'Ficção e Fantasia': 'FFFF00',
-  'Romance e Relacionamentos': 'FF0000',
-  'Suspense, Terror e Policial': '2F4F4F',
-  'Autoajuda e Espiritualidade Pessoal': '9ACD32',
-  'Infantil e Juvenil': 'FFB347',
-  'Quadrinhos e Cultura Pop': '00CED1',
-  'Biografias e Memórias': 'D2691E',
-  'Turismo e Viagens': '1E90FF',
-  'Poesia': 'DA70D6',
-  'Peça Teatral': 'A0522D',
-  'Comédia': 'FFA500',             
-  'Outro': 'D3D3D3'
-};
+  const coresGenero = {
+    'Administração e Negócios': 'FFB6C1',
+    'Agricultura e Meio Ambiente': '98FB98',
+    'Artes e Design': 'FFD700',
+    'Ciência e Tecnologia': '87CEEB',
+    'Educação e Didáticos': 'FF69B4',
+    'Engenharia e Arquitetura': 'FFA07A',
+    'Espiritualidade e Religião': '9370DB',
+    'Filosofia e Psicologia': '40E0D0',
+    'História e Sociedade': 'F4A460',
+    'Direito e Política': 'DC143C',
+    'Literatura Clássica e Movimentos Literários': '8B4513',
+    'Literatura Brasileira e Estrangeira': 'FF8C00',
+    'Ficção e Fantasia': 'FFFF00',
+    'Romance e Relacionamentos': 'FF0000',
+    'Suspense, Terror e Policial': '2F4F4F',
+    'Autoajuda e Espiritualidade Pessoal': '9ACD32',
+    'Infantil e Juvenil': 'FFB347',
+    'Quadrinhos e Cultura Pop': '00CED1',
+    'Biografias e Memórias': 'D2691E',
+    'Turismo e Viagens': '1E90FF',
+    'Poesia': 'DA70D6',
+    'Peça Teatral': 'A0522D',
+    'Comédia': 'FF6F61',
+    'Outro': 'D3D3D3'
+  };
 
+  // Ordenar por nome do gênero e depois por número do exemplar
+  selecionados.sort((a, b) => {
+    const generoA = a.Category?.dataValues?.nome || 'Outro';
+    const generoB = b.Category?.dataValues?.nome || 'Outro';
 
+    if (generoA < generoB) return -1;
+    if (generoA > generoB) return 1;
 
-selecionados.forEach(livro => {
-  const genero = livro.Category?.dataValues?.nome || 'Outro';
-  const cor = coresGenero[genero] || 'FFFFFF';
-
-  const row = worksheet.addRow({
-    codigo: `C. ${livro.codigoLivro}`,
-    exemplar: `EX.${livro.exemplar}`,
-    genero,
+    // Se os gêneros forem iguais, ordenar por exemplar numérico
+    return parseInt(a.exemplar) - parseInt(b.exemplar);
   });
 
-  // Aumenta a altura da linha
-  row.height = 40;
+  selecionados.forEach(livro => {
+    const genero = livro.Category?.dataValues?.nome || 'Outro';
+    const cor = coresGenero[genero] || 'FFFFFF';
 
-  // Estilo individual de cada célula da linha
-  row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-    // Centraliza o conteúdo
-    cell.alignment = {
-      vertical: 'middle',
-      horizontal: 'center',
-      wrapText: true,
-    };
+    const row = worksheet.addRow({
+      codigo: `C. ${livro.codigoLivro}`,
+      exemplar: `EX.${livro.exemplar}`,
+      genero,
+    });
 
-    // Aplica a borda superior
-    cell.border = {
-      top: { style: 'thick', color: { argb: '000000' } },
-    };
+    row.height = 40;
 
-    // Aplica o fundo colorido baseado no gênero
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: cor },
-    };
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      cell.alignment = {
+        vertical: 'middle',
+        horizontal: 'center',
+        wrapText: true,
+      };
+
+      cell.border = {
+        top: { style: 'thick', color: { argb: '000000' } },
+      };
+
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: cor },
+      };
+    });
   });
-});
-
-
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/octet-stream' });
