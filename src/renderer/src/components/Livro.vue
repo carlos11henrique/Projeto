@@ -186,10 +186,10 @@
     <!-- Detalhes visíveis apenas se for o livro selecionado -->
     <tr v-if="livroAbertoIndex === index">
       <td colspan="9" class="bg-gray-100 dark:bg-gray-700 px-6 py-4">
-        <p><strong>Descrição:</strong> {{ livro.descricao }}</p>
         <div v-if="livro.imagem" class="mt-4">
           <img :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="w-64 rounded shadow-lg object-contain" />
           <p><strong>Editora:</strong> {{ livro.editora }}</p>
+          <p><strong>Descrição:</strong> {{ livro.descricao }}</p>
         </div>
       </td>
     </tr>
