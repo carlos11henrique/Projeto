@@ -119,30 +119,28 @@
             @change="toggleSelectAll" 
             class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
           />
-          <button 
-            @click="gerarExcelEtiquetasEmMassa()" 
-            class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md shadow text-sm"
-          >
-            Etiquetas
-          </button>
+       <button 
+  @click="gerarEtiquetasSelecionadas()" 
+  class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md shadow text-sm">
+  Etiquetas
+</button>
+
         </div>
       </th>
       <th class="px-6 py-4">Código</th>
       <th class="px-6 py-4">Exemplar</th>
       <th class="px-6 py-4">Título</th>
       <th class="px-6 py-4">Autor</th>
-      <th class="px-6 py-4">Editora</th>
       <th class="px-6 py-4">Gênero</th>
-      <th class="px-6 py-4">Imagem</th>
       <th class="px-6 py-4">Ações</th>
     </tr>
   </thead>
 
-  <tbody>
+<tbody>
+  <template v-for="(livro, index) in filteredLivro" :key="index">
     <tr 
-      v-for="(livro, index) in filteredLivro" 
-      :key="index" 
-      class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+      @click="toggleDetalhes(index)" 
+      class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
     >
       <td class="px-6 py-4 w-56">
         <div class="flex items-center justify-center gap-2">
@@ -150,8 +148,8 @@
             type="checkbox" 
             v-model="livro.selecionado" 
             class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+            @click.stop
           />
-          <!-- Espaço reservado para manter alinhamento, pode ser oculto se não quiser -->
           <span class="invisible">
             <button class="px-3 py-1">Etiquetas</button>
           </span>
@@ -161,38 +159,43 @@
       <td class="px-6 py-4">{{ livro.exemplar }}</td>
       <td class="px-6 py-4">{{ livro.titulo }}</td>
       <td class="px-6 py-4">{{ livro.autor }}</td>
-      <td class="px-6 py-4">{{ livro.editora }}</td>
       <td class="px-6 py-4">{{ livro.Category?.dataValues?.nome || '-' }}</td>
-      <td class="px-6 py-4">
-        <img 
-          v-if="livro.imagem" 
-          :src="'atom:/' + livro.imagem" 
-          alt="Imagem do Livro" 
-          class="h-24 w-auto rounded shadow-md object-contain"
-        />
-      </td>
+      
       <td class="px-6 py-4 space-x-3">
         <button 
-          @click="editarLivro(index)" 
+          @click.stop="editarLivro(index)" 
           class="text-blue-600 hover:underline"
         >
           Editar
         </button>
         <button 
-          @click="removerLivro(index)" 
+          @click.stop="removerLivro(index)" 
           class="text-red-600 hover:underline"
         >
           Remover
         </button>
-        <button 
-          @click="gerarExcelEtiquetas(index)" 
-          class="text-green-600 hover:underline"
-        >
-          Etiqueta
-        </button>
+     <button 
+  @click.stop="gerarEtiquetaIndividual(index)" 
+  class="text-green-600 hover:underline">
+  Etiqueta
+</button>
+
       </td>
     </tr>
-  </tbody>
+
+    <!-- Detalhes visíveis apenas se for o livro selecionado -->
+    <tr v-if="livroAbertoIndex === index">
+      <td colspan="9" class="bg-gray-100 dark:bg-gray-700 px-6 py-4">
+        <p><strong>Descrição:</strong> {{ livro.descricao }}</p>
+        <div v-if="livro.imagem" class="mt-4">
+          <img :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="w-64 rounded shadow-lg object-contain" />
+          <p><strong>Editora:</strong> {{ livro.editora }}</p>
+        </div>
+      </td>
+    </tr>
+  </template>
+</tbody>
+
 </table>
 
 
@@ -243,288 +246,59 @@
 import Swal from 'sweetalert2';
 import ExcelJS from 'exceljs';
 
-import * as XLSX from 'xlsx';
-
-
 export default {
   name: "Livro",
   data() {
+    
     return {
+      // Formulário
       novoLivro: {
-        titulo: "",
-        codigoLivro: "",
-        autor: "",
-        editora: "",
-        categoryId: 0,
-        descricao: "",
-        exemplar: "",
-        quantidade: 0,
-        imagem: "",
-        selectAll: false,
-        imagemOriginal: ""
-        
+        titulo: "", codigoLivro: "", autor: "", editora: "",
+        categoryId: 0, descricao: "", exemplar: "", quantidade: 0,
+        imagem: "", imagemOriginal: ""
       },
       livros: [],
-      livrosSelecionados: [],
+      livroAbertoIndex: null,
+      categorys: [],
       searchQuery: "",
-      categorys: [], 
       editando: false,
       indexEdicao: null,
-      
-       currentPage: 1,
+      currentPage: 1,
       itemsPerPage: 20,
+      selectAll: false
     };
   },
-  watch: {
-    searchQuery() {
-      this.currentPage = 1; 
+  computed: {
+    livrosComFiltro() {
+      const query = this.searchQuery.toLowerCase();
+      return this.livros.filter(livro =>
+        livro.titulo.toLowerCase().includes(query) ||
+        livro.autor.toLowerCase().includes(query) ||
+        livro.codigoLivro.toLowerCase().includes(query)
+      );
+    },
+    filteredLivro() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      return this.livrosComFiltro.slice(start, start + this.itemsPerPage);
+    },
+
+    totalPages() {
+      return Math.ceil(this.livrosComFiltro.length / this.itemsPerPage) || 1;
+    },
+    paginasVisiveis() {
+      const total = this.totalPages, atual = this.currentPage;
+      let inicio = Math.max(atual - 2, 1), fim = Math.min(inicio + 4, total);
+      if (fim - inicio < 4) inicio = Math.max(fim - 4, 1);
+      return Array.from({ length: fim - inicio + 1 }, (_, i) => inicio + i);
     }
   },
-computed: {
-  livrosComFiltro() {
-    const query = this.searchQuery.toLowerCase();
-    return this.livros.filter(livro =>
-      livro.titulo.toLowerCase().includes(query) ||
-      livro.autor.toLowerCase().includes(query) ||
-      livro.codigoLivro.toLowerCase().includes(query)
-      
-    );
-  },
-
-  filteredLivro() {
-    const start = (this.currentPage - 1) * this.itemsPerPage;
-    const end = start + this.itemsPerPage;
-    return this.livrosComFiltro.slice(start, end); // depende dele aqui também
-  },
-
-  totalPages() {
-    return Math.ceil(this.livrosComFiltro.length / this.itemsPerPage) || 1;
-  },
-
-  paginasVisiveis() {
-    const total = this.totalPages;
-    const atual = this.currentPage;
-    const paginas = [];
-
-    let inicio = Math.max(atual - 2, 1);
-    let fim = Math.min(inicio + 4, total);
-
-    if (fim - inicio < 4) {
-      inicio = Math.max(fim - 4, 1);
-    }
-
-    for (let i = inicio; i <= fim; i++) {
-      paginas.push(i);
-    }
-
-    return paginas;
-  }
-},
-
   methods: {
-    
-async gerarExcelEtiquetas() {
-  const livros = this.livros;
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Etiquetas');
-
-  const selecionados = this.livros.filter(livro => livro.selecionado);
-  if (selecionados.length === 0) {
-    Swal.fire('Atenção', 'Nenhum livro selecionado!', 'warning');
-    return;
-  }
-
-  worksheet.columns = [
-    { header: 'Código', key: 'codigo', width: 15 },
-    { header: 'Exemplar', key: 'exemplar', width: 10 },
-    { header: 'Gênero', key: 'genero', width: 30 },
-  ];
-  worksheet.getRow(2).height = 25;
-
-
-const coresGenero = {
-  'Administração e Negócios': 'FFB6C1',
-  'Agricultura e Meio Ambiente': '98FB98',
-  'Artes e Design': 'FFD700',
-  'Ciência e Tecnologia': '87CEEB',
-  'Educação e Didáticos': 'FF69B4',
-  'Engenharia e Arquitetura': 'FFA07A',
-  'Espiritualidade e Religião': '9370DB',
-  'Filosofia e Psicologia': '40E0D0',
-  'História e Sociedade': 'F4A460',
-  'Direito e Política': 'DC143C',
-  'Literatura Clássica e Movimentos Literários': '8B4513',
-  'Literatura Brasileira e Estrangeira': 'FF8C00',
-  'Ficção e Fantasia': 'FFFF00',
-  'Romance e Relacionamentos': 'FF0000',
-  'Suspense, Terror e Policial': '2F4F4F',
-  'Autoajuda e Espiritualidade Pessoal': '9ACD32',
-  'Infantil e Juvenil': 'FFB347',
-  'Quadrinhos e Cultura Pop': '00CED1',
-  'Biografias e Memórias': 'D2691E',
-  'Turismo e Viagens': '1E90FF',
-  'Poesia': 'DA70D6',
-  'Peça Teatral': 'A0522D',
-  'Comédia': 'FF6F61',  // Coral, cor nova para diferenciar
-  'Outro': 'D3D3D3'
-};
-
-
-selecionados.forEach(livro => {
-  const genero = livro.Category?.dataValues?.nome || 'Outro';
-  const cor = coresGenero[genero] || 'FFFFFF';
-
-  const row = worksheet.addRow({
-    codigo: `C. ${livro.codigoLivro}`,
-    exemplar: `EX.${livro.exemplar}`,
-    genero,
-  });
-
-  // Aumenta a altura da linha
-  row.height = 40;
-
-  // Estilo individual de cada célula da linha
-  row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-    // Centraliza o conteúdo
-    cell.alignment = {
-      vertical: 'middle',
-      horizontal: 'center',
-      wrapText: true,
-    };
-
-    // Aplica a borda superior
-    cell.border = {
-      top: { style: 'thick', color: { argb: '000000' } },
-    };
-
-    // Aplica o fundo colorido baseado no gênero
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: cor },
-    };
-  });
-});
-
-
-
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/octet-stream' });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'etiquetas_livros.xlsx';
-  a.click();
-  URL.revokeObjectURL(url);
-},
-
-
-async gerarExcelEtiquetasEmMassa() {
-  const selecionados = this.livros.filter(livro => livro.selecionado);
-
-  if (selecionados.length === 0) {
-    Swal.fire('Atenção', 'Nenhum livro selecionado!', 'warning');
-    return;
-  }
-
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Etiquetas');
-
-  worksheet.columns = [
-    { header: 'Código', key: 'codigo', width: 15 },
-    { header: 'Exemplar', key: 'exemplar', width: 10 },
-    { header: 'Gênero', key: 'genero', width: 30 },
-  ];
-
-  const coresGenero = {
-    'Administração e Negócios': 'FFB6C1',
-    'Agricultura e Meio Ambiente': '98FB98',
-    'Artes e Design': 'FFD700',
-    'Ciência e Tecnologia': '87CEEB',
-    'Educação e Didáticos': 'FF69B4',
-    'Engenharia e Arquitetura': 'FFA07A',
-    'Espiritualidade e Religião': '9370DB',
-    'Filosofia e Psicologia': '40E0D0',
-    'História e Sociedade': 'F4A460',
-    'Direito e Política': 'DC143C',
-    'Literatura Clássica e Movimentos Literários': '8B4513',
-    'Literatura Brasileira e Estrangeira': 'FF8C00',
-    'Ficção e Fantasia': 'FFFF00',
-    'Romance e Relacionamentos': 'FF0000',
-    'Suspense, Terror e Policial': '2F4F4F',
-    'Autoajuda e Espiritualidade Pessoal': '9ACD32',
-    'Infantil e Juvenil': 'FFB347',
-    'Quadrinhos e Cultura Pop': '00CED1',
-    'Biografias e Memórias': 'D2691E',
-    'Turismo e Viagens': '1E90FF',
-    'Poesia': 'DA70D6',
-    'Peça Teatral': 'A0522D',
-    'Comédia': 'FF6F61',
-    'Outro': 'D3D3D3'
-  };
-
-  // Ordenar por nome do gênero e depois por número do exemplar
-  selecionados.sort((a, b) => {
-    const generoA = a.Category?.dataValues?.nome || 'Outro';
-    const generoB = b.Category?.dataValues?.nome || 'Outro';
-
-    if (generoA < generoB) return -1;
-    if (generoA > generoB) return 1;
-
-    // Se os gêneros forem iguais, ordenar por exemplar numérico
-    return parseInt(a.exemplar) - parseInt(b.exemplar);
-  });
-
-  selecionados.forEach(livro => {
-    const genero = livro.Category?.dataValues?.nome || 'Outro';
-    const cor = coresGenero[genero] || 'FFFFFF';
-
-    const row = worksheet.addRow({
-      codigo: `C. ${livro.codigoLivro}`,
-      exemplar: `EX.${livro.exemplar}`,
-      genero,
-    });
-
-    row.height = 40;
-
-    row.eachCell({ includeEmpty: true }, (cell) => {
-      cell.alignment = {
-        vertical: 'middle',
-        horizontal: 'center',
-        wrapText: true,
-      };
-
-      cell.border = {
-        top: { style: 'thick', color: { argb: '000000' } },
-      };
-
-      cell.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: cor },
-      };
-    });
-  });
-
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/octet-stream' });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `etiquetas_livros.xlsx`;
-  a.click();
-  URL.revokeObjectURL(url);
-},
-
-
-
-     toggleSelectAll() {
-    this.filteredLivro.forEach(livro => {
-      livro.selecionado = this.selectAll;
-    });
+  toggleDetalhes(index) {
+    this.livroAbertoIndex = this.livroAbertoIndex === index ? null : index;
   },
+    toggleSelectAll() {
+      this.filteredLivro.forEach(livro => livro.selecionado = this.selectAll);
+    },
     nextPage() {
       if (this.currentPage < this.totalPages) this.currentPage++;
     },
@@ -534,90 +308,134 @@ async gerarExcelEtiquetasEmMassa() {
     setPage(page) {
       this.currentPage = page;
     },
-    handleImagemSelecionada(event) {
-      this.novoLivro.imagem = window.api.getPathInput(event.target);
-    },
+   handleImagemSelecionada(event) {
+  const path = window.api.getPathInput(event.target);
+  if (path) {
+    this.novoLivro.imagem = path; // <-- deve ser uma string, tipo "C:/imagens/livro.jpg"
+  }
+},
+
     getNomeCategoria(id) {
       const cat = this.categorys.find(c => c.id === id);
       return cat ? cat.nome : '';
     },
     atualizarCategoriaPorNome(nome) {
-      const categoria = this.categorys.find(cat => cat.nome === nome);
-      this.novoLivro.categoryId = categoria ? categoria.id : 0;
+      const cat = this.categorys.find(c => c.nome === nome);
+      this.novoLivro.categoryId = cat ? cat.id : 0;
     },
-
-    async cadastrarEmMassa() {
-  if (this.livrosParaCadastrar.length === 0) {
-    return Swal.fire("Atenção", "Nenhum livro para cadastrar.", "warning");
-  }
-
-  try {
-    // Envio para backend via Electron IPC, fetch, ou Axios
-    await window.api.cadastrarLivrosEmMassa(this.livrosParaCadastrar);
-
-    Swal.fire("Sucesso", "Livros cadastrados com sucesso!", "success");
-
-    this.livrosParaCadastrar = [];
-    this.carregarLivros(); // Atualiza lista principal
-  } catch (error) {
-    Swal.fire("Erro", "Erro ao cadastrar os livros.", "error");
-  }
+async gerarEtiquetaIndividual(index) {
+  const livro = this.filteredLivro[index];
+  await this.gerarEtiquetasExcel([livro]);
 },
-async adicionarLivro() {
-  if (this.editando) return; 
 
-  const livroBase = this.novoLivro;
-  const quantidade = parseInt(livroBase.quantidade);
+async gerarEtiquetasSelecionadas() {
+  const selecionados = this.livros.filter(l => l.selecionado);
+  if (selecionados.length === 0) {
+    Swal.fire('Atenção', 'Nenhum livro selecionado!', 'warning');
+    return;
+  }
+  await this.gerarEtiquetasExcel(selecionados);
+},
 
-  const codigoOriginal = livroBase.codigoLivro || '';
-  const numeroInicial = parseInt(codigoOriginal.match(/\d+$/)) || 1;
+async gerarEtiquetasExcel(livros) {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Etiquetas');
 
-  if (
-    livroBase.titulo && livroBase.autor &&
-    livroBase.editora && livroBase.categoryId &&
-    quantidade > 0
-  ) {
-    try {
-      for (let i = 0; i < quantidade; i++) {
-        const novoExemplar = `${numeroInicial + i}`;
+  worksheet.columns = [
+    { header: 'Código', key: 'codigo', width: 20 },
+    { header: 'Exemplar', key: 'exemplar', width: 10 },
+    { header: 'Gênero', key: 'genero', width: 30 },
+    {}, {}, {}, {},
+    { header: 'Nome do Livro', key: 'titulo', width: 40 } 
+  ];
 
-        const novoLivro = {
-          ...livroBase,
-          exemplar: novoExemplar,
-          quantidade: 1,
-          imagem: livroBase.imagem,
-          CategoryId: livroBase.categoryId
-        };
+  const cores = {
+    'Administração e Negócios': 'FFB6C1', 'Agricultura e Meio Ambiente': '98FB98',
+    'Artes e Design': 'FFD700', 'Ciência e Tecnologia': '87CEEB',
+    'Educação e Didáticos': 'FF69B4', 'Engenharia e Arquitetura': 'FFA07A',
+    'Espiritualidade e Religião': '9370DB', 'Filosofia e Psicologia': '40E0D0',
+    'História e Sociedade': 'F4A460', 'Direito e Política': 'DC143C',
+    'Literatura Clássica e Movimentos Literários': '8B4513',
+    'Literatura Brasileira e Estrangeira': 'FF8C00',
+    'Ficção e Fantasia': 'FFFF00', 'Romance e Relacionamentos': 'FF0000',
+    'Suspense, Terror e Policial': '2F4F4F',
+    'Autoajuda e Espiritualidade Pessoal': '9ACD32', 'Infantil e Juvenil': 'FFB347',
+    'Quadrinhos e Cultura Pop': '00CED1', 'Biografias e Memórias': 'D2691E',
+    'Turismo e Viagens': '1E90FF', 'Poesia': 'DA70D6', 'Peça Teatral': 'A0522D',
+    'Comédia': 'FF6F61', 'Outro': 'D3D3D3'
+  };
 
-        await window.api.createLivro(novoLivro);
-      }
+  // Ordenar por título e exemplar
+  livros.sort((a, b) => {
+    const tituloA = a.titulo?.toLowerCase() || '';
+    const tituloB = b.titulo?.toLowerCase() || '';
+    if (tituloA !== tituloB) return tituloA.localeCompare(tituloB);
+    return Number(a.exemplar) - Number(b.exemplar);
+  });
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Livros cadastrados!',
-        text: 'Todos os exemplares foram adicionados com sucesso.'
-      });
+  livros.forEach(livro => {
+    const genero = livro.Category?.dataValues?.nome || 'Outro';
+    const cor = cores[genero] || 'FFFFFF';
 
-      this.resetarFormulario();
-      this.carregarLivro();
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Erro!',
-        text: 'Não foi possível cadastrar os livros.'
-      });
-      console.error(error);
+    const row = worksheet.addRow([
+      `C. ${livro.codigoLivro}`,
+      `EX.${livro.exemplar}`,
+      genero,
+      '', '', '', '', // espaços
+      livro.titulo // Coluna H (index 8)
+    ]);
+
+    row.height = 40;
+
+    for (let i = 1; i <= 3; i++) {
+      const cell = row.getCell(i);
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      cell.border = { top: { style: 'thick', color: { argb: '000000' } } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: cor } };
     }
-  } else {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Campos obrigatórios!',
-      text: 'Preencha todos os campos corretamente.'
-    });
-  }
-},
+  });
 
-editarLivro(index) {
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'etiquetas_livros.xlsx';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+,
+
+
+    async adicionarLivro() {
+      if (this.editando) return;
+
+      const base = this.novoLivro;
+      const quantidade = parseInt(base.quantidade);
+      const numeroInicial = parseInt(base.codigoLivro.match(/\d+$/)) || 1;
+
+      if (base.titulo && base.autor && base.editora && base.categoryId && quantidade > 0) {
+        try {
+          for (let i = 0; i < quantidade; i++) {
+            await window.api.createLivro({
+              ...base,
+              exemplar: `${numeroInicial + i}`,
+              quantidade: 1,
+              CategoryId: base.categoryId
+            });
+          }
+          Swal.fire('Sucesso', 'Livros cadastrados com sucesso!', 'success');
+          this.resetarFormulario();
+          this.carregarLivro();
+        } catch (err) {
+          console.error(err);
+          Swal.fire('Erro', 'Não foi possível cadastrar.', 'error');
+        }
+      } else {
+        Swal.fire('Campos obrigatórios!', 'Preencha todos os campos.', 'warning');
+      }
+    },
+    editarLivro(index) {
   const indexReal = (this.currentPage - 1) * this.itemsPerPage + index;
   this.novoLivro = { ...this.livrosComFiltro[indexReal] };
   this.editando = true;
@@ -646,74 +464,61 @@ editarLivro(index) {
         console.error('Erro ao atualizar livro:', error);
       }
     },
- async removerLivro(index) {
-  const indexReal = (this.currentPage - 1) * this.itemsPerPage + index;
-  const livro = this.livrosComFiltro[indexReal];
 
-  Swal.fire({
-    title: 'Tem certeza?',
-    text: "Deseja remover este livro?",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Sim, remover!',
-    cancelButtonText: 'Cancelar'
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      try {
-        await window.api.deleteLivro(livro.id);
-        this.livrosComFiltro.splice(indexReal, 1); // atualiza lista
-        Swal.fire('Removido!', 'O livro foi removido.', 'success');
-        this.carregarLivro();
-      } catch (error) {
-        Swal.fire('Erro', 'Não foi possível remover o livro.', 'error');
-        console.error(error);
-      }
-    }
-  });
-},
+    async removerLivro(index) {
+      const i = (this.currentPage - 1) * this.itemsPerPage + index;
+      const livro = this.livrosComFiltro[i];
 
+      const confirm = await Swal.fire({
+        title: 'Tem certeza?',
+        text: "Deseja remover este livro?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim',
+        cancelButtonText: 'Cancelar'
+      });
 
-    async carregarCategoria() {
-      try {
-        const categorys = await window.api.getCategoria();
-        this.categorys = categorys; 
-      } catch (error) {
-        console.error('Erro ao carregar categorys:', error);
+      if (confirm.isConfirmed) {
+        try {
+          await window.api.deleteLivro(livro.id);
+          this.carregarLivro();
+          Swal.fire('Removido!', 'Livro excluído.', 'success');
+        } catch (err) {
+          console.error(err);
+          Swal.fire('Erro', 'Não foi possível remover.', 'error');
+        }
       }
     },
     async carregarLivro() {
       try {
         const livros = await window.api.getLivro();
-        this.livros = livros;
-      } catch (error) {
-        console.error('Erro ao carregar livros:', error);
-        Swal.fire('Erro', 'Não foi possível carregar os livros.', 'error');
+        this.livros = livros.map(l => ({ ...l, selecionado: false, mostrarDetalhes: false }));
+      } catch (e) {
+        console.error(e);
+        Swal.fire('Erro', 'Erro ao carregar livros.', 'error');
+      }
+    },
+    async carregarCategoria() {
+      try {
+        this.categorys = await window.api.getCategoria();
+      } catch (e) {
+        console.error(e);
       }
     },
     resetarFormulario() {
       this.novoLivro = {
-        titulo: "",
-        autor: "",
-        editora: "",
-        categoryId: 0,
-        descricao: "",
-        exemplar: "",
-        quantidade: 0,
-        imagem: "",
-        imagemOriginal: ""
+        titulo: "", autor: "", editora: "", categoryId: 0,
+        descricao: "", exemplar: "", quantidade: 0,
+        imagem: "", imagemOriginal: ""
       };
       this.editando = false;
       this.indexEdicao = null;
-      this.currentPage = 1; // reseta paginação ao limpar form
+      this.currentPage = 1;
     }
   },
   mounted() {
     this.carregarLivro();
-    this.carregarCategoria(); 
+    this.carregarCategoria();
   }
 };
-
 </script>
-
-
-
