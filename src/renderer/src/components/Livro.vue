@@ -268,21 +268,19 @@ export default {
       selectAll: false
     };
   },
-  computed: {
+computed: {
   livrosComFiltro() {
-    const query = this.searchQuery.toLowerCase();
-    
-    // Primeiro filtra
+    const query = this.searchQuery?.toLowerCase() || '';
+
     const filtrados = this.livros.filter(livro =>
-      livro.titulo.toLowerCase().includes(query) ||
-      livro.autor.toLowerCase().includes(query) ||
-      livro.codigoLivro.toLowerCase().includes(query)
+      (livro.titulo?.toLowerCase() || '').includes(query) ||
+      (livro.autor?.toLowerCase() || '').includes(query) ||
+      (livro.codigoLivro?.toLowerCase() || '').includes(query)
     );
 
-    // Depois ordena por título e exemplar
     return filtrados.sort((a, b) => {
-      const tituloA = a.titulo.toLowerCase();
-      const tituloB = b.titulo.toLowerCase();
+      const tituloA = a.titulo?.toLowerCase() || '';
+      const tituloB = b.titulo?.toLowerCase() || '';
 
       if (tituloA !== tituloB) {
         return tituloA.localeCompare(tituloB);
@@ -296,6 +294,7 @@ export default {
     const start = (this.currentPage - 1) * this.itemsPerPage;
     return this.livrosComFiltro.slice(start, start + this.itemsPerPage);
   },
+
 
 
     totalPages() {
