@@ -269,18 +269,34 @@ export default {
     };
   },
   computed: {
-    livrosComFiltro() {
-      const query = this.searchQuery.toLowerCase();
-      return this.livros.filter(livro =>
-        livro.titulo.toLowerCase().includes(query) ||
-        livro.autor.toLowerCase().includes(query) ||
-        livro.codigoLivro.toLowerCase().includes(query)
-      );
-    },
-    filteredLivro() {
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      return this.livrosComFiltro.slice(start, start + this.itemsPerPage);
-    },
+  livrosComFiltro() {
+    const query = this.searchQuery.toLowerCase();
+    
+    // Primeiro filtra
+    const filtrados = this.livros.filter(livro =>
+      livro.titulo.toLowerCase().includes(query) ||
+      livro.autor.toLowerCase().includes(query) ||
+      livro.codigoLivro.toLowerCase().includes(query)
+    );
+
+    // Depois ordena por título e exemplar
+    return filtrados.sort((a, b) => {
+      const tituloA = a.titulo.toLowerCase();
+      const tituloB = b.titulo.toLowerCase();
+
+      if (tituloA !== tituloB) {
+        return tituloA.localeCompare(tituloB);
+      }
+
+      return (Number(a.exemplar) || 0) - (Number(b.exemplar) || 0);
+    });
+  },
+
+  filteredLivro() {
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    return this.livrosComFiltro.slice(start, start + this.itemsPerPage);
+  },
+
 
     totalPages() {
       return Math.ceil(this.livrosComFiltro.length / this.itemsPerPage) || 1;
@@ -345,8 +361,7 @@ async gerarEtiquetasExcel(livros) {
     { header: 'Código', key: 'codigo', width: 20 },
     { header: 'Exemplar', key: 'exemplar', width: 10 },
     { header: 'Gênero', key: 'genero', width: 30 },
-    {}, {}, {}, {},
-    { header: 'Nome do Livro', key: 'titulo', width: 40 } 
+    {},
   ];
 
   const cores = {
@@ -373,17 +388,19 @@ async gerarEtiquetasExcel(livros) {
     return Number(a.exemplar) - Number(b.exemplar);
   });
 
-  livros.forEach(livro => {
-    const genero = livro.Category?.dataValues?.nome || 'Outro';
-    const cor = cores[genero] || 'FFFFFF';
 
-    const row = worksheet.addRow([
-      `C. ${livro.codigoLivro}`,
-      `EX.${livro.exemplar}`,
-      genero,
-      '', '', '', '', // espaços
-      livro.titulo // Coluna H (index 8)
-    ]);
+livros.forEach(livro => {
+  const genero = livro.Category?.dataValues?.nome || 'Outro';
+  const cor = cores[genero] || 'FFFFFF';
+
+  const row = worksheet.addRow([
+    `C. ${livro.codigoLivro}`,
+    `EX.${livro.exemplar}`,
+    genero,
+    '', // espaços
+    livro.titulo.slice(0, 17) // Limita o título a 17 caracteres
+  ]);
+
 
     row.height = 40;
 
@@ -412,7 +429,8 @@ async gerarEtiquetasExcel(livros) {
 
       const base = this.novoLivro;
       const quantidade = parseInt(base.quantidade);
-      const numeroInicial = parseInt(base.codigoLivro.match(/\d+$/)) || 1;
+      const numeroInicial = parseInt(base.codigoLivro?.match(/\d+$/)?.[0]) || 1;
+      console.log(base);
 
       if (base.titulo && base.autor && base.editora && base.categoryId && quantidade > 0) {
         try {
