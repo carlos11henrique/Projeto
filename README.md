@@ -19,6 +19,16 @@ $ npm install
 ```bash
 $ npm run dev
 ```
+teste extresse
+
+npx sequelize-cli db:seed --seed 20250511204520-emprestimo.js
+
+ npx sequelize db:seed --seed  20250511204457-categoria.js
+
+npx sequelize-cli db:seed --seed 20250511201737-demo-user.js 
+
+npx sequelize-cli db:seed --seed 20250511204508-livro.js
+
 
 ### Build
 
