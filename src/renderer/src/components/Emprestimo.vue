@@ -87,8 +87,9 @@
             <td colspan="9" class="px-6 py-5">
               <div class="space-y-3">
                 <h3 class="text-lg font-semibold">Emprestar Livro: {{ book.titulo }}</h3>
+
                 <p><strong>Autor:</strong> {{ book.autor }}</p>
-                <p><strong>Gênero:</strong> {{ book.genero }}</p>
+                <p><strong>Gênero:</strong> {{ book.Category.dataValues.nome }}</p>
                 <p><strong>Exemplares:</strong> {{ book.exemplar }}</p>
 
                 <!-- Campo de busca de usuários -->
