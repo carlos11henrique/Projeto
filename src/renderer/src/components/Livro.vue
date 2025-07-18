@@ -268,6 +268,15 @@ export default {
       selectAll: false
     };
   },
+
+  watch: {
+    'novoLivro.titulo': {
+      handler(novoTitulo) {
+        this.verificarLivroExistente(novoTitulo);
+      },
+      immediate: false,
+    },
+  },
 computed: {
   livrosComFiltro() {
     const query = this.searchQuery?.toLowerCase() || '';
@@ -419,44 +428,70 @@ livros.forEach(livro => {
   a.download = 'etiquetas_livros.xlsx';
   a.click();
   URL.revokeObjectURL(url);
-}
-,
+},
 
+async verificarLivroExistente(titulo) {
+    if (!titulo || titulo.length < 3) return; // Evita buscas muito curtas
 
-    async adicionarLivro() {
-      if (this.editando) return;
+    try {
+      const livroExistente = await window.api.buscarLivroPorTitulo(titulo.trim());
 
-      const base = this.novoLivro;
-      const quantidade = parseInt(base.quantidade);
-      const numeroInicial = parseInt(base.codigoLivro?.match(/\d+$/)?.[0]) || 1;
-      console.log(base);
+      if (livroExistente) {
+        // Preenche os campos com dados existentes
+        this.novoLivro = {
+          ...livroExistente,
+          quantidade: '', // Deixa a quantidade para o usuário preencher
+          exemplar: '',   // Será gerado dinamicamente
+        };
 
-      if (base.titulo && base.autor && base.editora && base.categoryId && quantidade > 0) {
-        try {
-          for (let i = 0; i < quantidade; i++) {
-            await window.api.createLivro({
-              ...base,
-              exemplar: `${numeroInicial + i}`,
-              quantidade: 1,
-              CategoryId: base.categoryId
-            });
-          }
-          Swal.fire('Sucesso', 'Livros cadastrados com sucesso!', 'success');
-          this.resetarFormulario();
-          this.carregarLivro();
-        } catch (err) {
-          console.error(err);
-          Swal.fire('Erro', 'Não foi possível cadastrar.', 'error');
-        }
+        this.livroExistente = livroExistente; // Armazena para usar depois no cadastro
       } else {
-        Swal.fire('Campos obrigatórios!', 'Preencha todos os campos.', 'warning');
+        this.livroExistente = null; // Nada encontrado
       }
-    },
-    editarLivro(index) {
-  const indexReal = (this.currentPage - 1) * this.itemsPerPage + index;
-  this.novoLivro = { ...this.livrosComFiltro[indexReal] };
-  this.editando = true;
-  this.indexEdicao = indexReal;
+    } catch (error) {
+      console.error('Erro ao buscar livro:', error);
+    }
+  },
+
+async adicionarLivro() {
+  if (this.editando) return;
+
+  const base = this.novoLivro;
+  const quantidade = parseInt(base.quantidade);
+  
+  if (!base.titulo || quantidade <= 0) {
+    return Swal.fire('Campos obrigatórios!', 'Preencha o título e a quantidade.', 'warning');
+  }
+
+  try {
+    let dadosParaUsar = { ...base };
+    let exemplarInicial = 1;
+
+    if (this.livroExistente) {
+      // Livro já existe → usar os dados dele
+      dadosParaUsar = { ...this.livroExistente };
+
+      // 🔧 Correção: passa o título em vez do id
+      const ultimosExemplares = await window.api.buscarUltimoExemplar(dadosParaUsar.titulo);
+      exemplarInicial = ultimosExemplares + 1;
+    }
+
+    for (let i = 0; i < quantidade; i++) {
+      await window.api.createLivro({
+        ...dadosParaUsar,
+        exemplar: exemplarInicial + i,
+        quantidade: 1,
+        categoryId: dadosParaUsar.categoryId // 🔧 Certo agora
+      });
+    }
+
+    Swal.fire('Sucesso', 'Livros cadastrados com sucesso!', 'success');
+    this.resetarFormulario();
+    this.carregarLivro();
+  } catch (err) {
+    console.error(err);
+    Swal.fire('Erro', 'Não foi possível cadastrar.', 'error');
+  }
 },
 
     async salvarEdicaoLivro() {

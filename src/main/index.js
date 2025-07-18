@@ -339,6 +339,9 @@ ipcMain.handle('getRankingLivrosAno', async () => {
 
 ipcMain.on('createLivro', async (event, book) => {
   try {
+    // Remove o campo 'id' se existir
+    delete book.id;
+
     // Trata a imagem
     if (book.imagem) {
       const picturesPath = app.getPath('pictures');
@@ -346,7 +349,7 @@ ipcMain.on('createLivro', async (event, book) => {
 
       await fs.mkdir(imagesDir, { recursive: true });
 
-      const ext = extname(book.imagem); // ex: '.jpg'
+      const ext = extname(book.imagem);
       const uniqueName = `livro_${Date.now()}_${Math.floor(Math.random() * 10000)}${ext}`;
       const finalimagem = join(imagesDir, uniqueName);
       await fs.copyFile(book.imagem, finalimagem);
@@ -354,14 +357,13 @@ ipcMain.on('createLivro', async (event, book) => {
       book.imagem = finalimagem;
     }
 
+    // Geração de código único se não tiver
     if (!book.codigoLivro) {
       let codigoUnico;
       let codigoExiste = true;
 
-      while (codigoExiste) {    
- codigoUnico = `L${new Date().getFullYear()}${Math.floor(Math.random() * 10000)}`;
-
-        // Verifica se já existe no banco
+      while (codigoExiste) {
+        codigoUnico = `L${new Date().getFullYear()}${Math.floor(Math.random() * 10000)}`;
         const livroExistente = await LivroModel.findOne({ where: { codigoLivro: codigoUnico } });
         if (!livroExistente) {
           codigoExiste = false;
@@ -380,6 +382,7 @@ ipcMain.on('createLivro', async (event, book) => {
 });
 
 
+
 ipcMain.on('createLivrosEmMassa', async (event, livros) => {
   try {
     const picturesPath = app.getPath('pictures');
@@ -389,16 +392,19 @@ ipcMain.on('createLivrosEmMassa', async (event, livros) => {
     const livrosProcessados = [];
 
     for (const book of livros) {
+      // Remove o campo 'id' se existir
+      delete book.id;
+
       // Trata imagem
       if (book.imagem) {
-        const ext = extname(book.imagem); // ex: '.jpg'
+        const ext = extname(book.imagem);
         const uniqueName = `livro_${Date.now()}_${Math.floor(Math.random() * 10000)}${ext}`;
         const finalimagem = join(imagesDir, uniqueName);
         await fs.copyFile(book.imagem, finalimagem);
         book.imagem = finalimagem;
       }
 
-      // Gera código único se não houver
+      // Geração de código único
       if (!book.codigoLivro) {
         let codigoUnico;
         let codigoExiste = true;
@@ -479,12 +485,9 @@ ipcMain.on('deleteLivro', async (event, id) => {
   });
   
 ipcMain.handle('getLivro', async () => {
-
   try {
-    
     const livros = await LivroModel.findAll({
-      include: CategoriaModel
-      
+      include: CategoriaModel    
     });
     return livros.map(l => l.dataValues);
   } catch (error) {
@@ -492,6 +495,38 @@ ipcMain.handle('getLivro', async () => {
     throw error;
   }
 });
+
+
+ipcMain.handle('buscarLivroPorTitulo', async (event, titulo) => {
+  try {
+    const livro = await LivroModel.findOne({
+      where: { titulo },
+      include: CategoriaModel
+    });
+
+    return livro ? livro.dataValues : null;
+  } catch (error) {
+    console.error('Erro ao buscar livro por título:', error);
+    return null;
+  }
+});
+
+
+ipcMain.handle('buscarUltimoExemplar', async (event, titulo) => {
+  try {
+    const livro = await LivroModel.findOne({
+      where: { titulo },
+      order: [['exemplar', 'DESC']]
+    });
+
+    return livro ? parseInt(livro.exemplar) : 0;
+  } catch (error) {
+    console.error('Erro ao buscar último exemplar:', error);
+    return 0;
+  }
+});
+
+
 
 
   ipcMain.on('createEmprestimo', async (event, loans) => {

@@ -8,6 +8,8 @@ const api = {
   updateLivro: (livro) => ipcRenderer.send('updateLivro', livro),
   deleteLivro: (id) => ipcRenderer.send('deleteLivro', id),
   getLivro: () => ipcRenderer.invoke('getLivro'),
+  buscarLivroPorTitulo: (titulo) => ipcRenderer.invoke('buscarLivroPorTitulo', titulo),
+  buscarUltimoExemplar: (livroId) => ipcRenderer.invoke('buscarUltimoExemplar', livroId),
 
 createLivrosEmMassa: (livros) => ipcRenderer.send('createLivrosEmMassa', livros),
   createEmprestimo: (emprestimo) => ipcRenderer.send('createEmprestimo', emprestimo),
