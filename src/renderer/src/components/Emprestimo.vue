@@ -35,7 +35,8 @@
           <td class="px-4 py-3">{{ book.codigoLivro }}</td>
             <td class="px-4 py-3">{{ book.titulo }}</td>
             <td class="px-4 py-3">{{ book.autor }}</td>
-            <td class="px-4 py-3">{{ book.Category.dataValues.nome }}</td>
+<td class="px-4 py-3">{{ book.Category?.nome || 'Sem Gênero' }}</td>
+
             <td class="px-4 py-3">{{ book.exemplar }}</td>
             <td class="px-4 py-3 text-center">
             <img
@@ -95,25 +96,32 @@
                 <!-- Campo de busca de usuários -->
                 <div>
                   <label class="block text-sm font-medium text-gray-800">Selecionar Usuário</label>
-                  <input
-                    v-model="searchUsuario"
-                    type="text"
-                    placeholder="Matrícula, nome ou CPF"
-                    class="mt-1 p-2 border border-gray-300 rounded-md w-full"
-                  />
+                 <input
+               v-model="searchUsuario"
+               type="text"
+                placeholder="Matrícula, nome ou CPF"
+                class="mt-1 p-2 border border-gray-300 rounded-md w-full"
+               @focus="mostrarLista = true"
+                @blur="() => setTimeout(() => mostrarLista = false, 100)"
+/>
+
 
                   <ul
                     v-if="filteredUsers.length"
                     class="mt-2 border border-gray-300 rounded bg-white max-h-32 overflow-y-auto"
                   >
-                    <li
-                      v-for="user in filteredUsers"
-                      :key="user.matricula"
-                      @click="selecionarUsuario(user)"
-                      class="p-2 hover:bg-gray-100 cursor-pointer"
-                    >
-                      {{ user.nome }} (M{{ user.matricula }}) (CPF {{ user.cpf }})
-                    </li>
+                 <li
+  v-for="user in filteredUsers"
+  :key="user.matricula"
+  @click="selecionarUsuario(user)"
+  :class="[
+    'p-2 hover:bg-gray-100 cursor-pointer',
+    userSelecionado && userSelecionado.matricula === user.matricula ? 'bg-blue-100 font-semibold' : ''
+  ]"
+>
+  {{ user.nome }} (M{{ user.matricula }}) (CPF {{ user.cpf }})
+</li>
+
                   </ul>
 
                   <div class="mt-4 flex gap-3 flex-wrap">
@@ -186,6 +194,7 @@ export default {
       books: [],
       users: [],
       loans: [],
+      filteredUsers: [],
       searchQuery: "",
       searchUsuario: "",
       bookSelecionado: null,
@@ -221,7 +230,8 @@ filteredBooks() {
     const codigo = livro.codigoLivro || '';
     const titulo = livro.titulo || '';
     const autor = livro.autor || '';
-    const genero = livro.Category.dataValues.nome || '';
+const genero = livro.Category?.dataValues?.nome?.toLowerCase() || '';
+    
     return (
       codigo.toString().includes(this.searchQuery) ||
       titulo.toLowerCase().includes(query) ||
@@ -262,6 +272,11 @@ totalPages() {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
     }
+  },
+   cancelarEmprestimo() {
+    this.bookSelecionado = null;
+    this.userSelecionado = null;
+    this.searchUsuario = '';
   },
   prevPage() {
     if (this.currentPage > 1) {
@@ -338,10 +353,10 @@ totalPages() {
       this.carregarUsers();
     },
 
-    selecionarUsuario(user) {
-      this.userSelecionado = user;
-      this.searchUsuario = '';
-    },
+  selecionarUsuario(user) {
+    this.userSelecionado = user;
+    this.buscaUsuario = `${user.nome} (M${user.matricula})`; 
+  },
 
     async finalizarEmprestimo() {
   try {
