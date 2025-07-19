@@ -162,12 +162,8 @@
       <td class="px-6 py-4">{{ livro.Category?.dataValues?.nome || '-' }}</td>
       
       <td class="px-6 py-4 space-x-3">
-        <button 
-          @click.stop="editarLivro(index)" 
-          class="text-blue-600 hover:underline"
-        >
-          Editar
-        </button>
+      <button @click.stop="editarLivro(livro)" class="text-blue-600 hover:underline">Editar</button>
+
         <button 
           @click.stop="removerLivro(index)" 
           class="text-red-600 hover:underline"
@@ -338,7 +334,11 @@ computed: {
     this.novoLivro.imagem = path; // <-- deve ser uma string, tipo "C:/imagens/livro.jpg"
   }
 },
-
+editarLivro(livro) {
+    this.editando = true;
+    // Clona o livro selecionado para o formulário
+    this.novoLivro = JSON.parse(JSON.stringify(livro));
+  },
     getNomeCategoria(id) {
       const cat = this.categorys.find(c => c.id === id);
       return cat ? cat.nome : '';
@@ -458,7 +458,7 @@ async adicionarLivro() {
 
   const base = this.novoLivro;
   const quantidade = parseInt(base.quantidade);
-  
+console.log(this.novoLivro);
   if (!base.titulo || quantidade <= 0) {
     return Swal.fire('Campos obrigatórios!', 'Preencha o título e a quantidade.', 'warning');
   }
@@ -471,23 +471,32 @@ async adicionarLivro() {
       // Livro já existe → usar os dados dele
       dadosParaUsar = { ...this.livroExistente };
 
-      // 🔧 Correção: passa o título em vez do id
-      const ultimosExemplares = await window.api.buscarUltimoExemplar(dadosParaUsar.titulo);
-      exemplarInicial = ultimosExemplares + 1;
+      // Buscar último exemplar corretamente
+      const ultimoExemplar = await window.api.buscarUltimoExemplar(dadosParaUsar.titulo);
+      exemplarInicial = ultimoExemplar + 1;
+
+    } else {
+      // Gerar código base único para novo livro (ex: L123)
+      const random = Math.floor(100 + Math.random() * 900);
+      dadosParaUsar.codigo = `L${random}`;
     }
 
     for (let i = 0; i < quantidade; i++) {
+      const exemplar = exemplarInicial + i;
+
       await window.api.createLivro({
         ...dadosParaUsar,
-        exemplar: exemplarInicial + i,
+        exemplar,
         quantidade: 1,
-        categoryId: dadosParaUsar.categoryId // 🔧 Certo agora
+       categoryId: dadosParaUsar.categoryId,
+        codigo: `${dadosParaUsar.codigo}-${exemplar}` // gerar código único por exemplar
       });
     }
 
     Swal.fire('Sucesso', 'Livros cadastrados com sucesso!', 'success');
     this.resetarFormulario();
     this.carregarLivro();
+
   } catch (err) {
     console.error(err);
     Swal.fire('Erro', 'Não foi possível cadastrar.', 'error');

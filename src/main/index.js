@@ -335,18 +335,13 @@ ipcMain.handle('getRankingLivrosAno', async () => {
       return '';
     }
   });
-
-
 ipcMain.on('createLivro', async (event, book) => {
   try {
-    // Remove o campo 'id' se existir
     delete book.id;
 
-    // Trata a imagem
     if (book.imagem) {
       const picturesPath = app.getPath('pictures');
       const imagesDir = join(picturesPath, 'livros_imagens');
-
       await fs.mkdir(imagesDir, { recursive: true });
 
       const ext = extname(book.imagem);
@@ -357,23 +352,28 @@ ipcMain.on('createLivro', async (event, book) => {
       book.imagem = finalimagem;
     }
 
-    // Geração de código único se não tiver
-    if (!book.codigoLivro) {
-      let codigoUnico;
-      let codigoExiste = true;
+    // Garante códigoLivro único
+    let codigoUnico = book.codigoLivro || `L${new Date().getFullYear()}${Math.floor(Math.random() * 10000)}`;
+    let tentativa = 0;
 
-      while (codigoExiste) {
-        codigoUnico = `L${new Date().getFullYear()}${Math.floor(Math.random() * 10000)}`;
-        const livroExistente = await LivroModel.findOne({ where: { codigoLivro: codigoUnico } });
-        if (!livroExistente) {
-          codigoExiste = false;
-        }
-      }
+    while (true) {
+      const existe = await LivroModel.findOne({ where: { codigoLivro: codigoUnico } });
+      if (!existe) break;
 
-      book.codigoLivro = codigoUnico;
+      tentativa++;
+      codigoUnico = `L${new Date().getFullYear()}${Math.floor(Math.random() * 10000)}_${tentativa}`;
     }
 
-    await LivroModel.create(book);
+    book.codigoLivro = codigoUnico;
+
+    // Ajuste para CategoryId, caso venha como categoryId (minúsculo)
+    const livroPlain = JSON.parse(JSON.stringify(book));
+    if (livroPlain.categoryId && !livroPlain.CategoryId) {
+      livroPlain.CategoryId = livroPlain.categoryId;
+      delete livroPlain.categoryId;
+    }
+
+    await LivroModel.create(livroPlain);
     event.reply('createLivroSuccess', { message: 'Livro criado com sucesso!' });
 
   } catch (error) {
@@ -392,7 +392,6 @@ ipcMain.on('createLivrosEmMassa', async (event, livros) => {
     const livrosProcessados = [];
 
     for (const book of livros) {
-      // Remove o campo 'id' se existir
       delete book.id;
 
       // Trata imagem
@@ -404,32 +403,36 @@ ipcMain.on('createLivrosEmMassa', async (event, livros) => {
         book.imagem = finalimagem;
       }
 
-      // Geração de código único
-      if (!book.codigoLivro) {
-        let codigoUnico;
-        let codigoExiste = true;
+      // Gera código único
+      let codigoUnico = book.codigoLivro || `L${Math.floor(Math.random() * 10000)}`;
+      let tentativa = 0;
+      while (true) {
+        const existe = await LivroModel.findOne({ where: { codigoLivro: codigoUnico } });
+        if (!existe) break;
 
-        while (codigoExiste) {
-          codigoUnico = `L${Math.floor(Math.random() * 10000)}`;
-          const livroExistente = await LivroModel.findOne({ where: { codigoLivro: codigoUnico } });
-          if (!livroExistente) {
-            codigoExiste = false;
-          }
-        }
+        tentativa++;
+        codigoUnico = `L${Math.floor(Math.random() * 10000)}_${tentativa}`;
+      }
+      book.codigoLivro = codigoUnico;
 
-        book.codigoLivro = codigoUnico;
+      // Objeto plano e ajuste do CategoryId
+      const livroPlain = JSON.parse(JSON.stringify(book));
+      if (livroPlain.categoryId && !livroPlain.CategoryId) {
+        livroPlain.CategoryId = livroPlain.categoryId;
+        delete livroPlain.categoryId;
       }
 
-      livrosProcessados.push(book);
+      livrosProcessados.push(livroPlain);
     }
 
     await LivroModel.bulkCreate(livrosProcessados);
-    event.reply('createLivrosEmMassaSuccess', { message: 'Livros cadastrados com sucesso!' });
 
+    event.reply('createLivrosEmMassaSuccess', { message: 'Livros cadastrados com sucesso!' });
   } catch (error) {
     handleError(event, error, 'createLivrosEmMassa');
   }
 });
+
 
 
 
