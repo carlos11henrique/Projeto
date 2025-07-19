@@ -33,9 +33,9 @@
   :class="{ 'bg-red-100': isAtrasado(book.dataDevolucao) }"
 >
           <td class="px-4 py-3">{{ book.codigoLivro }}</td>
-            <td class="px-4 py-3">{{ book.titulo }}</td>
-            <td class="px-4 py-3">{{ book.autor }}</td>
-<td class="px-4 py-3">{{ book.Category.dataValues.nome || 'Sem Gênero' }}</td>
+            <td class="px-4 py-3 max-w-[200px] break-words">{{ book.titulo }}</td>
+            <td class="px-4 py-3 max-w-[200px] break-words">{{ book.autor }}</td>
+<td class="px-4 py-3 max-w-[200px] break-words">{{ book.Category.dataValues.nome || 'Sem Gênero' }}</td>
 
             <td class="px-4 py-3">{{ book.exemplar }}</td>
             <td class="px-4 py-3 text-center">
