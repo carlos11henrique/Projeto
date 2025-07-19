@@ -231,24 +231,34 @@ filteredBooks() {
     const codigo = livro.codigoLivro || '';
     const titulo = livro.titulo || '';
     const autor = livro.autor || '';
-const genero = livro.Category?.dataValues?.nome?.toLowerCase() || '';
-    
+    const genero = livro.Category?.dataValues?.nome?.toLowerCase() || '';
+
     return (
       codigo.toString().includes(this.searchQuery) ||
       titulo.toLowerCase().includes(query) ||
-      autor.toLowerCase().includes(query)||
-      genero.toLowerCase().includes(query)
+      autor.toLowerCase().includes(query) ||
+      genero.includes(query)
     );
   });
-  
 
-  // Organiza: emprestados primeiro
-  const emprestados = filtrados.filter(l => l.status === 'emprestado');
-  const disponiveis = filtrados.filter(l => l.status !== 'emprestado');
-  const ordenados = [...emprestados, ...disponiveis];
+  // Ordena os resultados por título e exemplar
+  const ordenados = filtrados.sort((a, b) => {
+    const tituloA = a.titulo.toLowerCase();
+    const tituloB = b.titulo.toLowerCase();
 
-  return ordenados;
+    if (tituloA < tituloB) return -1;
+    if (tituloA > tituloB) return 1;
+
+    return a.exemplar - b.exemplar;
+  });
+
+  // Emprestados no topo
+  const emprestados = ordenados.filter(l => l.status === 'emprestado');
+  const disponiveis = ordenados.filter(l => l.status !== 'emprestado');
+
+  return [...emprestados, ...disponiveis];
 },
+
 paginatedBooks() {
   const start = (this.currentPage - 1) * this.itemsPerPage;
   const end = start + this.itemsPerPage;
@@ -294,14 +304,23 @@ totalPages() {
 
   },
   
-    async carregarBooks() {
-      try {
-        const livros = await window.api.getLivro();
-        this.books = livros;
-            } catch (error) {
-        console.error('Erro ao carregar livros:', error);
+async carregarBooks() {
+  try {
+    const livros = await window.api.getLivro();
+
+    // Corrige livros sem categoria
+    this.books = livros.map(livro => {
+      if (!livro.Category || !livro.Category.dataValues) {
+        livro.Category = { dataValues: { nome: 'Sem Gênero' } };
       }
-    },
+      return livro;
+    });
+
+  } catch (error) {
+    console.error('Erro ao carregar livros:', error);
+  }
+},
+
 
     async carregarUsers() {
       try {
