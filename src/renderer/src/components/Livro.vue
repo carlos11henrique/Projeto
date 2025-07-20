@@ -80,95 +80,96 @@
       <!-- ... o conteúdo do formulário permanece o mesmo ... -->
     </form>
 
-    <!-- Ações e Pesquisa -->
-    <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
-      <div class="flex flex-wrap gap-2">
-        <button 
-          @click="removerSelecionados" 
-          class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm shadow"
-        >
-          Excluir Selecionados
-        </button>
-        <button 
-          @click="gerarEtiquetasSelecionadas" 
-          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm shadow"
-        >
-          Gerar Etiquetas
-        </button>
-      </div>
+<div class="flex flex-wrap items-center justify-between mb-4 gap-2">
+  <div class="flex flex-wrap gap-2">
+    <button 
+      @click="removerSelecionados" 
+      class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm shadow"
+    >
+      Excluir Selecionados
+    </button>
+    <button 
+      @click="gerarEtiquetasSelecionadas" 
+      class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm shadow"
+    >
+      Gerar Etiquetas
+    </button>
+  </div>
 
-      <div>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Pesquisar livro..."
-          class="p-2 border border-gray-300 rounded-md w-64 text-sm"
-        />
-      </div>
-    </div>
+  <div>
+    <input
+      v-model="searchQuery"
+      type="text"
+      placeholder="Pesquisar livro..."
+      class="p-2 border border-gray-300 rounded-md w-64 text-sm"
+    />
+  </div>
+</div>
 
-  <table class="w-full text-[16px] text-gray-700 dark:text-gray-300 table-auto">
-      <thead class="text-base uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-        <tr class="text-center">
-          <th class="px-6 py-4 w-56">
-            <div class="flex items-center justify-center gap-2">
-              <input 
-                type="checkbox" 
-                v-model="selectAll" 
-                @change="toggleSelectAll" 
-                class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-              />
+<table class="w-full text-[16px] text-gray-700 dark:text-gray-300 table-auto">
+  <thead class="text-base uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+    <tr class="text-center">
+      <th class="px-6 py-4 w-56">
+        <div class="flex items-center justify-center gap-2">
+          <input 
+            type="checkbox"
+            @change="selecionarTodos"
+            :checked="todosSelecionados"
+            class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+          />
+        </div>
+      </th>
+      <th class="px-6 py-4">Código</th>
+      <th class="px-6 py-4">Exemplar</th>
+      <th class="px-6 py-4 max-w-[200px] whitespace-normal break-words text-center">Título</th>
+      <th class="px-6 py-4 max-w-[180px] whitespace-normal break-words text-center">Autor</th>
+      <th class="px-6 py-4 max-w-[160px] whitespace-normal break-words text-center">Gênero</th>
+      <th class="px-6 py-4">Ações</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <template v-for="(livro, index) in filteredLivro" :key="index">
+      <tr 
+        @click="toggleDetalhes(index)" 
+        class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-center"
+      >
+        <td class="px-6 py-4 w-56">
+          <input 
+            type="checkbox" 
+            :value="livro" 
+            v-model="livrosSelecionados" 
+            class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+            @click.stop
+          />
+        </td>
+        <td class="px-6 py-4">{{ livro.codigoLivro }}</td>
+        <td class="px-6 py-4">{{ livro.exemplar }}</td>
+        <td class="px-6 py-4 max-w-[200px] break-words">{{ livro.titulo }}</td>
+        <td class="px-6 py-4 max-w-[180px] break-words">{{ livro.autor }}</td>
+        <td class="px-6 py-4 max-w-[160px] break-words">{{ livro.Category?.dataValues?.nome || '-' }}</td>
+        <td class="px-6 py-4 space-x-3">
+          <button @click.stop="editarLivro(livro)" class="text-blue-600 hover:underline">Editar</button>
+          <button @click.stop="removerLivro(index)" class="text-red-600 hover:underline">Remover</button>
+        </td>
+      </tr>
+
+      <!-- Detalhes do livro -->
+      <tr v-if="livroAbertoIndex === index">
+        <td colspan="7" class="bg-gray-100 dark:bg-gray-700 px-6 py-4 text-left">
+          <div v-if="livro.imagem" class="mt-4 flex gap-4 items-center">
+            <img :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="w-32 rounded shadow-lg object-contain" />
+            <div>
+              <p><strong>Editora:</strong> {{ livro.editora }}</p>
+              <p><strong>Descrição:</strong> {{ livro.descricao }}</p>
             </div>
-          </th>
-          <th class="px-6 py-4">Código</th>
-          <th class="px-6 py-4">Exemplar</th>
-          <th class="px-6 py-4 max-w-[200px] whitespace-normal break-words text-center">Título</th>
-          <th class="px-6 py-4 max-w-[180px] whitespace-normal break-words text-center">Autor</th>
-          <th class="px-6 py-4 max-w-[160px] whitespace-normal break-words text-center">Gênero</th>
-          <th class="px-6 py-4">Ações</th>
-        </tr>
-      </thead>
+          </div>
+        </td>
+      </tr>
+    </template>
+  </tbody>
+</table>
 
-      <tbody>
-        <template v-for="(livro, index) in filteredLivro" :key="index">
-          <tr 
-            @click="toggleDetalhes(index)" 
-            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-center"
-          >
-            <td class="px-6 py-4 w-56">
-              <input 
-                type="checkbox" 
-                v-model="livro.selecionado" 
-                class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                @click.stop
-              />
-            </td>
-            <td class="px-6 py-4">{{ livro.codigoLivro }}</td>
-            <td class="px-6 py-4">{{ livro.exemplar }}</td>
-            <td class="px-6 py-4 max-w-[200px] break-words">{{ livro.titulo }}</td>
-            <td class="px-6 py-4 max-w-[180px] break-words">{{ livro.autor }}</td>
-            <td class="px-6 py-4 max-w-[160px] break-words">{{ livro.Category?.dataValues?.nome || '-' }}</td>
-            <td class="px-6 py-4 space-x-3">
-              <button @click.stop="editarLivro(livro)" class="text-blue-600 hover:underline">Editar</button>
-              <button @click.stop="removerLivro(index)" class="text-red-600 hover:underline">Remover</button>
-            </td>
-          </tr>
-
-          <!-- Linha de detalhes do livro (expandida) -->
-          <tr v-if="livroAbertoIndex === index">
-            <td colspan="7" class="bg-gray-100 dark:bg-gray-700 px-6 py-4 text-left">
-              <div v-if="livro.imagem" class="mt-4 flex gap-4 items-center">
-                <img :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="w-32 rounded shadow-lg object-contain" />
-                <div>
-                  <p><strong>Editora:</strong> {{ livro.editora }}</p>
-                  <p><strong>Descrição:</strong> {{ livro.descricao }}</p>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
 
     <!-- Paginação -->
     <div class="flex justify-center mt-6">
@@ -230,6 +231,7 @@ export default {
       livros: [],
       
       livroAbertoIndex: null,
+      livrosSelecionados: [],
       categorys: [],
       searchQuery: "",
       editando: false,
@@ -274,6 +276,15 @@ computed: {
     const start = (this.currentPage - 1) * this.itemsPerPage;
     return this.livrosComFiltro.slice(start, start + this.itemsPerPage);
   },
+todosSelecionados() {
+  return (
+    this.filteredLivro.length > 0 &&
+    this.filteredLivro.every(livro => this.livrosSelecionados.includes(livro))
+  );
+},
+  todosSelecionados() {
+    return this.livros.length > 0 && this.livrosSelecionados.length === this.livros.length;
+  },
 
 
 
@@ -288,7 +299,17 @@ computed: {
     }
   },
   methods: {
+selecionarTodos(event) {
+    const selecionado = event.target.checked;
 
+    this.filteredLivro.forEach(livro => {
+      if (selecionado && !this.livrosSelecionados.includes(livro)) {
+        this.livrosSelecionados.push(livro);
+      } else if (!selecionado) {
+        this.livrosSelecionados = this.livrosSelecionados.filter(l => l !== livro);
+      }
+    });
+  },
   toggleDetalhes(index) {
     if (this.livroAbertoIndex === index) {
       this.livroAbertoIndex = null;
@@ -311,7 +332,7 @@ computed: {
    handleImagemSelecionada(event) {
   const path = window.api.getPathInput(event.target);
   if (path) {
-    this.novoLivro.imagem = path; // <-- deve ser uma string, tipo "C:/imagens/livro.jpg"
+    this.novoLivro.imagem = path; 
   }
 },
 editarLivro(livro) {
@@ -505,40 +526,64 @@ console.log(this.novoLivro);
         console.error('Erro ao atualizar livro:', error);
       }
     },
+ toggleTodosLivros(event) {
+    if (event.target.checked) {
+      this.livrosSelecionados = [...this.livros];
+    } else {
+      this.livrosSelecionados = [];
+    }
+  },
+async removerSelecionados() {
+  try {
+    if (!this.livrosSelecionados || this.livrosSelecionados.length === 0) {
+      return Swal.fire('Atenção', 'Nenhum livro selecionado.', 'warning');
+    }
 
-    async removerLivro(index) {
-      const i = (this.currentPage - 1) * this.itemsPerPage + index;
-      const livro = this.livrosComFiltro[i];
+    const confirmacao = await Swal.fire({
+      title: 'Tem certeza?',
+      text: `Você deseja mover ${this.livrosSelecionados.length} livro(s) para a lixeira?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, mover',
+      cancelButtonText: 'Cancelar'
+    });
 
-      const confirm = await Swal.fire({
-        title: 'Tem certeza?',
-        text: "Deseja remover este livro?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sim',
-        cancelButtonText: 'Cancelar'
-      });
+    if (!confirmacao.isConfirmed) return;
 
-      if (confirm.isConfirmed) {
-        try {
-          await window.api.deleteLivro(livro.id);
-          this.carregarLivro();
-          Swal.fire('Removido!', 'Livro excluído.', 'success');
-        } catch (err) {
-          console.error(err);
-          Swal.fire('Erro', 'Não foi possível remover.', 'error');
-        }
-      }
-    },
+    for (const livro of this.livrosSelecionados) {
+      const copiaLivro = JSON.parse(JSON.stringify(livro)); // 🔥 Aqui está o pulo do gato
+      copiaLivro.status = 'invalido';
+      await window.api.updateLivro(copiaLivro);
+    }
+
+    Swal.fire('Movido!', 'Livros enviados para a lixeira com sucesso.', 'success');
+    this.livrosSelecionados = [];
+    this.carregarLivro();
+
+  } catch (error) {
+    console.error('Erro ao mover livros para lixeira:', error);
+    Swal.fire('Erro!', 'Não foi possível mover os livros para a lixeira.', 'error');
+  }
+},
+
     async carregarLivro() {
-      try {
-        const livros = await window.api.getLivro();
-        this.livros = livros.map(l => ({ ...l, selecionado: false, mostrarDetalhes: false }));
-      } catch (e) {
-        console.error(e);
-        Swal.fire('Erro', 'Erro ao carregar livros.', 'error');
-      }
-    },
+  try {
+    const livros = await window.api.getLivro();
+
+    // Filtra apenas os livros que NÃO têm status "invalido"
+    const livrosValidos = livros.filter(l => l.status !== 'invalido');
+
+    // Adiciona os campos adicionais
+    this.livros = livrosValidos.map(l => ({
+      ...l,
+      selecionado: false,
+      mostrarDetalhes: false
+    }));
+  } catch (e) {
+    console.error(e);
+    Swal.fire('Erro', 'Erro ao carregar livros.', 'error');
+  }
+},
     async carregarCategoria() {
       try {
         this.categorys = await window.api.getCategoria();

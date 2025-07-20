@@ -1,49 +1,104 @@
 <template>
-  <div class="p-6 bg-white rounded shadow-md text-[15px]">
-    <h2 class="text-2xl font-semibold mb-4">Lixeira</h2>
-
-    <div v-if="itens.length === 0" class="text-gray-500">Nenhum item na lixeira.</div>
-
-    <table v-else class="w-full text-left border border-gray-200 rounded-lg">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="p-3 border-b">Tipo</th>
-          <th class="p-3 border-b">Informações</th>
-          <th class="p-3 border-b">Deletado em</th>
-          <th class="p-3 border-b">Ações</th>
+  <div>
+    <table class="w-full text-[16px] text-gray-700 dark:text-gray-300 table-auto">
+      <thead class="text-base uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+        <tr class="text-center">
+          <th class="px-6 py-4 w-56">
+            <div class="flex items-center justify-center gap-2">
+              <input 
+                type="checkbox"
+                @change="selecionarTodos"
+                :checked="todosSelecionados"
+                class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+              />
+            </div>
+          </th>
+          <th class="px-6 py-4">Código</th>
+          <th class="px-6 py-4">Exemplar</th>
+          <th class="px-6 py-4 max-w-[200px] whitespace-normal break-words text-center">Título</th>
+          <th class="px-6 py-4 max-w-[180px] whitespace-normal break-words text-center">Autor</th>
+          <th class="px-6 py-4 max-w-[160px] whitespace-normal break-words text-center">Gênero</th>
+          <th class="px-6 py-4">Ações</th>
         </tr>
       </thead>
+
       <tbody>
-        <tr v-for="item in itens" :key="item.id" class="hover:bg-gray-50">
-          <td class="p-3 border-b capitalize">{{ item.tipo }}</td>
-          <td class="p-3 border-b">
-            <div v-if="item.tipo === 'livro'">
-              <p><strong>Título:</strong> {{ item.dados.titulo }}</p>
-              <p><strong>Autor:</strong> {{ item.dados.autor }}</p>
-            </div>
-            <div v-else-if="item.tipo === 'usuario'">
-              <p><strong>Nome:</strong> {{ item.dados.nome }}</p>
-              <p><strong>Tipo:</strong> {{ item.dados.tipo }}</p>
-            </div>
-          </td>
-          <td class="p-3 border-b">{{ formatarData(item.deletado_em) }}</td>
-          <td class="p-3 border-b space-x-2">
-            <button
-              class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
-              @click="restaurarItem(item.id)"
-            >
-              Restaurar
-            </button>
-            <button
-              class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-              @click="removerItem(item.id)"
-            >
-              Remover
-            </button>
-          </td>
-        </tr>
+        <template v-for="(livro, index) in livrosPaginados" :key="livro.id">
+          <tr 
+            @click="toggleDetalhes(index)" 
+            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-center"
+          >
+            <td class="px-6 py-4 w-56">
+              <input 
+                type="checkbox" 
+                :value="livro" 
+                v-model="livrosSelecionados" 
+                class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                @click.stop
+              />
+            </td>
+            <td class="px-6 py-4">{{ livro.codigoLivro }}</td>
+            <td class="px-6 py-4">{{ livro.exemplar }}</td>
+            <td class="px-6 py-4 max-w-[200px] break-words">{{ livro.titulo }}</td>
+            <td class="px-6 py-4 max-w-[180px] break-words">{{ livro.autor }}</td>
+            <td class="px-6 py-4 max-w-[160px] break-words">{{ livro.Category?.dataValues?.nome || '-' }}</td>
+            <td class="px-6 py-4 space-x-3">
+              <button @click.stop="removerLivro(index)" class="text-red-600 hover:underline">Remover</button>
+            </td>
+          </tr>
+
+          <!-- Detalhes do livro -->
+          <tr v-if="livroAbertoIndex === index">
+            <td colspan="7" class="bg-gray-100 dark:bg-gray-700 px-6 py-4 text-left">
+              <div v-if="livro.imagem" class="mt-4 flex gap-4 items-center">
+                <img :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="w-32 rounded shadow-lg object-contain" />
+                <div>
+                  <p><strong>Editora:</strong> {{ livro.editora }}</p>
+                  <p><strong>Descrição:</strong> {{ livro.descricao }}</p>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </template>
       </tbody>
     </table>
+
+    <!-- Paginação -->
+    <div class="flex justify-center mt-6">
+      <nav class="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+        <button
+          @click="prevPage"
+          :disabled="currentPage === 1"
+          class="relative inline-flex items-center px-3 py-2 text-sm font-medium border border-gray-300 rounded-l-md bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Anterior
+        </button>
+
+        <button
+          v-for="page in paginasVisiveis"
+          :key="page"
+          @click="setPage(page)"
+          class="relative inline-flex items-center px-4 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700"
+          :class="{ 'z-10 bg-blue-600 text-white': currentPage === page }"
+        >
+          {{ page }}
+        </button>
+
+        <button
+          @click="nextPage"
+          :disabled="currentPage === totalPages"
+          class="relative inline-flex items-center px-3 py-2 text-sm font-medium border border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700"
+        >
+          Próxima
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </nav>
+    </div>
   </div>
 </template>
 
@@ -52,45 +107,92 @@ export default {
   name: "Lixeira",
   data() {
     return {
-      itens: [],
+      livros: [],
+      livrosSelecionados: [],
+      livroAbertoIndex: null,
+      currentPage: 1,
+      itemsPerPage: 10,
     };
   },
-  methods: {
-    async carregarLixeira() {
-      try {
-        const response = await fetch("http://localhost:3000/lixeira"); // ajuste se usar IPC ou outra rota
-        const dados = await response.json();
-        this.itens = dados;
-      } catch (error) {
-        console.error("Erro ao carregar lixeira:", error);
-      }
-    },
-    async restaurarItem(id) {
-      try {
-        await fetch(`http://localhost:3000/lixeira/restaurar/${id}`, {
-          method: "POST",
-        });
-        this.itens = this.itens.filter((item) => item.id !== id);
-      } catch (error) {
-        console.error("Erro ao restaurar item:", error);
-      }
-    },
-    async removerItem(id) {
-      try {
-        await fetch(`http://localhost:3000/lixeira/${id}`, {
-          method: "DELETE",
-        });
-        this.itens = this.itens.filter((item) => item.id !== id);
-      } catch (error) {
-        console.error("Erro ao remover item:", error);
-      }
-    },
-    formatarData(data) {
-      return new Date(data).toLocaleString("pt-BR");
-    },
-  },
+
   mounted() {
-    this.carregarLixeira();
+    this.carregarLivro();
   },
+
+  computed: {
+    totalPages() {
+      return Math.ceil(this.livros.length / this.itemsPerPage);
+    },
+    livrosPaginados() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.livros.slice(start, end);
+    },
+    todosSelecionados() {
+      return this.livrosSelecionados.length === this.livros.length && this.livros.length > 0;
+    },
+    paginasVisiveis() {
+      const total = this.totalPages;
+      let pages = [];
+      for(let i = 1; i <= total; i++) {
+        pages.push(i);
+      }
+      return pages;
+    }
+  },
+
+  methods: {
+    async carregarLivro() {
+      try {
+        const livros = await window.api.getLivro();
+
+        // Filtra só os livros inválidos
+        const livrosInvalidos = livros.filter(l => l.status === 'invalido');
+
+        this.livros = livrosInvalidos.map(l => ({
+          ...l,
+          selecionado: false,
+          mostrarDetalhes: false
+        }));
+      } catch (e) {
+        console.error(e);
+        Swal.fire('Erro', 'Erro ao carregar livros.', 'error');
+      }
+    },
+
+    toggleDetalhes(index) {
+      this.livroAbertoIndex = this.livroAbertoIndex === index ? null : index;
+    },
+
+    selecionarTodos(event) {
+      if (event.target.checked) {
+        this.livrosSelecionados = [...this.livros];
+      } else {
+        this.livrosSelecionados = [];
+      }
+    },
+
+    prevPage() {
+      if (this.currentPage > 1) this.currentPage--;
+    },
+
+    nextPage() {
+      if (this.currentPage < this.totalPages) this.currentPage++;
+    },
+
+    setPage(page) {
+      this.currentPage = page;
+    },
+
+    editarLivro(livro) {
+      // lógica para editar
+      console.log('Editar livro:', livro);
+    },
+
+    removerLivro(index) {
+      // lógica para remover
+      console.log('Remover livro índice:', index);
+    }
+  }
 };
 </script>
