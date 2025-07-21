@@ -1,9 +1,14 @@
 <template>
   <div>
-    <form @submit.prevent="adicionarUsuario" class="mb-6">
+    <!-- FORMULÁRIO -->
+   <form @submit.prevent="adicionarUsuario" class="mb-6">
       <!-- Dropdown para selecionar o tipo de usuário -->
       <label class="block mb-4 text-lg font-medium text-gray-900 dark:text-white">Tipo do Usuário</label>
-      <select v-model="novoUsuario.tipo" @change="handleTipoUsuarioChange" class="bg-gray-50 border border-gray-300 text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+      <select
+        v-model="novoUsuario.tipo"
+        @change="handleTipoUsuarioChange"
+        class="bg-gray-50 border border-gray-300 text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+      >
         <option value="">Selecione...</option>
         <option value="Professor">Professor</option>
         <option value="Aluno">Aluno</option>
@@ -13,34 +18,74 @@
       <div class="grid gap-6 mb-6 md:grid-cols-2">
         <div>
           <label for="nome" class="block mb-3 text-lg font-medium text-gray-900 dark:text-white">Nome Completo</label>
-          <input v-model="novoUsuario.nome" type="text" id="nome" class="bg-gray-50 border border-gray-300 text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required />
+          <input
+            v-model="novoUsuario.nome"
+            type="text"
+            id="nome"
+            class="bg-gray-50 border border-gray-300 text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+            required
+          />
         </div>
         <div>
           <label for="cpf" class="block mb-3 text-lg font-medium text-gray-900 dark:text-white">CPF</label>
-          <input v-model="novoUsuario.cpf" type="text" id="cpf" class="bg-gray-50 border border-gray-300 text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required />
+          <input
+            v-model="novoUsuario.cpf"
+            type="text"
+            id="cpf"
+            class="bg-gray-50 border border-gray-300 text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+            required
+          />
         </div>
 
         <div v-if="tipoUsuario === 'Aluno'">
           <label for="matricula" class="block mb-3 text-lg font-medium text-gray-900 dark:text-white">Matrícula</label>
-          <input v-model="novoUsuario.matricula" type="text" id="matricula" class="bg-gray-50 border border-gray-300 text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required />
+          <input
+            v-model="novoUsuario.matricula"
+            type="text"
+            id="matricula"
+            class="bg-gray-50 border border-gray-300 text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+            required
+          />
         </div>
 
         <div v-if="tipoUsuario === 'Aluno'">
           <label for="serie" class="block mb-3 text-lg font-medium text-gray-900 dark:text-white">Série</label>
-          <input v-model="novoUsuario.serie" type="text" id="serie" class="bg-gray-50 border border-gray-300 text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required />
+          <input
+            v-model="novoUsuario.serie"
+            type="text"
+            id="serie"
+            class="bg-gray-50 border border-gray-300 text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+            required
+          />
         </div>
         <div v-if="tipoUsuario === 'Aluno'">
           <label for="turma" class="block mb-3 text-lg font-medium text-gray-900 dark:text-white">Turma</label>
-          <input v-model="novoUsuario.turma" type="text" id="turma" class="bg-gray-50 border border-gray-300 text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required />
+          <input
+            v-model="novoUsuario.turma"
+            type="text"
+            id="turma"
+            class="bg-gray-50 border border-gray-300 text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+            required
+          />
         </div>
 
         <div>
           <label for="telefone" class="block mb-3 text-lg font-medium text-gray-900 dark:text-white">Telefone</label>
-          <input v-model="novoUsuario.telefone" type="tel" id="telefone" class="bg-gray-50 border border-gray-300 text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3" required />
+          <input
+            v-model="novoUsuario.telefone"
+            type="tel"
+            id="telefone"
+            class="bg-gray-50 border border-gray-300 text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+            required
+          />
         </div>
       </div>
 
-      <div v-if="mensagem" :class="mensagem.tipo === 'sucesso' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="p-5 mb-6 rounded-lg">
+      <div
+        v-if="mensagem"
+        :class="mensagem.tipo === 'sucesso' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+        class="p-5 mb-6 rounded-lg"
+      >
         <p class="font-medium text-lg">{{ mensagem.texto }}</p>
       </div>
 
@@ -71,35 +116,56 @@
       </div>
     </form>
 
-    <div class="mb-5">
+
+    <!-- FILTROS -->
+   <div class="flex gap-4 mb-4">
       <input
         v-model="termoBusca"
         type="text"
         placeholder="Buscar por nome ou CPF..."
-        class="w-full p-3 border border-gray-300 text-lg rounded-lg focus:ring-blue-500 focus:border-blue-500"
+        class="flex-1 p-3 border border-gray-300 text-lg rounded-lg focus:ring-blue-500 focus:border-blue-500"
       />
+
+      <select v-model="filtroTipo" class="p-3 border border-gray-300 rounded-lg text-lg">
+        <option value="">Todos os tipos</option>
+        <option value="Professor">Professor</option>
+        <option value="Aluno">Aluno</option>
+        <option value="Terceiros">Terceiros</option>
+      </select>
+
+      <select v-model="filtroSerie" class="p-3 border border-gray-300 rounded-lg text-lg" >
+        <option value="">Todas as séries</option>
+        <option v-for="serie in seriesDisponiveis" :key="serie" :value="serie">{{ serie }}</option>
+      </select>
+
+      <button @click="excluirSelecionados" class="text-white bg-red-600 px-4 py-2 rounded-lg font-semibold hover:bg-red-700" :disabled="selecionados.length === 0">
+        Excluir Selecionados
+      </button>
     </div>
 
+    <!-- TABELA -->
     <table class="w-full text-lg text-left text-gray-500 dark:text-gray-400 mt-6">
       <thead class="text-xl text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
         <tr>
           <th class="px-8 py-5">Nome</th>
           <th class="px-8 py-5">CPF</th>
-          <th v-if="tipoUsuario === 'Aluno'" class="px-8 py-5">Matrícula</th>
-          <th v-if="tipoUsuario === 'Aluno'" class="px-8 py-5">Série</th>
-          <th v-if="tipoUsuario === 'Aluno'" class="px-8 py-5">Turma</th>
+          <th class="px-8 py-5">Tipo</th>
+          <th class="px-8 py-5">Matrícula</th>
+          <th class="px-8 py-5">Série</th>
+          <th class="px-8 py-5">Turma</th>
           <th class="px-8 py-5">Telefone</th>
           <th class="px-8 py-5">Ações</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(usuario  ) in usuariosPaginados" :key="usuario.id" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50">
-          <td class="px-8 py-5">{{ usuario?.nome || 'Nome não disponível' }}</td>
-          <td class="px-8 py-5">{{ usuario?.cpf }}</td>
-          <td v-if="tipoUsuario === 'Aluno'" class="px-8 py-5">{{ usuario.matricula || 'Matrícula não disponível' }}</td>
-          <td v-if="tipoUsuario === 'Aluno'" class="px-8 py-5">{{ usuario.serie || 'Série não disponível' }}</td>
-          <td v-if="tipoUsuario === 'Aluno'" class="px-8 py-5">{{ usuario.turma || 'Turma não disponível' }}</td>
-          <td class="px-8 py-5">{{ usuario?.telefone }}</td>
+        <tr v-for="usuario in usuariosPaginados" :key="usuario.id" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50">
+          <td class="px-8 py-5">{{ usuario.nome || '-' }}</td>
+          <td class="px-8 py-5">{{ usuario.cpf || '-' }}</td>
+          <td class="px-8 py-5">{{ usuario.tipo || '-' }}</td>
+          <td class="px-8 py-5">{{ usuario.matricula || '-' }}</td>
+          <td class="px-8 py-5">{{ usuario.serie || '-' }}</td>
+          <td class="px-8 py-5">{{ usuario.turma || '-' }}</td>
+          <td class="px-8 py-5">{{ usuario.telefone || '-' }}</td>
           <td class="px-8 py-5">
             <button @click="editarUsuario(usuarios.indexOf(usuario))" class="text-blue-600 hover:text-blue-800 font-semibold">Editar</button>
             <button @click="removerUsuario(usuario)" class="text-red-600 hover:text-red-800 font-semibold ml-5">Excluir</button>
@@ -108,67 +174,56 @@
       </tbody>
     </table>
 
-<nav class="flex justify-center mt-6" aria-label="Paginação">
-  <ul class="inline-flex -space-x-px text-lg">
-    <!-- Botão Anterior -->
-    <li>
-      <button
-        @click="paginaAtual--"
-        :disabled="paginaAtual === 1"
-        class="px-4 py-2 border rounded-l-lg border-gray-300 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Anterior
-      </button>
-    </li>
-
-    <!-- Páginas visíveis (3 por vez) -->
-    <li
-      v-for="page in paginasVisiveis"
-      :key="page"
-    >
-      <button
-        @click="paginaAtual = page"
-        :class="[
-          'px-4 py-2 border border-gray-300',
-          page === paginaAtual
-            ? 'bg-blue-600 text-white'
-            : 'bg-white text-gray-700 hover:bg-gray-100 hover:text-blue-600'
-        ]"
-      >
-        {{ page }}
-      </button>
-    </li>
-
-    <!-- Botão Próximo -->
-    <li>
-      <button
-        @click="paginaAtual++"
-        :disabled="paginaAtual === totalPaginas"
-        class="px-4 py-2 border rounded-r-lg border-gray-300 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Próximo
-      </button>
-    </li>
-  </ul>
-</nav>
-
-
+    <!-- PAGINAÇÃO -->
+    <nav class="flex justify-center mt-6" aria-label="Paginação">
+      <ul class="inline-flex -space-x-px text-lg">
+        <li>
+          <button
+            @click="paginaAtual--"
+            :disabled="paginaAtual === 1"
+            class="px-4 py-2 border rounded-l-lg border-gray-300 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50"
+          >
+            Anterior
+          </button>
+        </li>
+        <li v-for="page in paginasVisiveis" :key="page">
+          <button
+            @click="paginaAtual = page"
+            :class="[
+              'px-4 py-2 border border-gray-300',
+              page === paginaAtual ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
+            ]"
+          >
+            {{ page }}
+          </button>
+        </li>
+        <li>
+          <button
+            @click="paginaAtual++"
+            :disabled="paginaAtual === totalPaginas"
+            class="px-4 py-2 border rounded-r-lg border-gray-300 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50"
+          >
+            Próximo
+          </button>
+        </li>
+      </ul>
+    </nav>
   </div>
 </template>
 
 
-
-
 <script>
-import $ from 'jquery';
-import 'jquery-mask-plugin';
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
+import $ from "jquery";
+import "jquery-mask-plugin";
 
 export default {
   name: "ControleUsuario",
   data() {
     return {
       termoBusca: "",
+      filtroTipo: "",
+      filtroSerie: "",
       editando: false,
       usuarioEditandoId: null,
       usuarios: [],
@@ -180,49 +235,84 @@ export default {
         matricula: "",
         serie: "",
         turma: "",
-        telefone: ""
+        telefone: "",
       },
       mensagem: null,
-
-      // Paginação
       paginaAtual: 1,
-      usuariosPorPagina: 20
+      usuariosPorPagina: 20,
+      selecionados: [],
+
+      seriesDisponiveis: ["7", "8", "9", "1", "2", "3"],
     };
   },
   computed: {
     usuariosFiltrados() {
-    return this.usuarios;
+      return this.usuarios.filter((usuario) => {
+        // Filtra por status (somente ativos)
+        if (usuario.status === "invalido") return false;
+
+        // Busca por nome ou cpf
+        const busca = this.termoBusca.toLowerCase();
+        if (
+          busca &&
+          !(
+            usuario.nome?.toLowerCase().includes(busca) ||
+            usuario.cpf?.toLowerCase().includes(busca)
+          )
+        )
+          return false;
+
+        // Filtra por tipo
+        if (this.filtroTipo && usuario.tipo !== this.filtroTipo) return false;
+
+        // Filtra por série - só se for aluno e filtroSerie preenchido
+        if (
+          this.filtroSerie &&
+          usuario.tipo === "Aluno" &&
+          String(usuario.serie) !== String(this.filtroSerie)
+        )
+          return false;
+
+        return true;
+      });
+    },
+    usuariosPaginados() {
+      const start = (this.paginaAtual - 1) * this.usuariosPorPagina;
+      return this.usuariosFiltrados.slice(start, start + this.usuariosPorPagina);
+    },
+    totalPaginas() {
+      return Math.ceil(this.usuariosFiltrados.length / this.usuariosPorPagina);
+    },
+    paginasVisiveis() {
+      const total = this.totalPaginas;
+      const atual = this.paginaAtual;
+      const inicio = Math.max(atual, 1);
+      const paginas = [];
+
+      for (let i = inicio; i < inicio + 5 && i <= total; i++) {
+        paginas.push(i);
+      }
+
+      return paginas;
+    },
+    todosSelecionados() {
+      if (this.usuariosPaginados.length === 0) return false;
+      return this.usuariosPaginados.every((u) => this.selecionados.includes(u.id));
+    },
   },
-  usuariosPaginados() {
-    const start = (this.paginaAtual - 1) * this.usuariosPorPagina;
-    return this.usuariosFiltrados.slice(start, start + this.usuariosPorPagina);
-  },
-  totalPaginas() {
-    return Math.ceil(this.usuariosFiltrados.length / this.usuariosPorPagina);
-  },
-  paginasVisiveis() {
-    const total = this.totalPaginas;
-    const atual = this.paginaAtual;
-
-    // Lógica para mostrar 3 páginas "deslizantes"
-    const inicio = Math.max(atual, 1);
-    const paginas = [];
-
-    for (let i = inicio; i < inicio + 5 && i <= total; i++) {
-      paginas.push(i);
-    }
-
-    return paginas;
-  }
-},
-
   watch: {
     termoBusca() {
       this.paginaAtual = 1;
     },
-    'novoUsuario.tipo'(val) {
+    filtroTipo() {
+      this.paginaAtual = 1;
+    },
+    filtroSerie() {
+      this.paginaAtual = 1;
+    },
+    "novoUsuario.tipo"(val) {
       this.tipoUsuario = val;
-    }
+    },
   },
   methods: {
     async adicionarUsuario() {
@@ -233,8 +323,8 @@ export default {
         this.resetForm();
 
         this.mensagem = {
-          tipo: 'sucesso',
-          texto: 'Usuário cadastrado com sucesso!'
+          tipo: "sucesso",
+          texto: "Usuário cadastrado com sucesso!",
         };
 
         setTimeout(() => {
@@ -244,8 +334,8 @@ export default {
         console.error("Erro ao criar usuário:", error);
 
         this.mensagem = {
-          tipo: 'erro',
-          texto: 'Não foi possível cadastrar o usuário. Tente novamente.'
+          tipo: "erro",
+          texto: "Não foi possível cadastrar o usuário. Tente novamente.",
         };
       }
     },
@@ -257,14 +347,14 @@ export default {
 
         await window.api.updateUser(usuarioAtualizado);
 
-        const index = this.usuarios.findIndex(u => u.id === usuarioAtualizado.id);
+        const index = this.usuarios.findIndex((u) => u.id === usuarioAtualizado.id);
         if (index !== -1) {
           this.usuarios.splice(index, 1, usuarioAtualizado);
         }
 
         this.mensagem = {
-          tipo: 'sucesso',
-          texto: 'Usuário atualizado com sucesso!'
+          tipo: "sucesso",
+          texto: "Usuário atualizado com sucesso!",
         };
 
         this.resetForm();
@@ -273,8 +363,8 @@ export default {
       } catch (error) {
         console.error("Erro ao atualizar usuário:", error);
         this.mensagem = {
-          tipo: 'erro',
-          texto: 'Não foi possível atualizar o usuário.'
+          tipo: "erro",
+          texto: "Não foi possível atualizar o usuário.",
         };
       }
     },
@@ -286,31 +376,6 @@ export default {
       this.usuarioEditandoId = usuario.id;
       this.editando = true;
     },
-
-    async removerUsuario(usuario) {
-  const confirmacao = await Swal.fire({
-    title: 'Tem certeza?',
-    text: "Esse usuário será movido para a lixeira.",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Sim, mover para lixeira!'
-  });
-
-  if (confirmacao.isConfirmed) {
-    try {
-      usuario.status = 'invalido';
-      await window.api.updateUser(usuario);
-      await this.carregarUsuarios();
-      Swal.fire('Movido!', 'O usuário foi movido para a lixeira.', 'success');
-    } catch (error) {
-      console.error("Erro ao mover usuário para lixeira:", error);
-    }
-  }
-},
-
-
 
     async carregarUsuarios() {
       try {
@@ -333,7 +398,7 @@ export default {
         matricula: "",
         serie: "",
         turma: "",
-        telefone: ""
+        telefone: "",
       };
       this.editando = false;
       this.usuarioEditandoId = null;
@@ -355,15 +420,103 @@ export default {
 
     goToPage(page) {
       this.paginaAtual = page;
-    }
+    },
+
+    // Marca/desmarca todos da página atual
+    selecionarTodos(event) {
+      const checked = event.target.checked;
+      const idsPagina = this.usuariosPaginados.map((u) => u.id);
+      if (checked) {
+        // Adiciona todos da página que ainda não estão selecionados
+        this.selecionados = Array.from(new Set([...this.selecionados, ...idsPagina]));
+      } else {
+        // Remove todos da página
+        this.selecionados = this.selecionados.filter((id) => !idsPagina.includes(id));
+      }
+    },
+
+    // Excluir 1 usuário (status invalido)
+    async removerUsuario(usuario) {
+      const confirm = await Swal.fire({
+        title: `Deseja realmente excluir o usuário ${usuario.nome}?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Sim, excluir",
+        cancelButtonText: "Cancelar",
+      });
+      if (confirm.isConfirmed) {
+        try {
+          // Atualiza status para invalido no banco
+          const usuarioAtualizado = { ...usuario, status: "invalido" };
+          await window.api.updateUser(usuarioAtualizado);
+          await this.carregarUsuarios();
+
+          this.mensagem = {
+            tipo: "sucesso",
+            texto: "Usuário removido e enviado para a lixeira.",
+          };
+
+          setTimeout(() => (this.mensagem = null), 4000);
+        } catch (error) {
+          console.error(error);
+          this.mensagem = {
+            tipo: "erro",
+            texto: "Erro ao remover usuário.",
+          };
+        }
+      }
+    },
+
+    // Excluir múltiplos usuários selecionados (status invalido)
+    async excluirSelecionados() {
+      if (this.selecionados.length === 0) return;
+
+      const confirm = await Swal.fire({
+        title: `Deseja realmente excluir os ${this.selecionados.length} usuários selecionados?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Sim, excluir",
+        cancelButtonText: "Cancelar",
+      });
+      if (confirm.isConfirmed) {
+        try {
+          for (const id of this.selecionados) {
+            const usuario = this.usuarios.find((u) => u.id === id);
+            if (usuario) {
+              const usuarioAtualizado = { ...usuario, status: "invalido" };
+              await window.api.updateUser(usuarioAtualizado);
+            }
+          }
+
+          await this.carregarUsuarios();
+          this.selecionados = [];
+
+          this.mensagem = {
+            tipo: "sucesso",
+            texto: "Usuários removidos e enviados para a lixeira.",
+          };
+          setTimeout(() => (this.mensagem = null), 4000);
+        } catch (error) {
+          console.error(error);
+          this.mensagem = {
+            tipo: "erro",
+            texto: "Erro ao remover usuários selecionados.",
+          };
+        }
+      }
+    },
   },
   mounted() {
     $(document).ready(() => {
-      $('#cpf').mask('000.000.000-00');
-      $('#telefone').mask('(00) 00000-0000');
+      $("#cpf").mask("000.000.000-00");
+      $("#telefone").mask("(00) 00000-0000");
     });
 
     this.carregarUsuarios();
-  }
+  },
 };
 </script>
