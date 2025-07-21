@@ -1,4 +1,31 @@
 <template>
+    <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
+  <div class="flex flex-wrap gap-2">
+
+     <button 
+      @click="RestaurarSelecionados" 
+      class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm shadow"
+    >
+      Restaurar Selecionados
+    </button>
+    <button 
+      @click="removerSelecionados" 
+      class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm shadow"
+    >
+      Excluir Selecionados
+    </button>
+   
+  </div>
+
+  <div>
+    <input
+      v-model="searchQuery"
+      type="text"
+      placeholder="Pesquisar livro..."
+      class="p-2 border border-gray-300 rounded-md w-64 text-sm"
+    />
+  </div>
+</div>
   <div>
     <table class="w-full text-[16px] text-gray-700 dark:text-gray-300 table-auto">
       <thead class="text-base uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -43,7 +70,9 @@
             <td class="px-6 py-4 max-w-[180px] break-words">{{ livro.autor }}</td>
             <td class="px-6 py-4 max-w-[160px] break-words">{{ livro.Category?.dataValues?.nome || '-' }}</td>
             <td class="px-6 py-4 space-x-3">
-              <button @click.stop="removerLivro(index)" class="text-red-600 hover:underline">Remover</button>
+            <button @click.stop="removerLivro(index)" class="text-red-600 hover:underline">Remover</button>
+            <button @click.stop="restaurarLivro(index)" class="text-green-600 hover:underline">Restaurar</button>
+
             </td>
           </tr>
 
@@ -103,6 +132,8 @@
 </template>
 
 <script>
+import Swal from 'sweetalert2';
+
 export default {
   name: "Lixeira",
   data() {
@@ -159,6 +190,142 @@ export default {
         Swal.fire('Erro', 'Erro ao carregar livros.', 'error');
       }
     },
+    async restaurarLivro(index) {
+  const livro = this.livros[index];
+
+  const confirmacao = await Swal.fire({
+    title: 'Deseja restaurar este livro?',
+    text: `Título: ${livro.titulo}`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sim, restaurar',
+    cancelButtonText: 'Cancelar'
+  });
+
+  if (!confirmacao.isConfirmed) return;
+
+  try {
+    const copiaLivro = JSON.parse(JSON.stringify(livro));
+    copiaLivro.status = 'valido';
+    await window.api.updateLivro(copiaLivro);
+
+    Swal.fire('Restaurado!', 'Livro restaurado com sucesso.', 'success');
+    this.carregarLivro();
+  } catch (e) {
+    console.error(e);
+    Swal.fire('Erro', 'Erro ao restaurar o livro.', 'error');
+  }
+},
+
+
+
+async RestaurarSelecionados() {
+  try {
+    if (!this.livrosSelecionados || this.livrosSelecionados.length === 0) {
+      return Swal.fire('Atenção', 'Nenhum livro selecionado.', 'warning');
+    }
+
+    const confirmacao = await Swal.fire({
+      title: 'Deseja restaurar os livros selecionados?',
+      text: `Você está prestes a restaurar ${this.livrosSelecionados.length} livro(s).`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, restaurar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!confirmacao.isConfirmed) return;
+
+    for (const livro of this.livrosSelecionados) {
+      const copiaLivro = JSON.parse(JSON.stringify({ ...livro, status: 'valido' }));
+      await window.api.updateLivro(copiaLivro);
+    }
+
+    Swal.fire('Restaurado!', 'Livro(s) restaurado(s) com sucesso.', 'success');
+
+    this.livrosSelecionados = [];
+    await this.carregarLivro();
+
+  } catch (error) {
+    console.error('Erro ao restaurar livros:', error);
+    Swal.fire('Erro!', 'Não foi possível restaurar os livros.', 'error');
+  }
+},
+ 
+ async removerLivro(index) {
+    const confirm = await Swal.fire({
+      title: 'Remover livro da lixeira?',
+      text: 'Essa ação é permanente e não poderá ser desfeita!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sim, remover',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true,
+      backdrop: true,
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        // Remove da lista (caso esteja só no frontend)
+        this.livrosInvalidos.splice(index, 1);
+
+        await Swal.fire({
+          title: 'Removido!',
+          text: 'O livro foi removido da lixeira.',
+          icon: 'success',
+          timer: 1800,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error(error);
+        Swal.fire('Erro!', 'Não foi possível remover o livro.', 'error');
+      }
+    } else {
+      Swal.fire({
+        title: 'Cancelado',
+        text: 'Nenhum livro foi removido.',
+        icon: 'info',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    }
+  },
+
+    async removerSelecionados() {
+      try {
+        if (!this.livrosSelecionados || this.livrosSelecionados.length === 0) {
+          return Swal.fire('Atenção', 'Nenhum livro selecionado.', 'warning');
+        }
+
+        const confirmacao = await Swal.fire({
+          title: 'Deseja excluir os livros selecionados?',
+          text: `Você está prestes a excluir ${this.livrosSelecionados.length} livro(s).`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sim, excluir',
+          cancelButtonText: 'Cancelar'
+        });
+
+        if (!confirmacao.isConfirmed) return;
+
+        for (const livro of this.livrosSelecionados) {
+          await window.api.deleteLivro(livro.id);
+        }
+
+        Swal.fire('Excluído!', 'Livro(s) excluído(s) com sucesso.', 'success');
+
+        this.livrosSelecionados = [];
+        await this.carregarLivro();
+
+      } catch (error) {
+        console.error('Erro ao excluir livros:', error);
+        Swal.fire('Erro!', 'Não foi possível excluir os livros.', 'error');
+      }
+    },
+    
+
 
     toggleDetalhes(index) {
       this.livroAbertoIndex = this.livroAbertoIndex === index ? null : index;
@@ -184,15 +351,7 @@ export default {
       this.currentPage = page;
     },
 
-    editarLivro(livro) {
-      // lógica para editar
-      console.log('Editar livro:', livro);
-    },
 
-    removerLivro(index) {
-      // lógica para remover
-      console.log('Remover livro índice:', index);
-    }
   }
 };
 </script>

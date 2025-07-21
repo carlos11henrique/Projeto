@@ -24,7 +24,7 @@ const routes = [
             { path: 'ControleUsuario', component: () => import('./components/ControleUsuario.vue') },
             { path: 'Emprestimo', component: () => import('./components/Emprestimo.vue') },
            { path: 'Livro', component: () => import('./components/Livro.vue') },
-           { path: 'Lixeira', component: () => import('./components/lixeira.vue') },
+           { path: 'Lixeira', component: () => import('./components/Lixeira.vue') },
          ],
 
     },

@@ -96,8 +96,9 @@ export default {
     Livros,
     Emprestimo,
     ControleUsuario,
-    Dashboard,
     Lixeira,
+    Dashboard,
+   
   },
   data() {
     return {

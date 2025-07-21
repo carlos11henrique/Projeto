@@ -38,6 +38,9 @@ export function UserModel(sequelize) {
       type: DataTypes.STRING,
       allowNull: true, 
     },
+      status: {
+      type: DataTypes.STRING
+    },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW

@@ -287,46 +287,30 @@ export default {
       this.editando = true;
     },
 
-    async removerUsuario(user) {
-      const result = await Swal.fire({
-        title: 'Tem certeza?',
-        text: "Você não poderá reverter isso!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sim, excluir!',
-        cancelButtonText: 'Cancelar'
-      });
+    async removerUsuario(usuario) {
+  const confirmacao = await Swal.fire({
+    title: 'Tem certeza?',
+    text: "Esse usuário será movido para a lixeira.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Sim, mover para lixeira!'
+  });
 
-      if (result.isConfirmed) {
-        try {
-          if (!user || !user.id) {
-            Swal.fire('Erro!', 'ID inválido.', 'error');
-            return;
-          }
+  if (confirmacao.isConfirmed) {
+    try {
+      usuario.status = 'invalido';
+      await window.api.updateUser(usuario);
+      await this.carregarUsuarios();
+      Swal.fire('Movido!', 'O usuário foi movido para a lixeira.', 'success');
+    } catch (error) {
+      console.error("Erro ao mover usuário para lixeira:", error);
+    }
+  }
+},
 
-          await window.api.deleteUser(user.id);
-          Swal.fire(
-            'Excluído!',
-            'O usuário foi excluído com sucesso.',
-            'success'
-          );
-          await this.carregarUsuarios();
 
-          if (this.usuariosPaginados.length === 0 && this.paginaAtual > 1) {
-            this.paginaAtual--;
-          }
-        } catch (error) {
-          console.error("Erro ao remover usuário:", error);
-          Swal.fire(
-            'Erro!',
-            'Não foi possível excluir o usuário.',
-            'error'
-          );
-        }
-      }
-    },
 
     async carregarUsuarios() {
       try {
