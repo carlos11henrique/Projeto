@@ -61,14 +61,7 @@
           Cadastrar
         </button>
 
-        <div v-else class="flex flex-wrap gap-4">
-          <button @click="salvarEdicaoLivro" type="button" class="text-white bg-green-600 hover:bg-green-700 rounded-lg text-sm px-5 py-2.5">
-            Salvar Edição
-          </button>
-          <button @click="resetarFormulario" type="button" class="text-white bg-gray-500 hover:bg-gray-600 rounded-lg text-sm px-5 py-2.5">
-            Cancelar
-          </button>
-        </div>
+      
       </div>
     </form>
 
@@ -149,7 +142,9 @@
         <td class="px-6 py-4 max-w-[180px] break-words">{{ livro.autor }}</td>
         <td class="px-6 py-4 max-w-[160px] break-words">{{ livro.Category?.dataValues?.nome || '-' }}</td>
         <td class="px-6 py-4 space-x-3">
-          <button @click.stop="editarLivro(livro)" class="text-blue-600 hover:underline">Editar</button>
+<button @click="abrirModalEdicao(livro)" class="text-blue-600 hover:underline">
+  Editar
+</button>
           <button @click.stop="removerLivro(index)" class="text-red-600 hover:underline">Remover</button>
         </td>
       </tr>
@@ -165,6 +160,7 @@
 
       <!-- Informações do livro -->
       <div class="space-y-2 text-sm text-gray-800 dark:text-gray-200">
+        <p><strong>Título:</strong> {{ livro.titulo }}</p>
         <p><strong>Código:</strong> {{ livro.codigoLivro }}</p>
         <p><strong>Exemplar:</strong> {{ livro.exemplar }}</p>
         <p><strong>Editora:</strong> {{ livro.editora }}</p>
@@ -178,6 +174,53 @@
     </template>
   </tbody>
 </table>
+<!-- Modal de Edição de Livro -->
+<!-- Modal de Edição (sem fundo escuro) -->
+<div v-if="mostrarModalEdicao" class="fixed inset-0 flex items-center justify-center z-50">
+  <div class="bg-white border border-gray-300 rounded-xl shadow-lg w-full max-w-md p-6 relative">
+
+    <!-- Título do modal com nome do livro -->
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">
+      Editando: <span class="text-blue-600">{{ livroEditando.titulo || 'Livro' }}</span>
+    </h2>
+
+    <!-- Botão Fechar -->
+    <button @click="fecharModal"
+      class="absolute top-2 right-3 text-gray-400 hover:text-red-600 text-2xl leading-none">
+      &times;
+    </button>
+
+    <!-- Campos de Edição -->
+    <div class="flex flex-col gap-3">
+      <input v-model="livroEditando.titulo" type="text" placeholder="Título"
+        class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+
+      <input v-model="livroEditando.autor" type="text" placeholder="Autor"
+        class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+
+      <input v-model="livroEditando.genero" type="text" placeholder="Gênero"
+        class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+
+      <input v-model="livroEditando.exemplar" type="number" placeholder="Exemplar"
+        class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+
+      <textarea v-model="livroEditando.descricao" placeholder="Descrição" rows="3"
+        class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+
+      <input type="file" @change="handleUploadImagemEdicao"
+        class="p-2 border border-gray-300 rounded-lg file:mr-3 file:py-1 file:px-3 file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer" />
+    </div>
+
+    <!-- Botão Salvar -->
+    <div class="mt-5 text-right">
+  <button @click="salvarEdicao" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+  Salvar
+</button>
+
+    </div>
+  </div>
+</div>
+
 
 
     <!-- Paginação -->
@@ -238,7 +281,9 @@ export default {
         imagem: "", imagemOriginal: ""
       },
       livros: [],
-      
+       livroEditando: {},
+      mostrarModalEdicao: false,  // controla se o modal está visível
+    livroEditando: null, 
       livroAbertoIndex: null,
       livrosSelecionados: [],
       categorys: [],
@@ -338,17 +383,23 @@ selecionarTodos(event) {
     setPage(page) {
       this.currentPage = page;
     },
+
+     abrirModalEdicao(livro) {
+      this.livroEditando = { ...livro }; // copia o livro para edição
+      this.mostrarModalEdicao = true;
+    },
+    fecharModal() {
+      this.mostrarModalEdicao = false;
+      this.livroEditando = null;
+    },
+ 
    handleImagemSelecionada(event) {
   const path = window.api.getPathInput(event.target);
   if (path) {
     this.novoLivro.imagem = path; 
   }
 },
-editarLivro(livro) {
-    this.editando = true;
-    // Clona o livro selecionado para o formulário
-    this.novoLivro = JSON.parse(JSON.stringify(livro));
-  },
+
     getNomeCategoria(id) {
       const cat = this.categorys.find(c => c.id === id);
       return cat ? cat.nome : '';
@@ -530,35 +581,26 @@ console.log(this.novoLivro);
   }
 },
 
-    async salvarEdicaoLivro() {
-      try {
-        const livroParaSalvar = JSON.parse(JSON.stringify(this.novoLivro)); 
-        await window.api.updateLivro(livroParaSalvar);
+// Vue
+async salvarEdicao() {
+  try {
+    const livroParaSalvar = { ...this.livroEditando };
 
-        Swal.fire({
-          icon: 'success',
-          title: 'Livro atualizado!',
-          text: 'As informações foram alteradas com sucesso.'
-        });
-
-        this.resetarFormulario();
-        this.carregarLivro();
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Erro!',
-          text: 'Não foi possível atualizar o livro.'
-        });
-        console.error('Erro ao atualizar livro:', error);
-      }
-    },
- toggleTodosLivros(event) {
-    if (event.target.checked) {
-      this.livrosSelecionados = [...this.livros];
-    } else {
-      this.livrosSelecionados = [];
+    if (livroParaSalvar.imagem instanceof File) {
+      delete livroParaSalvar.imagem;
     }
-  },
+
+    await window.api.updateLivro(livroParaSalvar);
+
+    Swal.fire('Sucesso', 'Livro atualizado com sucesso!', 'success');
+    this.mostrarModalEdicao = false;
+    this.carregarLivro();
+  } catch (error) {
+    console.error('Erro ao salvar edição:', error);
+    Swal.fire('Erro', 'Erro ao salvar livro', 'error');
+  }
+},
+
 async removerSelecionados() {
   try {
     if (!this.livrosSelecionados || this.livrosSelecionados.length === 0) {
