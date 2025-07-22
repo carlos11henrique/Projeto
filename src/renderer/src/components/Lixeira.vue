@@ -186,7 +186,7 @@ export default {
       livroAbertoIndex: null,
       paginaUsuarios: 1,
       paginaLivros: 1,
-      itensPorPagina: 9,
+      itensPorPagina: 15,
     };
   },
   computed: {
@@ -385,6 +385,45 @@ async restaurarLivro(id) {
         this.carregarDados();
       }
     },
+    async excluirSelecionados() {
+  if (this.itensSelecionados.length === 0) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Nenhum item selecionado',
+      text: 'Selecione ao menos um item para excluir.',
+    });
+    return;
+  }
+
+  const confirmacao = await Swal.fire({
+    title: 'Tem certeza?',
+    text: 'Esta ação removerá permanentemente os itens selecionados.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sim, excluir',
+    cancelButtonText: 'Cancelar',
+  });
+
+  if (!confirmacao.isConfirmed) return;
+
+  for (const item of this.itensSelecionados) {
+    if (item.tipo === 'usuario') {
+      await window.api.deleteUser(item.id);
+    } else if (item.tipo === 'livro') {
+      await window.api.deleteLivro(item.id);
+    }
+  }
+
+  Swal.fire({
+    icon: 'success',
+    title: 'Removidos!',
+    text: 'Itens selecionados foram excluídos com sucesso.',
+  });
+
+  this.itensSelecionados = [];
+  this.carregarDados();
+},
+
 
 async restaurarUsuario(id) {
   const result = await window.api.updateUser(id, 'ativo');

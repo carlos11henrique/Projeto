@@ -156,16 +156,25 @@
 
       <!-- Detalhes do livro -->
       <tr v-if="livroAbertoIndex === index">
-        <td colspan="7" class="bg-gray-100 dark:bg-gray-700 px-6 py-4 text-left">
-          <div v-if="livro.imagem" class="mt-4 flex gap-4 items-center">
-            <img :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="w-32 rounded shadow-lg object-contain" />
-            <div>
-              <p><strong>Editora:</strong> {{ livro.editora }}</p>
-              <p><strong>Descrição:</strong> {{ livro.descricao }}</p>
-            </div>
-          </div>
-        </td>
-      </tr>
+  <td colspan="7" class="bg-gray-100 dark:bg-gray-700 px-6 py-4 text-left">
+    <div class="flex flex-col md:flex-row gap-6 items-start mt-4">
+      <!-- Imagem, se existir -->
+      <div v-if="livro.imagem">
+        <img :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="w-32 rounded shadow-lg object-contain" />
+      </div>
+
+      <!-- Informações do livro -->
+      <div class="space-y-2 text-sm text-gray-800 dark:text-gray-200">
+        <p><strong>Código:</strong> {{ livro.codigoLivro }}</p>
+        <p><strong>Exemplar:</strong> {{ livro.exemplar }}</p>
+        <p><strong>Editora:</strong> {{ livro.editora }}</p>
+        <p><strong>Descrição:</strong> {{ livro.descricao }}</p>
+        <p><strong>Gênero:</strong> {{ livro.Category?.dataValues?.nome || '-' }}</p>
+      </div>
+    </div>
+  </td>
+</tr>
+
     </template>
   </tbody>
 </table>
@@ -354,13 +363,30 @@ async gerarEtiquetaIndividual(index) {
 },
 
 async gerarEtiquetasSelecionadas() {
-  const selecionados = this.livros.filter(l => l.selecionado);
+  const selecionados = this.livrosSelecionados;
+  
   if (selecionados.length === 0) {
     Swal.fire('Atenção', 'Nenhum livro selecionado!', 'warning');
     return;
   }
-  await this.gerarEtiquetasExcel(selecionados);
+
+  const resultado = await Swal.fire({
+    title: `Gerar ${selecionados.length} etiqueta(s)?`,
+    text: "Você deseja continuar?",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Sim, gerar!',
+    cancelButtonText: 'Cancelar'
+  });
+
+  if (resultado.isConfirmed) {
+    await this.gerarEtiquetasExcel(selecionados);
+    Swal.fire('Sucesso!', 'As etiquetas foram geradas.', 'success');
+  }
 },
+
 
 async gerarEtiquetasExcel(livros) {
   const workbook = new ExcelJS.Workbook();

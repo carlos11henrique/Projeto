@@ -32,7 +32,6 @@ Emprestimo.belongsTo(User);
         
         await sequelize.sync({  });
         console.log("Banco sincronizado com sucesso.");
-        sequelize.sync({ alter: true });
 
 
         
