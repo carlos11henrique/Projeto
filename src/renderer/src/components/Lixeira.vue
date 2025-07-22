@@ -1,96 +1,64 @@
 <template>
-    <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
-  <div class="flex flex-wrap gap-2">
-
-     <button 
-      @click="RestaurarSelecionados" 
-      class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm shadow"
-    >
-      Restaurar Selecionados
-    </button>
-    <button 
-      @click="removerSelecionados" 
-      class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm shadow"
-    >
-      Excluir Selecionados
-    </button>
-   
-  </div>
-
   <div>
-    <input
-      v-model="searchQuery"
-      type="text"
-      placeholder="Pesquisar livro..."
-      class="p-2 border border-gray-300 rounded-md w-64 text-sm"
-    />
-  </div>
-</div>
-  <div>
-    <table class="w-full text-[16px] text-gray-700 dark:text-gray-300 table-auto">
-      <thead class="text-base uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-        <tr class="text-center">
-          <th class="px-6 py-4 w-56">
-            <div class="flex items-center justify-center gap-2">
-              <input 
-                type="checkbox"
-                @change="selecionarTodos"
-                :checked="todosSelecionados"
-                class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-              />
-            </div>
-          </th>
-          <th class="px-6 py-4">Código</th>
-          <th class="px-6 py-4">Exemplar</th>
-          <th class="px-6 py-4 max-w-[200px] whitespace-normal break-words text-center">Título</th>
-          <th class="px-6 py-4 max-w-[180px] whitespace-normal break-words text-center">Autor</th>
-          <th class="px-6 py-4 max-w-[160px] whitespace-normal break-words text-center">Gênero</th>
-          <th class="px-6 py-4">Ações</th>
-        </tr>
-      </thead>
+    <!-- Barra de ações -->
+    <div class="flex flex-wrap items-center justify-between mb-6 gap-2">
+      <div class="flex flex-wrap gap-2">
+        <button @click="RestaurarSelecionados" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm shadow">
+          Restaurar Selecionados
+        </button>
+        <button @click="removerSelecionados" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm shadow">
+          Excluir Selecionados
+        </button>
+      </div>
 
-      <tbody>
-        <template v-for="(livro, index) in livrosPaginados" :key="livro.id">
-          <tr 
-            @click="toggleDetalhes(index)" 
-            class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-center"
-          >
-            <td class="px-6 py-4 w-56">
-              <input 
-                type="checkbox" 
-                :value="livro" 
-                v-model="livrosSelecionados" 
-                class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                @click.stop
-              />
-            </td>
-            <td class="px-6 py-4">{{ livro.codigoLivro }}</td>
-            <td class="px-6 py-4">{{ livro.exemplar }}</td>
-            <td class="px-6 py-4 max-w-[200px] break-words">{{ livro.titulo }}</td>
-            <td class="px-6 py-4 max-w-[180px] break-words">{{ livro.autor }}</td>
-            <td class="px-6 py-4 max-w-[160px] break-words">{{ livro.Category?.dataValues?.nome || '-' }}</td>
-            <td class="px-6 py-4 space-x-3">
-            <button @click.stop="removerLivro(index)" class="text-red-600 hover:underline">Remover</button>
-            <button @click.stop="restaurarLivro(index)" class="text-green-600 hover:underline">Restaurar</button>
+      <div>
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Pesquisar livro..."
+          class="p-2 border border-gray-300 rounded-md w-64 text-sm"
+        />
+      </div>
+    </div>
 
-            </td>
-          </tr>
+    <!-- Lista de livros em cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div
+        v-for="(livro, index) in livrosPaginados"
+        :key="livro.id"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 relative cursor-pointer border hover:border-blue-400"
+        @click="toggleDetalhes(index)"
+      >
+        <div class="absolute top-2 left-2">
+          <input
+            type="checkbox"
+            :value="livro"
+            v-model="livrosSelecionados"
+            @click.stop
+            class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+          />
+        </div>
 
-          <!-- Detalhes do livro -->
-          <tr v-if="livroAbertoIndex === index">
-            <td colspan="7" class="bg-gray-100 dark:bg-gray-700 px-6 py-4 text-left">
-              <div v-if="livro.imagem" class="mt-4 flex gap-4 items-center">
-                <img :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="w-32 rounded shadow-lg object-contain" />
-                <div>
-                  <p><strong>Editora:</strong> {{ livro.editora }}</p>
-                  <p><strong>Descrição:</strong> {{ livro.descricao }}</p>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
+        <h2 class="text-lg font-semibold text-center mb-2 break-words">{{ livro.titulo }}</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-300 text-center mb-1"><strong>Código:</strong> {{ livro.codigoLivro }}</p>
+
+        <div v-if="livroAbertoIndex === index" class="mt-4">
+          <div v-if="livro.imagem" class="mb-2 flex justify-center">
+            <img :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="w-24 h-32 object-contain rounded shadow" />
+          </div>
+          <p class="text-sm text-gray-700 dark:text-gray-200"><strong>Editora:</strong> {{ livro.editora }}</p>
+          <p class="text-sm text-gray-700 dark:text-gray-200"><strong>Descrição:</strong> {{ livro.descricao }}</p>
+          <p class="text-sm text-gray-700 dark:text-gray-200"><strong>Exemplar:</strong> {{ livro.exemplar }}</p>
+          <p class="text-sm text-gray-700 dark:text-gray-200"><strong>Autor:</strong> {{ livro.autor }}</p>
+          <p class="text-sm text-gray-700 dark:text-gray-200"><strong>Gênero:</strong> {{ livro.Category?.dataValues?.nome || '-'  }}</p>
+        </div>
+
+        <div class="mt-4 flex justify-center gap-3">
+          <button @click.stop="restaurarLivro(index)" class="text-green-600 hover:underline">Restaurar</button>
+          <button @click.stop="removerLivro(index)" class="text-red-600 hover:underline">Remover</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Paginação -->
     <div class="flex justify-center mt-6">
@@ -131,6 +99,7 @@
   </div>
 </template>
 
+
 <script>
 import Swal from 'sweetalert2';
 
@@ -140,9 +109,11 @@ export default {
     return {
       livros: [],
       livrosSelecionados: [],
+      categorys: [],
+        searchQuery: "",
       livroAbertoIndex: null,
       currentPage: 1,
-      itemsPerPage: 10,
+      itemsPerPage: 20,
     };
   },
 
@@ -190,6 +161,22 @@ export default {
         Swal.fire('Erro', 'Erro ao carregar livros.', 'error');
       }
     },
+   async carregarCategoria() {
+      try {
+        this.categorys = await window.api.getCategoria();
+      } catch (e) {
+        console.error(e);
+      }
+    },
+async carregarUsuario() {
+  try {
+    const usuarios = await window.api.getUsuario();
+    this.usuarios = usuarios.filter(u => u.status === 'invalido');
+  } catch (e) {
+    console.error(e);
+    Swal.fire('Erro', 'Erro ao carregar usuários.', 'error');
+  }
+},
     async restaurarLivro(index) {
   const livro = this.livros[index];
 
