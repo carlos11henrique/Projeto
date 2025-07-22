@@ -1,344 +1,442 @@
 <template>
-  <div>
-    <!-- Barra de ações -->
-    <div class="flex flex-wrap items-center justify-between mb-6 gap-2">
-      <div class="flex flex-wrap gap-2">
-        <button @click="RestaurarSelecionados" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm shadow">
-          Restaurar Selecionados
-        </button>
-        <button @click="removerSelecionados" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm shadow">
-          Excluir Selecionados
-        </button>
-      </div>
+  <div class="p-6 bg-white rounded shadow text-[15px]">
+    <h2 class="text-2xl font-bold mb-6">Lixeira</h2>
 
-      <div>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Pesquisar livro..."
-          class="p-2 border border-gray-300 rounded-md w-64 text-sm"
-        />
-      </div>
+    <!-- Filtros -->
+    <div class="flex flex-wrap gap-4 mb-4">
+      <input v-model="searchTerm" placeholder="Buscar por nome, título, CPF..." class="p-2 border rounded w-60" />
+
+      <select v-model="filtroTipo" class="p-2 border rounded">
+        <option value="">Todos os Tipos</option>
+        <option value="aluno">Aluno</option>
+        <option value="professor">Professor</option>
+        <option value="terceiro">Terceiro</option>
+        <option value="livro">Livro</option>
+      </select>
+
+      <select v-if="['aluno','professor','terceiro'].includes(filtroTipo)" v-model="filtroSerie" class="p-2 border rounded">
+        <option value="">Todas as Séries</option>
+        <option v-for="n in 9" :key="n" :value="n">{{ n }}º ano</option>
+      </select>
+
+      <button @click="restaurarSelecionados" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+        Restaurar Selecionados
+      </button>
+
+      <button @click="excluirSelecionados" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+        Excluir Selecionados
+      </button>
     </div>
 
-    <!-- Lista de livros em cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <!-- Selecionar Todos Usuários -->
+    <div class="flex items-center mb-4" v-if="exibirUsuarios.length > 0">
+      <input
+        type="checkbox"
+        :checked="todosSelecionadosUsuarios"
+        @change="alternarSelecaoTodosUsuarios"
+        class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded mr-2"
+      />
+      <label class="text-gray-700 font-medium">Selecionar Todos Usuários</label>
+    </div>
+
+    <!-- Usuários -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" v-if="exibirUsuarios.length > 0">
       <div
-        v-for="(livro, index) in livrosPaginados"
-        :key="livro.id"
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 relative cursor-pointer border hover:border-blue-400"
-        @click="toggleDetalhes(index)"
+        v-for="(usuario, index) in usuariosPaginated"
+        :key="'usuario-' + usuario.id"
+        @click="usuarioAbertoIndex = usuarioAbertoIndex === index ? null : index"
+        class="relative p-4 border border-gray-300 rounded shadow cursor-pointer hover:shadow-lg transition"
       >
+        <div class="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">Usuário</div>
+
         <div class="absolute top-2 left-2">
           <input
             type="checkbox"
-            :value="livro"
-            v-model="livrosSelecionados"
+            :value="{ tipo: 'usuario', id: usuario.id }"
+            v-model="itensSelecionados"
             @click.stop
-            class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+            class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded"
+          />
+        </div>
+
+        <h2 class="text-lg font-semibold text-center mb-2 break-words">{{ usuario.nome }}</h2>
+        <p class="text-sm text-gray-600 text-center mb-1"><strong>CPF:</strong> {{ usuario.cpf || 'Não informado' }}</p>
+
+        <div v-if="usuarioAbertoIndex === index" class="mt-4 text-gray-700 space-y-1">
+          <p><strong>Tipo:</strong> {{ usuario.tipo }}</p>
+          <p v-if="usuario.tipo === 'aluno'"><strong>Série:</strong> {{ usuario.serie }}º ano</p>
+          <p><strong>Telefone:</strong> {{ usuario.telefone || 'Não informado' }}</p>
+          <p><strong>Série:</strong> {{ usuario.serie || 'Não informado' }}</p>
+          <p><strong>Turma:</strong> {{ usuario.turma || 'Não informado' }}</p>
+        </div>
+
+        <div class="mt-4 flex justify-center gap-3 text-sm">
+          <button @click.stop="restaurarUsuario(usuario.id)" class="text-green-600 hover:underline">Restaurar</button>
+          <button @click.stop="removerUsuario(usuario.id)" class="text-red-600 hover:underline">Remover</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paginação Usuários -->
+    <div class="flex justify-center items-center gap-4 mt-6" v-if="totalPaginasUsuarios > 1">
+      <button
+        :disabled="paginaUsuarios === 1"
+        @click="paginaUsuarios--"
+        class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+      >
+        Anterior
+      </button>
+      <span>Página {{ paginaUsuarios }} de {{ totalPaginasUsuarios }}</span>
+      <button
+        :disabled="paginaUsuarios === totalPaginasUsuarios"
+        @click="paginaUsuarios++"
+        class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+      >
+        Próxima
+      </button>
+    </div>
+
+    <!-- Selecionar Todos Livros -->
+    <div class="flex items-center mb-4 mt-12" v-if="exibirLivros.length > 0">
+      <input
+        type="checkbox"
+        :checked="todosSelecionadosLivros"
+        @change="alternarSelecaoTodosLivros"
+        class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded mr-2"
+      />
+      <label class="text-gray-700 font-medium">Selecionar Todos Livros</label>
+    </div>
+
+    <!-- Livros -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" v-if="exibirLivros.length > 0">
+      <div
+        v-for="(livro, index) in livrosPaginated"
+        :key="'livro-' + livro.id"
+        @click="livroAbertoIndex = livroAbertoIndex === index ? null : index"
+        class="relative p-4 border border-gray-300 rounded shadow cursor-pointer hover:shadow-lg transition"
+      >
+        <div class="absolute top-2 right-2 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">Livro</div>
+
+        <div class="absolute top-2 left-2">
+          <input
+            type="checkbox"
+            :value="{ tipo: 'livro', id: livro.id }"
+            v-model="itensSelecionados"
+            @click.stop
+            class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded"
           />
         </div>
 
         <h2 class="text-lg font-semibold text-center mb-2 break-words">{{ livro.titulo }}</h2>
-        <p class="text-sm text-gray-600 dark:text-gray-300 text-center mb-1"><strong>Código:</strong> {{ livro.codigoLivro }}</p>
+        <p class="text-sm text-gray-600 text-center mb-1"><strong>Código:</strong> {{ livro.codigo }}</p>
 
-        <div v-if="livroAbertoIndex === index" class="mt-4">
-          <div v-if="livro.imagem" class="mb-2 flex justify-center">
-            <img :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="w-24 h-32 object-contain rounded shadow" />
-          </div>
-          <p class="text-sm text-gray-700 dark:text-gray-200"><strong>Editora:</strong> {{ livro.editora }}</p>
-          <p class="text-sm text-gray-700 dark:text-gray-200"><strong>Descrição:</strong> {{ livro.descricao }}</p>
-          <p class="text-sm text-gray-700 dark:text-gray-200"><strong>Exemplar:</strong> {{ livro.exemplar }}</p>
-          <p class="text-sm text-gray-700 dark:text-gray-200"><strong>Autor:</strong> {{ livro.autor }}</p>
-          <p class="text-sm text-gray-700 dark:text-gray-200"><strong>Gênero:</strong> {{ livro.Category?.dataValues?.nome || '-'  }}</p>
+        <div v-if="livroAbertoIndex === index" class="mt-4 text-gray-700 space-y-1">
+          <div v-if="livro.imagem" class="mt-4 flex gap-4 items-center">
+            <img :src="'atom:/' + livro.imagem" alt="Imagem do Livro" class="w-32 rounded shadow-lg object-contain" />
+           </div>
+          <p><strong>Autor:</strong> {{ livro.autor }}</p>
+          <p><strong>Editora:</strong> {{ livro.editora }}</p>
+          <p><strong>Descrição:</strong> {{ livro.descricao }}</p>
+          <p><strong>Exemplar:</strong> {{ livro.exemplar }}</p>
+          <p><strong>Gênero:</strong> {{ livro.Category?.dataValues?.nome || '-' }}</p>
         </div>
 
-        <div class="mt-4 flex justify-center gap-3">
-          <button @click.stop="restaurarLivro(index)" class="text-green-600 hover:underline">Restaurar</button>
-          <button @click.stop="removerLivro(index)" class="text-red-600 hover:underline">Remover</button>
+        <div class="mt-4 flex justify-center gap-3 text-sm">
+          <button @click.stop="restaurarLivro(livro.id)" class="text-green-600 hover:underline">Restaurar</button>
+          <button @click.stop="removerLivro(livro.id)" class="text-red-600 hover:underline">Remover</button>
         </div>
       </div>
     </div>
 
-    <!-- Paginação -->
-    <div class="flex justify-center mt-6">
-      <nav class="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-        <button
-          @click="prevPage"
-          :disabled="currentPage === 1"
-          class="relative inline-flex items-center px-3 py-2 text-sm font-medium border border-gray-300 rounded-l-md bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-          Anterior
-        </button>
-
-        <button
-          v-for="page in paginasVisiveis"
-          :key="page"
-          @click="setPage(page)"
-          class="relative inline-flex items-center px-4 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700"
-          :class="{ 'z-10 bg-blue-600 text-white': currentPage === page }"
-        >
-          {{ page }}
-        </button>
-
-        <button
-          @click="nextPage"
-          :disabled="currentPage === totalPages"
-          class="relative inline-flex items-center px-3 py-2 text-sm font-medium border border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700"
-        >
-          Próxima
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </nav>
+    <!-- Paginação Livros -->
+    <div class="flex justify-center items-center gap-4 mt-6" v-if="totalPaginasLivros > 1">
+      <button
+        :disabled="paginaLivros === 1"
+        @click="paginaLivros--"
+        class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+      >
+        Anterior
+      </button>
+      <span>Página {{ paginaLivros }} de {{ totalPaginasLivros }}</span>
+      <button
+        :disabled="paginaLivros === totalPaginasLivros"
+        @click="paginaLivros++"
+        class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+      >
+        Próxima
+      </button>
     </div>
   </div>
 </template>
 
-
 <script>
-import Swal from 'sweetalert2';
-
+  import Swal from "sweetalert2";
 export default {
   name: "Lixeira",
   data() {
     return {
+      usuarios: [],
       livros: [],
-      livrosSelecionados: [],
-      categorys: [],
-        searchQuery: "",
+      selecionados: [],
+      itensSelecionados: [],
+      filtroTipo: "",
+      filtroSerie: "",
+      searchTerm: "",
+      usuarioAbertoIndex: null,
       livroAbertoIndex: null,
-      currentPage: 1,
-      itemsPerPage: 20,
+      paginaUsuarios: 1,
+      paginaLivros: 1,
+      itensPorPagina: 9,
     };
   },
-
-  mounted() {
-    this.carregarLivro();
-  },
-
   computed: {
-    totalPages() {
-      return Math.ceil(this.livros.length / this.itemsPerPage);
-    },
-    livrosPaginados() {
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      return this.livros.slice(start, end);
-    },
-    todosSelecionados() {
-      return this.livrosSelecionados.length === this.livros.length && this.livros.length > 0;
-    },
-    paginasVisiveis() {
-      const total = this.totalPages;
-      let pages = [];
-      for(let i = 1; i <= total; i++) {
-        pages.push(i);
+    // Filtra usuários ativos inválidos e com filtros aplicados
+    exibirUsuarios() {
+      let filtrados = this.usuarios.filter(u => u.status === "invalido");
+
+      if (this.filtroTipo && ["aluno","professor","terceiro"].includes(this.filtroTipo)) {
+        filtrados = filtrados.filter(u => u.tipo === this.filtroTipo);
+      } else if(this.filtroTipo && this.filtroTipo !== "livro") {
+        // Se filtroTipo não é livro nem usuario válido, não mostra usuários
+        filtrados = [];
       }
-      return pages;
-    }
+
+      if (this.filtroSerie && this.filtroSerie !== "") {
+        filtrados = filtrados.filter(u => u.serie == this.filtroSerie);
+      }
+
+      if(this.searchTerm) {
+        const term = this.searchTerm.toLowerCase();
+        filtrados = filtrados.filter(u =>
+          (u.nome && u.nome.toLowerCase().includes(term)) ||
+          (u.cpf && u.cpf.toLowerCase().includes(term))
+        );
+      }
+      return filtrados;
+    },
+    // Filtra livros inválidos com filtros aplicados
+    exibirLivros() {
+      let filtrados = this.livros.filter(l => l.status === "invalido");
+
+      if (this.filtroTipo === "livro" || this.filtroTipo === "") {
+        // mostra livros quando filtroTipo é livro ou vazio (todos)
+      } else {
+        // se filtroTipo não é livro, não mostra livros
+        filtrados = [];
+      }
+
+      if(this.searchTerm) {
+        const term = this.searchTerm.toLowerCase();
+        filtrados = filtrados.filter(l =>
+          (l.titulo && l.titulo.toLowerCase().includes(term)) ||
+          (l.codigo && l.codigo.toLowerCase().includes(term))
+        );
+      }
+
+      return filtrados;
+    },
+
+    // Paginação usuários
+    totalPaginasUsuarios() {
+      return Math.max(1, Math.ceil(this.exibirUsuarios.length / this.itensPorPagina));
+    },
+    usuariosPaginated() {
+      const start = (this.paginaUsuarios - 1) * this.itensPorPagina;
+      return this.exibirUsuarios.slice(start, start + this.itensPorPagina);
+    },
+
+    // Paginação livros
+    totalPaginasLivros() {
+      return Math.max(1, Math.ceil(this.exibirLivros.length / this.itensPorPagina));
+    },
+    livrosPaginated() {
+      const start = (this.paginaLivros - 1) * this.itensPorPagina;
+      return this.exibirLivros.slice(start, start + this.itensPorPagina);
+    },
+
+    // Seleção total para usuários
+    todosSelecionadosUsuarios() {
+      const idsVisiveis = this.usuariosPaginated.map(u => `usuario-${u.id}`);
+      const selecionados = this.itensSelecionados.map(i => `${i.tipo}-${i.id}`);
+      return idsVisiveis.every(id => selecionados.includes(id)) && idsVisiveis.length > 0;
+    },
+
+    // Seleção total para livros
+    todosSelecionadosLivros() {
+      const idsVisiveis = this.livrosPaginated.map(l => `livro-${l.id}`);
+      const selecionados = this.itensSelecionados.map(i => `${i.tipo}-${i.id}`);
+      return idsVisiveis.every(id => selecionados.includes(id)) && idsVisiveis.length > 0;
+    },
   },
-
+  watch: {
+    filtroTipo() {
+      this.paginaUsuarios = 1;
+      this.paginaLivros = 1;
+      this.itensSelecionados = [];
+    },
+    filtroSerie() {
+      this.paginaUsuarios = 1;
+      this.itensSelecionados = [];
+    },
+    searchTerm() {
+      this.paginaUsuarios = 1;
+      this.paginaLivros = 1;
+    },
+  },
   methods: {
-    async carregarLivro() {
-      try {
-        const livros = await window.api.getLivro();
-
-        // Filtra só os livros inválidos
-        const livrosInvalidos = livros.filter(l => l.status === 'invalido');
-
-        this.livros = livrosInvalidos.map(l => ({
-          ...l,
-          selecionado: false,
-          mostrarDetalhes: false
-        }));
-      } catch (e) {
-        console.error(e);
-        Swal.fire('Erro', 'Erro ao carregar livros.', 'error');
-      }
-    },
-   async carregarCategoria() {
-      try {
-        this.categorys = await window.api.getCategoria();
-      } catch (e) {
-        console.error(e);
-      }
-    },
-async carregarUsuario() {
+  async carregarDados() {
   try {
-    const usuarios = await window.api.getUsuario();
-    this.usuarios = usuarios.filter(u => u.status === 'invalido');
-  } catch (e) {
-    console.error(e);
-    Swal.fire('Erro', 'Erro ao carregar usuários.', 'error');
+    const [usuarios, livros] = await Promise.all([
+      window.api.getUser(),
+      window.api.getLivro()
+    ]);
+    // Filtra só os com status "invalido"
+    this.usuarios = usuarios.filter(u => u.status === "invalido");
+    this.livros = livros.filter(l => l.status === "invalido");
+  } catch (error) {
+    console.error("Erro ao carregar dados:", error);
   }
 },
-    async restaurarLivro(index) {
-  const livro = this.livros[index];
 
-  const confirmacao = await Swal.fire({
-    title: 'Deseja restaurar este livro?',
-    text: `Título: ${livro.titulo}`,
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonText: 'Sim, restaurar',
-    cancelButtonText: 'Cancelar'
+
+    async restaurarSelecionados() {
+      if (this.itensSelecionados.length === 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Nenhum item selecionado',
+          text: 'Selecione ao menos um item para restaurar.',
+        });
+        return;
+      }
+
+      for (const item of this.itensSelecionados) {
+        if (item.tipo === 'usuario') {
+          await window.api.updateUser(item.id, 'ativo');
+        } else if (item.tipo === 'livro') {
+          await window.api.updateLivro(item.id, 'ativo');
+        }
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Restaurado!',
+        text: 'Itens selecionados foram restaurados com sucesso.',
+      });
+
+      this.itensSelecionados = [];
+      this.carregarDados();
+    },
+
+async restaurarSelecionados() {
+  if (this.itensSelecionados.length === 0) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Nenhum item selecionado',
+      text: 'Selecione ao menos um item para restaurar.',
+    });
+    return;
+  }
+
+  for (const item of this.itensSelecionados) {
+    if (item.tipo === 'usuario') {
+      // Enviando objeto com id e status para atualização
+      await window.api.updateUser({ id: item.id, status: 'ativo' });
+    } else if (item.tipo === 'livro') {
+      // Mesma lógica para livro
+      await window.api.updateLivro({ id: item.id, status: 'ativo' });
+    }
+  }
+
+  Swal.fire({
+    icon: 'success',
+    title: 'Restaurado!',
+    text: 'Itens selecionados foram restaurados com sucesso.',
   });
 
-  if (!confirmacao.isConfirmed) return;
+  this.itensSelecionados = [];
+  this.carregarDados();
+},
 
-  try {
-    const copiaLivro = JSON.parse(JSON.stringify(livro));
-    copiaLivro.status = 'valido';
-    await window.api.updateLivro(copiaLivro);
 
-    Swal.fire('Restaurado!', 'Livro restaurado com sucesso.', 'success');
-    this.carregarLivro();
-  } catch (e) {
-    console.error(e);
-    Swal.fire('Erro', 'Erro ao restaurar o livro.', 'error');
-  }
+async restaurarLivro(id) {
+  const livroAtualizado = { id, status: 'ativo' };
+  const result = await window.api.updateLivro(livroAtualizado);
+  console.log('Resultado updateLivro:', result);
+  Swal.fire('Livro restaurado!', '', 'success');
+  this.carregarDados();
 },
 
 
 
-async RestaurarSelecionados() {
-  try {
-    if (!this.livrosSelecionados || this.livrosSelecionados.length === 0) {
-      return Swal.fire('Atenção', 'Nenhum livro selecionado.', 'warning');
-    }
 
-    const confirmacao = await Swal.fire({
-      title: 'Deseja restaurar os livros selecionados?',
-      text: `Você está prestes a restaurar ${this.livrosSelecionados.length} livro(s).`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Sim, restaurar',
-      cancelButtonText: 'Cancelar'
-    });
-
-    if (!confirmacao.isConfirmed) return;
-
-    for (const livro of this.livrosSelecionados) {
-      const copiaLivro = JSON.parse(JSON.stringify({ ...livro, status: 'valido' }));
-      await window.api.updateLivro(copiaLivro);
-    }
-
-    Swal.fire('Restaurado!', 'Livro(s) restaurado(s) com sucesso.', 'success');
-
-    this.livrosSelecionados = [];
-    await this.carregarLivro();
-
-  } catch (error) {
-    console.error('Erro ao restaurar livros:', error);
-    Swal.fire('Erro!', 'Não foi possível restaurar os livros.', 'error');
-  }
-},
- 
- async removerLivro(index) {
-    const confirm = await Swal.fire({
-      title: 'Remover livro da lixeira?',
-      text: 'Essa ação é permanente e não poderá ser desfeita!',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sim, remover',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-      backdrop: true,
-    });
-
-    if (confirm.isConfirmed) {
-      try {
-        // Remove da lista (caso esteja só no frontend)
-        this.livrosInvalidos.splice(index, 1);
-
-        await Swal.fire({
-          title: 'Removido!',
-          text: 'O livro foi removido da lixeira.',
-          icon: 'success',
-          timer: 1800,
-          showConfirmButton: false,
-        });
-      } catch (error) {
-        console.error(error);
-        Swal.fire('Erro!', 'Não foi possível remover o livro.', 'error');
-      }
-    } else {
-      Swal.fire({
-        title: 'Cancelado',
-        text: 'Nenhum livro foi removido.',
-        icon: 'info',
-        timer: 1500,
-        showConfirmButton: false,
+    async removerUsuario(id) {
+      const result = await Swal.fire({
+        title: 'Tem certeza?',
+        text: 'Esta ação removerá permanentemente o usuário.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, remover',
+        cancelButtonText: 'Cancelar',
       });
-    }
-  },
 
-    async removerSelecionados() {
-      try {
-        if (!this.livrosSelecionados || this.livrosSelecionados.length === 0) {
-          return Swal.fire('Atenção', 'Nenhum livro selecionado.', 'warning');
-        }
+      if (result.isConfirmed) {
+        await window.api.deleteUser(id);
+        Swal.fire('Removido!', 'O usuário foi excluído.', 'success');
+        this.carregarDados();
+      }
+    },
 
-        const confirmacao = await Swal.fire({
-          title: 'Deseja excluir os livros selecionados?',
-          text: `Você está prestes a excluir ${this.livrosSelecionados.length} livro(s).`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Sim, excluir',
-          cancelButtonText: 'Cancelar'
+async restaurarUsuario(id) {
+  const result = await window.api.updateUser(id, 'ativo');
+  console.log('Resultado updateUser:', result);
+  Swal.fire('Usuário restaurado!', '', 'success');
+  this.carregarDados();
+},
+
+
+    async removerLivro(id) {
+      const result = await Swal.fire({
+        title: 'Tem certeza?',
+        text: 'Esta ação removerá permanentemente o livro.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, remover',
+        cancelButtonText: 'Cancelar',
+      });
+
+      if (result.isConfirmed) {
+        await window.api.deleteLivro(id);
+        Swal.fire('Removido!', 'O livro foi excluído.', 'success');
+        this.carregarDados();
+      }
+    },
+
+    alternarSelecaoTodosUsuarios(e) {
+      if (e.target.checked) {
+        // Adiciona todos os usuários da página aos selecionados (evita duplicatas)
+        this.usuariosPaginated.forEach(u => {
+          const existe = this.itensSelecionados.find(i => i.tipo === 'usuario' && i.id === u.id);
+          if (!existe) this.itensSelecionados.push({ tipo: 'usuario', id: u.id });
         });
-
-        if (!confirmacao.isConfirmed) return;
-
-        for (const livro of this.livrosSelecionados) {
-          await window.api.deleteLivro(livro.id);
-        }
-
-        Swal.fire('Excluído!', 'Livro(s) excluído(s) com sucesso.', 'success');
-
-        this.livrosSelecionados = [];
-        await this.carregarLivro();
-
-      } catch (error) {
-        console.error('Erro ao excluir livros:', error);
-        Swal.fire('Erro!', 'Não foi possível excluir os livros.', 'error');
-      }
-    },
-    
-
-
-    toggleDetalhes(index) {
-      this.livroAbertoIndex = this.livroAbertoIndex === index ? null : index;
-    },
-
-    selecionarTodos(event) {
-      if (event.target.checked) {
-        this.livrosSelecionados = [...this.livros];
       } else {
-        this.livrosSelecionados = [];
+        // Remove todos os usuários da página dos selecionados
+        this.itensSelecionados = this.itensSelecionados.filter(i => !(i.tipo === 'usuario' && this.usuariosPaginated.some(u => u.id === i.id)));
       }
     },
 
-    prevPage() {
-      if (this.currentPage > 1) this.currentPage--;
+    alternarSelecaoTodosLivros(e) {
+      if (e.target.checked) {
+        this.livrosPaginated.forEach(l => {
+          const existe = this.itensSelecionados.find(i => i.tipo === 'livro' && i.id === l.id);
+          if (!existe) this.itensSelecionados.push({ tipo: 'livro', id: l.id });
+        });
+      } else {
+        this.itensSelecionados = this.itensSelecionados.filter(i => !(i.tipo === 'livro' && this.livrosPaginated.some(l => l.id === i.id)));
+      }
     },
-
-    nextPage() {
-      if (this.currentPage < this.totalPages) this.currentPage++;
-    },
-
-    setPage(page) {
-      this.currentPage = page;
-    },
-
-
-  }
+  },
+  mounted() {
+    this.carregarDados();
+  },
 };
 </script>
