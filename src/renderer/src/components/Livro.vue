@@ -192,21 +192,22 @@
 
     <!-- Campos de Edição -->
     <div class="flex flex-col gap-3">
+      <p>Título</p>
       <input v-model="livroEditando.titulo" type="text" placeholder="Título"
         class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-
+<p>Autor</p>
       <input v-model="livroEditando.autor" type="text" placeholder="Autor"
         class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-
+<p>Gênero</p>
       <input v-model="livroEditando.genero" type="text" placeholder="Gênero"
         class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-
+<p>Exemplar</p>
       <input v-model="livroEditando.exemplar" type="number" placeholder="Exemplar"
         class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-
+<p>Descrição</p>
       <textarea v-model="livroEditando.descricao" placeholder="Descrição" rows="3"
         class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
-
+<p>IMG</p>
       <input type="file" @change="handleUploadImagemEdicao"
         class="p-2 border border-gray-300 rounded-lg file:mr-3 file:py-1 file:px-3 file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer" />
     </div>
@@ -600,7 +601,35 @@ async salvarEdicao() {
     Swal.fire('Erro', 'Erro ao salvar livro', 'error');
   }
 },
+// ...existing code...
+async removerLivro(index) {
+  try {
+    const livro = this.filteredLivro[index];
+    if (!livro) return;
 
+    const confirmacao = await Swal.fire({
+      title: 'Tem certeza?',
+      text: `Você deseja mover o livro "${livro.titulo}" para a lixeira?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, mover',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!confirmacao.isConfirmed) return;
+
+    const copiaLivro = JSON.parse(JSON.stringify(livro));
+    copiaLivro.status = 'invalido';
+    await window.api.updateLivro(copiaLivro);
+
+    Swal.fire('Movido!', 'Livro enviado para a lixeira com sucesso.', 'success');
+    this.carregarLivro();
+  } catch (error) {
+    console.error('Erro ao mover livro para lixeira:', error);
+    Swal.fire('Erro!', 'Não foi possível mover o livro para a lixeira.', 'error');
+  }
+},
+// ...existing code...
 async removerSelecionados() {
   try {
     if (!this.livrosSelecionados || this.livrosSelecionados.length === 0) {
