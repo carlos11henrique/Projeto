@@ -322,7 +322,8 @@ computed: {
     const filtrados = this.livros.filter(livro =>
       (livro.titulo?.toLowerCase() || '').includes(query) ||
       (livro.autor?.toLowerCase() || '').includes(query) ||
-      (livro.codigoLivro?.toLowerCase() || '').includes(query)
+      (livro.codigoLivro?.toLowerCase() || '').includes(query) ||
+      (livro.category?.dataValues?.nome?.toLowerCase() || '').includes(query)
     );
 
     return filtrados.sort((a, b) => {
@@ -456,9 +457,9 @@ async gerarEtiquetasExcel(livros) {
   const worksheet = workbook.addWorksheet('Etiquetas');
 
   worksheet.columns = [
-    { header: 'Código', key: 'codigo', width: 20 },
-    { header: 'Exemplar', key: 'exemplar', width: 10 },
-    { header: 'Gênero', key: 'genero', width: 30 },
+    { key: 'codigo', width: 20 },
+    {  key: 'exemplar', width: 10 },
+    {  key: 'genero', width: 30 },
     {},
   ];
 
