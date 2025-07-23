@@ -20,15 +20,16 @@
 
         <div>
           <label for="genero" class="block mb-2 text-sm font-medium text-gray-900">Gênero</label>
-          <input
-            :value="getNomeCategoria(novoLivro.categoryId)"
-            @input="atualizarCategoriaPorNome($event.target.value)"
-            list="listaCategorias"
-            id="genero"
-            name="genero"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-            placeholder="Digite ou selecione um gênero"
-          />
+      <input
+  v-model="generoDigitado"
+  @change="definirCategoriaDoNovoLivro(generoDigitado)"
+  list="listaCategorias"
+  id="genero"
+  name="genero"
+  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+  placeholder="Digite ou selecione um gênero"
+/>
+
           <datalist id="listaCategorias">
             <option v-for="cat in categorys" :key="cat.id" :value="cat.nome"></option>
           </datalist>
@@ -289,9 +290,11 @@ export default {
       novoLivro: {
         titulo: "", codigoLivro: "", autor: "", editora: "",
         categoryId: 0, descricao: "", exemplar: "", quantidade: 0,
-        imagem: "", imagemOriginal: ""
+        imagem: "", imagemOriginal: "",generoDigitado: '',
+
       },
       livros: [],
+      categorias: [],
        livroEditando: {},
       mostrarModalEdicao: false,  // controla se o modal está visível
     livroEditando: null, 
@@ -365,6 +368,7 @@ todosSelecionados() {
     }
   },
   methods: {
+
 selecionarTodos(event) {
     const selecionado = event.target.checked;
 
@@ -544,6 +548,12 @@ async verificarLivroExistente(titulo) {
     }
   },
 
+
+  definirCategoriaDoNovoLivro(nome) {
+  const categoria = this.categorys.find(c => c.nome === nome);
+  this.novoLivro.categoryId = categoria ? categoria.id : null;
+},
+
 async adicionarLivro() {
   if (this.editando) return;
 
@@ -596,23 +606,39 @@ console.log(this.novoLivro);
 
 // Vue
 async salvarEdicao() {
-  try {
-    const livroParaSalvar = { ...this.livroEditando };
+  if (!this.livroEditando.id) return;
 
-    if (livroParaSalvar.imagem instanceof File) {
-      delete livroParaSalvar.imagem;
-    }
+  const confirm = await Swal.fire({
+    title: 'Confirmar edição?',
+    text: 'Deseja salvar as alterações no livro?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sim',
+    cancelButtonText: 'Cancelar'
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  try {
+    const categoria = this.categorias.find(c => c.nome.toLowerCase() === this.generoDigitado.toLowerCase());
+    this.livroEditando.CategoryId = categoria?.id || null;
+
+    // Transforma o objeto reativo em objeto plano antes de enviar
+    const livroParaSalvar = JSON.parse(JSON.stringify(this.livroEditando));
 
     await window.api.updateLivro(livroParaSalvar);
 
-    Swal.fire('Sucesso', 'Livro atualizado com sucesso!', 'success');
-    this.mostrarModalEdicao = false;
+    this.modalAberto = false;
     this.carregarLivro();
+    Swal.fire('Sucesso', 'Livro atualizado com sucesso!', 'success');
   } catch (error) {
     console.error('Erro ao salvar edição:', error);
-    Swal.fire('Erro', 'Erro ao salvar livro', 'error');
+    Swal.fire('Erro', 'Falha ao atualizar o livro', 'error');
   }
 },
+
+
+
 // ...existing code...
 async removerLivro(index) {
   try {
@@ -709,6 +735,7 @@ async removerSelecionados() {
       this.editando = false;
       this.indexEdicao = null;
       this.currentPage = 1;
+      this.generoDigitado = '';
     }
   },
   mounted() {
