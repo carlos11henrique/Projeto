@@ -140,7 +140,7 @@
         <td class="px-6 py-4">{{ livro.exemplar }}</td>
         <td class="px-6 py-4 max-w-[200px] break-words">{{ livro.titulo }}</td>
         <td class="px-6 py-4 max-w-[180px] break-words">{{ livro.autor }}</td>
-        <td class="px-6 py-4 max-w-[160px] break-words">{{ livro.Category?.dataValues?.nome || '-' }}</td>
+      <td class="px-6 py-4">{{ livro.Category?.dataValues?.nome || '-' }}</td>
         <td class="px-6 py-4 space-x-3">
 <button @click="abrirModalEdicao(livro)" class="text-blue-600 hover:underline">
   Editar
@@ -199,8 +199,18 @@
       <input v-model="livroEditando.autor" type="text" placeholder="Autor"
         class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
 <p>Gênero</p>
-      <input v-model="livroEditando.genero" type="text" placeholder="Gênero"
-        class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+<input
+  :value="getNomeCategoria(livroEditando.categoryId)"
+  @input="atualizarCategoriaEdicaoPorNome($event.target.value)"
+  list="listaCategorias"
+  type="text"
+  placeholder="Digite ou selecione um gênero"
+  class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+/>
+<datalist id="listaCategorias">
+  <option v-for="cat in categorys" :key="cat.id" :value="cat.nome"></option>
+</datalist>
+
 <p>Exemplar</p>
       <input v-model="livroEditando.exemplar" type="number" placeholder="Exemplar"
         class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
@@ -405,10 +415,11 @@ selecionarTodos(event) {
       const cat = this.categorys.find(c => c.id === id);
       return cat ? cat.nome : '';
     },
-    atualizarCategoriaPorNome(nome) {
-      const cat = this.categorys.find(c => c.nome === nome);
-      this.novoLivro.categoryId = cat ? cat.id : 0;
-    },
+atualizarCategoriaEdicaoPorNome(nome) {
+    const cat = this.categorys.find(c => c.nome === nome);
+    this.livroEditando.categoryId = cat ? cat.id : 0;
+},
+
 async gerarEtiquetaIndividual(index) {
   const livro = this.filteredLivro[index];
   await this.gerarEtiquetasExcel([livro]);

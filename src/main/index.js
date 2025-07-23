@@ -84,10 +84,11 @@ app.whenReady().then(() => {
 ipcMain.handle('getQuantidadeUsuarios', async () => {
   try {
     const [results] = await sequelize.query(`
-   SELECT COUNT(*) AS Usuarios
+      SELECT COUNT(*) AS Usuarios
       FROM Users
+      WHERE status = 'valido'
     `);
-    return results[0]; // { totalLivros: Y }
+    return results[0];
   } catch (error) {
     console.error('Erro ao buscar quantidade de users:', error);
     return { error: 'Erro ao buscar dados' };
@@ -127,29 +128,29 @@ ipcMain.handle('getQuantidadeLivros', async () => {
 
   ipcMain.handle('getRankingUsuariosEmprestimos', async () => {
   try {
-    const [results, metadata] = await sequelize.query(`
- SELECT 
-  u.id,
-  u.nome,
-  COUNT(l.id) AS totalEmprestimos
-FROM 
-  Users u
-JOIN 
-  Loans l ON u.id = l.UserId
-GROUP BY 
-  u.id, u.nome
-ORDER BY 
-  totalEmprestimos DESC
-LIMIT 5;
-
+    const [results] = await sequelize.query(`
+      SELECT 
+        u.id,
+        u.nome,
+        COUNT(l.id) AS totalEmprestimos
+      FROM 
+        Users u
+      JOIN 
+        Loans l ON u.id = l.UserId
+      WHERE u.status = 'valido'
+      GROUP BY 
+        u.id, u.nome
+      ORDER BY 
+        totalEmprestimos DESC
+      LIMIT 5;
     `);
-
-    return results; // já retorna como array de objetos [{ id, nome, totalEmprestimos }]
+    return results;
   } catch (error) {
     console.error('Erro ao buscar ranking de usuários:', error);
     return { error: 'Erro ao buscar dados' };
   }
 });
+
 
   
 // Evolução dos Empréstimos por Mês
@@ -200,9 +201,9 @@ ipcMain.handle('getPercentualUsuarios', async () => {
       SELECT Users.tipo AS tipo_usuario, COUNT(*) AS total
       FROM Loans
       JOIN Users ON Loans.UserId = Users.id
-      GROUP BY Users.tipo;
+      WHERE Users.status = 'valido'
+      GROUP BY Users.tipo
       LIMIT 5;
-
     `);
     return results;
   } catch (err) {
@@ -241,8 +242,8 @@ ipcMain.handle('getTempoMedioUsuario', async () => {
         Users.tipo AS tipo_usuario,
         ROUND(AVG(JULIANDAY(dataDevolucao) - JULIANDAY(dataEmprestimo)), 2) AS media_dias
       FROM Loans
-      JOIN Users ON Loans.userId = Users.id
-      WHERE dataDevolucao IS NOT NULL
+      JOIN Users ON Loans.UserId = Users.id
+      WHERE dataDevolucao IS NOT NULL AND Users.status = 'valido'
       GROUP BY Users.tipo;
     `);
     return results;
@@ -251,6 +252,7 @@ ipcMain.handle('getTempoMedioUsuario', async () => {
     throw err;
   }
 });
+
 
 // Livros Mais Populares
 ipcMain.handle('getLivrosPopulares', async () => {
@@ -437,14 +439,19 @@ ipcMain.on('createLivrosEmMassa', async (event, livros) => {
 
 
 
-  ipcMain.on('updateLivro', async (event, book) => {
-    try {
-      await LivroModel.update(book, { where: { id: book.id } });
-      console.log('Livro atualizado com sucesso');
-    } catch (error) {
-      handleError(event, error, 'updateLivro');
+ipcMain.on('updateLivro', async (event, book) => {
+  try {
+    const livroPlain = JSON.parse(JSON.stringify(book));
+    if (livroPlain.categoryId && !livroPlain.CategoryId) {
+      livroPlain.CategoryId = livroPlain.categoryId;
+      delete livroPlain.categoryId;
     }
-  });
+    await LivroModel.update(livroPlain, { where: { id: livroPlain.id } });
+    console.log('Livro atualizado com sucesso');
+  } catch (error) {
+    handleError(event, error, 'updateLivro');
+  }
+});
   
 ipcMain.on('deleteLivro', async (event, id) => {
   try {
