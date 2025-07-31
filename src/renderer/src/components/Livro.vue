@@ -320,18 +320,25 @@ export default {
   },
 computed: {
   livrosComFiltro() {
-    const query = this.searchQuery?.toLowerCase() || '';
+    function removeAcentos(str) {
+      return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+    }
+
+    const query = removeAcentos(this.searchQuery || '');
 
     const filtrados = this.livros.filter(livro =>
-      (livro.titulo?.toLowerCase() || '').includes(query) ||
-      (livro.autor?.toLowerCase() || '').includes(query) ||
-      (livro.codigoLivro?.toLowerCase() || '').includes(query) ||
-      (livro.category?.dataValues?.nome?.toLowerCase() || '').includes(query)
+      removeAcentos(livro.titulo || '').includes(query) ||
+      removeAcentos(livro.autor || '').includes(query) ||
+      removeAcentos(livro.codigoLivro || '').includes(query) ||
+      removeAcentos(livro.category?.dataValues?.nome || '').includes(query)
     );
 
     return filtrados.sort((a, b) => {
-      const tituloA = a.titulo?.toLowerCase() || '';
-      const tituloB = b.titulo?.toLowerCase() || '';
+      const tituloA = removeAcentos(a.titulo || '');
+      const tituloB = removeAcentos(b.titulo || '');
 
       if (tituloA !== tituloB) {
         return tituloA.localeCompare(tituloB);
@@ -340,6 +347,7 @@ computed: {
       return (Number(a.exemplar) || 0) - (Number(b.exemplar) || 0);
     });
   },
+
 
   filteredLivro() {
     const start = (this.currentPage - 1) * this.itemsPerPage;
