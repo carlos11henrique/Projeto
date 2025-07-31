@@ -86,7 +86,6 @@ ipcMain.handle('getQuantidadeUsuarios', async () => {
     const [results] = await sequelize.query(`
       SELECT COUNT(*) AS Usuarios
       FROM Users
-      WHERE status = 'valido'
     `);
     return results[0];
   } catch (error) {
@@ -137,7 +136,6 @@ ipcMain.handle('getQuantidadeLivros', async () => {
         Users u
       JOIN 
         Loans l ON u.id = l.UserId
-      WHERE u.status = 'valido'
       GROUP BY 
         u.id, u.nome
       ORDER BY 
@@ -177,11 +175,13 @@ ipcMain.handle('getEvolucaoEmprestimos', async () => {
 ipcMain.handle('getEmprestimosCategoria', async () => {
   try {
     const [results] = await sequelize.query(`
-   SELECT Categories.nome AS categoria, COUNT(*) AS total
+SELECT 
+  COALESCE(Categories.nome, 'Sem Categoria') AS categoria, 
+  COUNT(*) AS total
 FROM Loans
 JOIN Books ON Loans.BookId = Books.id
-JOIN Categories ON Books.CategoryId = Categories.id
-GROUP BY Categories.nome
+LEFT JOIN Categories ON Books.CategoryId = Categories.id
+GROUP BY categoria
 ORDER BY total DESC
 LIMIT 5;
 
@@ -198,10 +198,9 @@ LIMIT 5;
 ipcMain.handle('getPercentualUsuarios', async () => {
   try {
     const [results] = await sequelize.query(`
-      SELECT Users.tipo AS tipo_usuario, COUNT(*) AS total
+    SELECT Users.tipo AS tipo_usuario, COUNT(*) AS total
       FROM Loans
       JOIN Users ON Loans.UserId = Users.id
-      WHERE Users.status = 'valido'
       GROUP BY Users.tipo
       LIMIT 5;
     `);
@@ -238,13 +237,13 @@ ipcMain.handle('getDevolucoesPrazo', async () => {
 ipcMain.handle('getTempoMedioUsuario', async () => {
   try {
     const [results] = await sequelize.query(`
-      SELECT 
-        Users.tipo AS tipo_usuario,
-        ROUND(AVG(JULIANDAY(dataDevolucao) - JULIANDAY(dataEmprestimo)), 2) AS media_dias
-      FROM Loans
-      JOIN Users ON Loans.UserId = Users.id
-      WHERE dataDevolucao IS NOT NULL AND Users.status = 'valido'
-      GROUP BY Users.tipo;
+SELECT 
+  Users.tipo AS tipo_usuario,
+  ROUND(AVG(JULIANDAY(dataDevolucao) - JULIANDAY(dataEmprestimo)), 2) AS media_dias
+FROM Loans
+JOIN Users ON Loans.UserId = Users.id
+WHERE dataDevolucao IS NOT NULL
+GROUP BY Users.tipo;
     `);
     return results;
   } catch (err) {
