@@ -10,8 +10,10 @@ const api = {
   getLivro: () => ipcRenderer.invoke('getLivro'),
   buscarLivroPorTitulo: (titulo) => ipcRenderer.invoke('buscarLivroPorTitulo', titulo),
   buscarUltimoExemplar: (livroId) => ipcRenderer.invoke('buscarUltimoExemplar', livroId),
+  buscarLivrosPorCodigoLivro: (codigoLivro) => ipcRenderer.invoke('buscarLivrosPorCodigoLivro', codigoLivro),
+  createLivrosEmMassa: (livros) => ipcRenderer.send('createLivrosEmMassa', livros),
 
-createLivrosEmMassa: (livros) => ipcRenderer.send('createLivrosEmMassa', livros),
+
   createEmprestimo: (emprestimo) => ipcRenderer.send('createEmprestimo', emprestimo),
   updateEmprestimo: (emprestimo) => ipcRenderer.send('updateEmprestimo', emprestimo),
   deleteEmprestimo: (id) => ipcRenderer.send('deleteEmprestimo', id),
@@ -32,7 +34,7 @@ createLivrosEmMassa: (livros) => ipcRenderer.send('createLivrosEmMassa', livros)
 
 
 
-    getPathInput: (input) =>  webUtils.getPathForFile(input.files[0]),
+  getPathInput: (input) =>  webUtils.getPathForFile(input.files[0]),
   getQuantidadeEmprestimos: () => ipcRenderer.invoke('getQuantidadeEmprestimos'),
   getQuantidadeUsuarios: () => ipcRenderer.invoke('getQuantidadeUsuarios'),
   getQuantidadeLivros: () => ipcRenderer.invoke('getQuantidadeLivros'),

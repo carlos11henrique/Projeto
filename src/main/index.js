@@ -520,6 +520,19 @@ ipcMain.handle('buscarLivroPorTitulo', async (event, titulo) => {
   }
 });
 
+ipcMain.handle('buscarLivrosPorCodigoLivro', async (event, codigoLivro) => {
+  try {
+    const livros = await LivroModel.findAll({
+      where: { codigoLivro },
+      include: CategoriaModel
+    });
+    return livros.map(l => l.dataValues);
+  } catch (error) {
+    console.error('Erro ao buscar livros por códigoLivro:', error);
+    return [];
+  }
+});
+
 
 ipcMain.handle('buscarUltimoExemplar', async (event, titulo) => {
   try {

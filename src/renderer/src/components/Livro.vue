@@ -306,18 +306,21 @@ export default {
       indexEdicao: null,
       currentPage: 1,
       itemsPerPage: 20,
-      selectAll: false
+      selectAll: false,
+      generoDigitado: '',
+
     };
   },
 
-  watch: {
-    'novoLivro.titulo': {
-      handler(novoTitulo) {
-        this.verificarLivroExistente(novoTitulo);
-      },
-      immediate: false,
+watch: {
+  'novoLivro.titulo': {
+    handler(novoValor) {
+      this.verificarLivroExistente(novoValor);
     },
+    immediate: false,
   },
+},
+
 computed: {
 livrosComFiltro() {
   function removeAcentos(str) {
@@ -533,29 +536,40 @@ livros.forEach(livro => {
   a.click();
   URL.revokeObjectURL(url);
 },
+async verificarLivroExistente(valor) {
+  if (!valor || valor.trim().length < 3) return; // Evita buscas curtas
 
-async verificarLivroExistente(titulo) {
-    if (!titulo || titulo.length < 3) return; // Evita buscas muito curtas
+  try {
+    let resultado;
 
-    try {
-      const livroExistente = await window.api.buscarLivroPorTitulo(titulo.trim());
-
-      if (livroExistente) {
-        // Preenche os campos com dados existentes
-        this.novoLivro = {
-          ...livroExistente,
-          quantidade: '', // Deixa a quantidade para o usuário preencher
-          exemplar: '',   // Será gerado dinamicamente
-        };
-
-        this.livroExistente = livroExistente; // Armazena para usar depois no cadastro
-      } else {
-        this.livroExistente = null; // Nada encontrado
-      }
-    } catch (error) {
-      console.error('Erro ao buscar livro:', error);
+    // Se o valor for numérico (ex.: "1234"), busca por código
+    if (/^\d+$/.test(valor.trim())) {
+      resultado = await window.api.buscarLivroPorCodigo(valor.trim());
+    } else {
+      // Caso contrário, busca pelo título
+      resultado = await window.api.buscarLivroPorTitulo(valor.trim());
     }
-  },
+
+    if (resultado && Object.keys(resultado).length > 0) {
+      this.novoLivro.titulo = resultado.titulo;
+      this.novoLivro.autor = resultado.autor;
+      this.novoLivro.editora = resultado.editora;
+      this.novoLivro.categoryId = resultado.categoryId;
+      this.novoLivro.descricao = resultado.descricao;
+      this.novoLivro.imagem = resultado.imagem || "";
+
+      // Mantém quantidade e exemplar para o usuário preencher
+      this.novoLivro.quantidade = "";
+      this.novoLivro.exemplar = "";
+
+      this.livroExistente = resultado;
+    } else {
+      this.livroExistente = null;
+    }
+  } catch (error) {
+    console.error("Erro ao buscar livro:", error);
+  }
+},
 
 
   definirCategoriaDoNovoLivro(nome) {
