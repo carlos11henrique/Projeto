@@ -2,70 +2,99 @@
   <div class="p-6 bg-white rounded shadow overflow-x-auto text-[15px]">
     <!-- Formulário de Cadastro -->
     <form @submit.prevent="adicionarLivro" class="mb-6">
+
+
+      
       <div class="grid gap-6 mb-6 md:grid-cols-2">
+
+           <div v-if="mostrarCampoCodigo" class="md:col-span-2">
+  <label for="codigoLivro" class="block mb-2 text-sm font-medium text-gray-900">Código do Livro</label>
+  <input
+  v-model="codigoLivro"
+  type="text"
+  id="codigoLivro"
+  placeholder="Digite o código"
+   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+  @blur="verificarLivroExistente(codigoLivro)"
+  @keyup.enter="verificarLivroExistente(codigoLivro)"
+/>
+
+</div>
+        
+        <!-- Título -->
         <div>
           <label for="titulo" class="block mb-2 text-sm font-medium text-gray-900">Título do Livro</label>
           <input v-model="novoLivro.titulo" type="text" id="titulo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" required />
         </div>
 
+        <!-- Autor -->
         <div>
           <label for="autor" class="block mb-2 text-sm font-medium text-gray-900">Autor</label>
           <input v-model="novoLivro.autor" type="text" id="autor" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" required />
         </div>
 
+        <!-- Editora -->
         <div>
           <label for="editora" class="block mb-2 text-sm font-medium text-gray-900">Editora</label>
           <input v-model="novoLivro.editora" type="text" id="editora" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" required />
         </div>
 
+        <!-- Gênero -->
         <div>
           <label for="genero" class="block mb-2 text-sm font-medium text-gray-900">Gênero</label>
-      <input
-  v-model="generoDigitado"
-  @change="definirCategoriaDoNovoLivro(generoDigitado)"
-  list="listaCategorias"
-  id="genero"
-  name="genero"
-  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-  placeholder="Digite ou selecione um gênero"
-/>
-
+          <input
+            v-model="generoDigitado"
+            @change="definirCategoriaDoNovoLivro(generoDigitado)"
+            list="listaCategorias"
+            id="genero"
+            name="genero"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+            placeholder="Digite ou selecione um gênero"
+          />
           <datalist id="listaCategorias">
             <option v-for="cat in categorys" :key="cat.id" :value="cat.nome"></option>
           </datalist>
         </div>
 
+        <!-- Descrição -->
         <div>
           <label for="descricao" class="block mb-2 text-sm font-medium text-gray-900">Descrição</label>
           <input v-model="novoLivro.descricao" type="text" id="descricao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" required />
         </div>
 
+        <!-- Exemplar -->
         <div>
           <label for="exemplar" class="block mb-2 text-sm font-medium text-gray-900">Exemplar</label>
           <input v-model="novoLivro.exemplar" type="text" id="exemplar" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" required />
         </div>
 
-        <div>
-          <label v-if="!editando" for="quantidade" class="block mb-2 text-sm font-medium text-gray-900">Quantidade</label>
-          <input v-if="!editando" v-model="novoLivro.quantidade" type="number" id="quantidade" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" required />
+        <!-- Quantidade (somente se não estiver editando) -->
+        <div v-if="!editando">
+          <label for="quantidade" class="block mb-2 text-sm font-medium text-gray-900">Quantidade</label>
+          <input v-model="novoLivro.quantidade" type="number" id="quantidade" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" required />
         </div>
 
+        <!-- Upload Imagem -->
         <div class="md:col-span-2">
           <label class="block mb-2 text-sm font-medium text-gray-900" for="file_input">Upload Imagem</label>
           <input ref="fileInput" @change="handleImagemSelecionada" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50" id="file_input" type="file" />
         </div>
+
+        <!-- Campo de código do livro (aparece quando clicar em Livro Existente) -->
+    
       </div>
 
-      <!-- Botões de ação do formulário -->
+      <!-- Botões -->
       <div class="flex flex-wrap gap-4 mt-4">
         <button v-if="!editando" type="submit" class="text-white bg-blue-700 hover:bg-blue-800 rounded-lg text-sm px-5 py-2.5">
           Cadastrar
         </button>
 
-      
+        <button  type="button" @click="mostrarCampoCodigo = !mostrarCampoCodigo" class="text-white bg-green-700 hover:bg-green-800 rounded-lg text-sm px-5 py-2.5">
+          Livro Existente
+        </button>
       </div>
     </form>
-
     
   </div>
 <div>
@@ -290,13 +319,13 @@ export default {
       novoLivro: {
         titulo: "", codigoLivro: "", autor: "", editora: "",
         categoryId: 0, descricao: "", exemplar: "", quantidade: 0,
-        imagem: "", imagemOriginal: "",generoDigitado: '',
+        imagem: "", imagemOriginal: "",generoDigitado: '',    mostrarCampoCodigo: false, codigoLivro: "",
 
       },
       livros: [],
       categorias: [],
        livroEditando: {},
-      mostrarModalEdicao: false,  // controla se o modal está visível
+      mostrarModalEdicao: false, 
     livroEditando: null, 
       livroAbertoIndex: null,
       livrosSelecionados: [],
@@ -308,9 +337,12 @@ export default {
       itemsPerPage: 20,
       selectAll: false,
       generoDigitado: '',
+      mostrarCampoCodigo: false, 
+      codigoLivro: "",
 
     };
   },
+  
 
 watch: {
   'novoLivro.titulo': {
@@ -536,40 +568,53 @@ livros.forEach(livro => {
   a.click();
   URL.revokeObjectURL(url);
 },
+
+
+
 async verificarLivroExistente(valor) {
-  if (!valor || valor.trim().length < 3) return; // Evita buscas curtas
+  if (!valor || valor.trim().length < 1) return;
 
   try {
     let resultado;
 
-    // Se o valor for numérico (ex.: "1234"), busca por código
+    // Busca por código numérico ou por título
     if (/^\d+$/.test(valor.trim())) {
       resultado = await window.api.buscarLivroPorCodigo(valor.trim());
     } else {
-      // Caso contrário, busca pelo título
       resultado = await window.api.buscarLivroPorTitulo(valor.trim());
     }
 
+    // Se vier array, pega o primeiro item
+    if (Array.isArray(resultado) && resultado.length > 0) {
+      resultado = resultado[0];
+    }
+
     if (resultado && Object.keys(resultado).length > 0) {
-      this.novoLivro.titulo = resultado.titulo;
-      this.novoLivro.autor = resultado.autor;
-      this.novoLivro.editora = resultado.editora;
-      this.novoLivro.categoryId = resultado.categoryId;
-      this.novoLivro.descricao = resultado.descricao;
+      this.novoLivro.titulo = resultado.titulo || "";
+      this.novoLivro.autor = resultado.autor || "";
+      this.novoLivro.editora = resultado.editora || "";
+      this.novoLivro.categoryId = resultado.categoryId || null;
+      this.generoDigitado = resultado.categoriaNome || "";
+      this.novoLivro.descricao = resultado.descricao || "";
       this.novoLivro.imagem = resultado.imagem || "";
 
-      // Mantém quantidade e exemplar para o usuário preencher
       this.novoLivro.quantidade = "";
       this.novoLivro.exemplar = "";
 
       this.livroExistente = resultado;
     } else {
       this.livroExistente = null;
+      Swal.fire("Não encontrado", "Nenhum livro com esse código/título foi localizado", "warning");
     }
   } catch (error) {
     console.error("Erro ao buscar livro:", error);
+    Swal.fire("Erro", "Falha ao buscar livro", "error");
   }
-},
+}
+,
+
+
+
 
 
   definirCategoriaDoNovoLivro(nome) {
