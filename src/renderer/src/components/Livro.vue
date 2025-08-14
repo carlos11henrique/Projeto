@@ -579,7 +579,7 @@ async verificarLivroExistente(valor) {
 
     // Busca por código numérico ou por título
     if (/^\d+$/.test(valor.trim())) {
-      resultado = await window.api.buscarLivroPorCodigo(valor.trim());
+      resultado = await window.api.buscarLivrosPorCodigoLivro(valor.trim());
     } else {
       resultado = await window.api.buscarLivroPorTitulo(valor.trim());
     }
