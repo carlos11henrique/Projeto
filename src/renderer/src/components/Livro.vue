@@ -9,13 +9,13 @@
 
            <div v-if="mostrarCampoCodigo" class="md:col-span-2">
   <label for="codigoLivro" class="block mb-2 text-sm font-medium text-gray-900">Código do Livro</label>
-  <input
+<input
   v-model="codigoLivro"
   type="text"
   id="codigoLivro"
   placeholder="Digite o código"
-   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-  @blur="verificarLivroExistente(codigoLivro)"
+  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+  @blur="codigoLivro ? verificarLivroExistente(codigoLivro) : null"
   @keyup.enter="verificarLivroExistente(codigoLivro)"
 />
 
@@ -345,9 +345,11 @@ export default {
   
 
 watch: {
-  'novoLivro.titulo': {
-    handler(novoValor) {
-      this.verificarLivroExistente(novoValor);
+  codigoLivro: {
+    handler(novoCodigo) {
+      if (novoCodigo && novoCodigo.trim()) {
+        this.verificarLivroExistente(novoCodigo);
+      }
     },
     immediate: false,
   },
@@ -569,27 +571,27 @@ livros.forEach(livro => {
   URL.revokeObjectURL(url);
 },
 
-
-
-async verificarLivroExistente(valor) {
-  if (!valor || valor.trim().length < 1) return;
+async consultarLivroPorTitulo(titulo) {
+  if (!titulo || !titulo.trim()) {
+    console.warn("Título vazio, não vou buscar nada");
+    return;
+  }
 
   try {
-    let resultado;
+    console.log("🔎 Buscando livro pelo título:", titulo);
 
-    // Busca por código numérico ou por título
-    if (/^\d+$/.test(valor.trim())) {
-      resultado = await window.api.buscarLivrosPorCodigoLivro(valor.trim());
-    } else {
-      resultado = await window.api.buscarLivroPorTitulo(valor.trim());
-    }
+    let resultado = await window.api.buscarLivroPorTitulo(titulo.trim());
 
-    // Se vier array, pega o primeiro item
+    console.log("📚 Resultado da busca:", resultado);
+
+    // Se vier array, pega o primeiro
     if (Array.isArray(resultado) && resultado.length > 0) {
       resultado = resultado[0];
     }
 
     if (resultado && Object.keys(resultado).length > 0) {
+      console.log("✅ Livro encontrado, preenchendo formulário...");
+
       this.novoLivro.titulo = resultado.titulo || "";
       this.novoLivro.autor = resultado.autor || "";
       this.novoLivro.editora = resultado.editora || "";
@@ -598,20 +600,67 @@ async verificarLivroExistente(valor) {
       this.novoLivro.descricao = resultado.descricao || "";
       this.novoLivro.imagem = resultado.imagem || "";
 
+      // como é livro existente, usuário só informa exemplar/quantidade
       this.novoLivro.quantidade = "";
       this.novoLivro.exemplar = "";
 
       this.livroExistente = resultado;
     } else {
+      console.warn("⚠️ Nenhum livro encontrado com esse título.");
       this.livroExistente = null;
-      Swal.fire("Não encontrado", "Nenhum livro com esse código/título foi localizado", "warning");
+      Swal.fire("Não encontrado", "Nenhum livro com esse título foi localizado", "warning");
     }
   } catch (error) {
-    console.error("Erro ao buscar livro:", error);
+    console.error("❌ Erro ao buscar livro:", error);
     Swal.fire("Erro", "Falha ao buscar livro", "error");
   }
-}
-,
+},
+
+
+async verificarLivroExistente(codigoLivro) {
+  if (!codigoLivro || !codigoLivro.trim()) {
+    console.warn("Código vazio, não vou buscar nada");
+    return;
+  }
+
+  try {
+    console.log("🔎 Buscando livro pelo código:", codigoLivro);
+
+    let resultado = await window.api.buscarLivrosPorCodigoLivro(codigoLivro);
+
+    console.log("📚 Resultado da busca:", resultado);
+
+    // Se vier array, pega o primeiro
+    if (Array.isArray(resultado) && resultado.length > 0) {
+      resultado = resultado[0];
+    }
+
+    if (resultado && Object.keys(resultado).length > 0) {
+      console.log("✅ Livro encontrado, preenchendo formulário...");
+
+      this.novoLivro.titulo = resultado.titulo || "";
+      this.novoLivro.autor = resultado.autor || "";
+      this.novoLivro.editora = resultado.editora || "";
+      this.novoLivro.categoryId = resultado.categoryId || null;
+      this.generoDigitado = resultado.categoriaNome || "";
+      this.novoLivro.descricao = resultado.descricao || "";
+      this.novoLivro.imagem = resultado.imagem || "";
+
+      // como é livro existente, usuário só informa exemplar/quantidade
+      this.novoLivro.quantidade = "";
+      this.novoLivro.exemplar = "";
+
+      this.livroExistente = resultado;
+    } else {
+      console.warn("⚠️ Nenhum livro encontrado com esse código.");
+      this.livroExistente = null;
+      Swal.fire("Não encontrado", "Nenhum livro com esse código foi localizado", "warning");
+    }
+  } catch (error) {
+    console.error("❌ Erro ao buscar livro:", error);
+    Swal.fire("Erro", "Falha ao buscar livro", "error");
+  }
+},
 
 
 
