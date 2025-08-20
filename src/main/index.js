@@ -319,6 +319,27 @@ ipcMain.handle('getRankingLivrosAno', async () => {
     throw err;
   }
 });
+ipcMain.handle('getEmprestimosPorSerieTurma', async () => {
+  try {
+    const [results] = await sequelize.query(`
+      SELECT 
+          u.serie,
+          u.turma,
+          COUNT(l.id) AS total_emprestimos
+      FROM Loans l
+      JOIN Users u ON l.UserId = u.id
+      GROUP BY u.serie, u.turma
+      ORDER BY u.serie ASC, total_emprestimos DESC;
+      LIMIT 5;
+
+    `);
+
+    return results; // array [{ serie: '1', turma: 'B', total_emprestimos: 12 }, ...]
+  } catch (error) {
+    console.error('Erro ao buscar empréstimos por série/turma:', error);
+    return { error: 'Erro ao buscar dados' };
+  }
+});
 
 
 

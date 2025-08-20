@@ -25,8 +25,10 @@ const charts = reactive([
   { id: 'lineChart' },
   { id: 'stepChart' },
   { id: 'chartDiasSemana' },
+  { id: 'alunosLivrosEmprestimoChart' },
+  { id: 'serieTurmaChart' },
   { id: 'renderHighchart' },
-    { id: 'alunosLivrosEmprestimoChart' },
+
 
 ])
 
@@ -65,6 +67,8 @@ onMounted(async () => {
     const totalUsuarios = await cacheFetch('totalUsuarios', () => window.api.getQuantidadeUsuarios());
     const totalLivros = await cacheFetch('totalLivros', () => window.api.getQuantidadeLivros());
     const totalEmprestimos = await cacheFetch('totalEmprestimos', () => window.api.getQuantidadeEmprestimos());
+    const emprestimosSerieTurma = await cacheFetch('emprestimosSerieTurma',() => window.api.getEmprestimosPorSerieTurma());
+
 
 
 
@@ -244,6 +248,37 @@ renderHighchart('alunosLivrosEmprestimoChart', {
         }],
         plotOptions: { series: { animation: { duration: 1500 } } }
       });
+      if (emprestimosSerieTurma?.length) {
+  renderHighchart('serieTurmaChart', {
+    chart: { type: 'column' },
+    title: { text: 'Empréstimos por Sala' },
+    xAxis: {
+      categories: emprestimosSerieTurma.map(i => 
+        `${i.serie ?? ''}º ${i.turma ?? ''}`.trim()
+      ),
+      title: { text: 'Série / Turma' }
+    },
+    yAxis: {
+      title: { text: 'Total de Empréstimos' },
+      allowDecimals: false
+    },
+    series: [{
+      name: 'Empréstimos',
+      data: emprestimosSerieTurma.map(i => Number(i.total_emprestimos) || 0),
+      color: '#0288D1'
+    }],
+    plotOptions: {
+      column: {
+        animation: { duration: 1500 },
+        dataLabels: {
+          enabled: true,
+          format: '{point.y}'
+        }
+      }
+    }
+  });
+}
+
     }
 
   } catch (error) {
