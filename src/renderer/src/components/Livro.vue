@@ -23,9 +23,17 @@
         
         <!-- Título -->
         <div>
-          <label for="titulo" class="block mb-2 text-sm font-medium text-gray-900">Título do Livro</label>
-          <input v-model="novoLivro.titulo" type="text" id="titulo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" required />
-        </div>
+  <label for="titulo" class="block mb-2 text-sm font-medium text-gray-900">Título do Livro</label>
+  <input 
+    v-model="novoLivro.titulo" 
+    type="text" 
+    id="titulo" 
+    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" 
+    required 
+    @blur="novoLivro.titulo ? verificarLivroTitulo(novoLivro.titulo) : null"
+    @keyup.enter="novoLivro.titulo ? verificarLivroTitulo(novoLivro.titulo) : null"
+  />
+</div>
 
         <!-- Autor -->
         <div>
@@ -579,31 +587,26 @@ async consultarLivroPorTitulo(titulo) {
 
   try {
     console.log("🔎 Buscando livro pelo título:", titulo);
-
     let resultado = await window.api.buscarLivroPorTitulo(titulo.trim());
-
     console.log("📚 Resultado da busca:", resultado);
 
-    // Se vier array, pega o primeiro
-    if (Array.isArray(resultado) && resultado.length > 0) {
-      resultado = resultado[0];
-    }
-
-    if (resultado && Object.keys(resultado).length > 0) {
+    if (resultado) {
       console.log("✅ Livro encontrado, preenchendo formulário...");
-
+      
+      // Preenche os campos do formulário com os dados do livro encontrado
       this.novoLivro.titulo = resultado.titulo || "";
       this.novoLivro.autor = resultado.autor || "";
       this.novoLivro.editora = resultado.editora || "";
       this.novoLivro.categoryId = resultado.categoryId || null;
-      this.generoDigitado = resultado.categoriaNome || "";
+      this.generoDigitado = resultado.Category?.nome || "";
       this.novoLivro.descricao = resultado.descricao || "";
       this.novoLivro.imagem = resultado.imagem || "";
 
-      // como é livro existente, usuário só informa exemplar/quantidade
+      // Reseta os campos de quantidade e exemplar
       this.novoLivro.quantidade = "";
       this.novoLivro.exemplar = "";
 
+      // Armazena o livro existente
       this.livroExistente = resultado;
     } else {
       console.warn("⚠️ Nenhum livro encontrado com esse título.");
@@ -663,6 +666,43 @@ async verificarLivroExistente(codigoLivro) {
 },
 
 
+async verificarLivroTitulo(titulo) {
+  if (!titulo || !titulo.trim()) {
+    console.warn("Título vazio, não vou buscar nada");
+    return;
+  }
+
+  try {
+    console.log("🔎 Buscando livro pelo título:", titulo);
+    let resultado = await window.api.buscarLivroPorTitulo(titulo.trim());
+    console.log("📚 Resultado da busca:", resultado);
+
+    if (resultado) {
+      console.log("✅ Livro encontrado, preenchendo formulário...");
+
+      this.novoLivro.titulo = resultado.titulo || "";
+      this.novoLivro.autor = resultado.autor || "";
+      this.novoLivro.editora = resultado.editora || "";
+      this.novoLivro.categoryId = resultado.categoryId || null;
+      this.generoDigitado = resultado.Category?.nome || "";  // Corrigido para acessar o nome da categoria
+      this.novoLivro.descricao = resultado.descricao || "";
+      this.novoLivro.imagem = resultado.imagem || "";
+
+      // Reseta os campos de quantidade e exemplar
+      this.novoLivro.quantidade = "";
+      this.novoLivro.exemplar = "";
+
+      this.livroExistente = resultado;
+    } else {
+      console.warn("⚠️ Nenhum livro encontrado com esse título.");
+      this.livroExistente = null;
+      Swal.fire("Não encontrado", "Nenhum livro com esse título foi localizado", "warning");
+    }
+  } catch (error) {
+    console.error("❌ Erro ao buscar livro:", error);
+    Swal.fire("Erro", "Falha ao buscar livro", "error");
+  }
+},
 
 
 
