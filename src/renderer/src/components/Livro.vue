@@ -204,6 +204,7 @@
         <p><strong>Editora:</strong> {{ livro.editora }}</p>
         <p><strong>Descrição:</strong> {{ livro.descricao }}</p>
         <p><strong>Gênero:</strong> {{ livro.Category?.dataValues?.nome || '-' }}</p>
+        <p><strong>Data de Cadastro:</strong> {{ formatarData(livro.createdAt) }}</p>
       </div>
     </div>
   </td>
@@ -317,6 +318,9 @@
 <script>
 import Swal from 'sweetalert2';
 import ExcelJS from 'exceljs';
+import 'dayjs/locale/pt-br'
+import dayjs from 'dayjs';
+
 
 export default {
   name: "Livro",
@@ -422,6 +426,9 @@ todosSelecionados() {
     }
   },
   methods: {
+    formatarData(data) {
+    return dayjs(data).locale('pt-br').format('DD/MM/YYYY HH:mm');
+  },
 
 selecionarTodos(event) {
     const selecionado = event.target.checked;
