@@ -44,7 +44,7 @@
     "jquery-mask-plugin": "^1.14.16",
     "primeicons": "^7.0.0",
     "primevue": "^4.3.4",
-    "sequelize": "^6.37.6",
+    "sequelize": "^6.37.7",
     "sqlite3": "^5.1.7",
     "sweetalert2": "^11.6.13",
     "tailwindcss": "^4.0.14",

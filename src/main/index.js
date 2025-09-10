@@ -385,10 +385,7 @@ ipcMain.on('createLivro', async (event, book) => {
       tentativa++;
       codigoUnico = `L${new Date().getFullYear()}${Math.floor(Math.random() * 10000)}_${tentativa}`;
     }
-
     book.codigoLivro = codigoUnico;
-
-    // Ajuste para CategoryId, caso venha como categoryId (minúsculo)
     const livroPlain = JSON.parse(JSON.stringify(book));
     if (livroPlain.categoryId && !livroPlain.CategoryId) {
       livroPlain.CategoryId = livroPlain.categoryId;

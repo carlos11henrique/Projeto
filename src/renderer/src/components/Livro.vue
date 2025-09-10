@@ -113,6 +113,7 @@
 
 <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
   <div class="flex flex-wrap gap-2">
+  
     <button 
       @click="removerSelecionados" 
       class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm shadow"
@@ -125,6 +126,37 @@
     >
       Gerar Etiquetas
     </button>
+    
+<div class="relative inline-block text-left">
+  <button
+    @click="dropdownAberto = !dropdownAberto"
+    class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+    type="button"
+  >
+    Ordenar
+    <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+    </svg>
+  </button>
+
+  <div
+    v-if="dropdownAberto"
+    class="absolute left-0 mt-2 z-10 w-44 rounded-lg shadow-lg bg-white dark:bg-gray-700 dark:divide-gray-600"
+  >
+    <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
+      <li>
+        <button @click="alterarOrdem('alfabetica')" class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">A-Z</button>
+      </li>
+      <li>
+        <button @click="alterarOrdem('dataAsc')" class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Mais antigos</button>
+      </li>
+      <li>
+        <button @click="alterarOrdem('dataDesc')" class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Mais recentes</button>
+      </li>
+    </ul>
+  </div>
+</div>
+
   </div>
 
   <div>
@@ -327,7 +359,7 @@ export default {
   data() {
     
     return {
-      // Formulário
+      //F
       novoLivro: {
         titulo: "", codigoLivro: "", autor: "", editora: "",
         categoryId: 0, descricao: "", exemplar: "", quantidade: 0,
@@ -335,6 +367,8 @@ export default {
 
       },
       livros: [],
+      dropdownAberto: false,
+      ordemLivros: 'alfabetica', 
       categorias: [],
        livroEditando: {},
       mostrarModalEdicao: false, 
@@ -368,53 +402,51 @@ watch: {
 },
 
 computed: {
-livrosComFiltro() {
-  function removeAcentos(str) {
-    return str
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase();
-  }
+    livrosComFiltro() {
+      function removeAcentos(str) {
+        return str
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase();
+      }
 
-  const query = removeAcentos(this.searchQuery || '');
+      const query = removeAcentos(this.searchQuery || '');
 
-  const filtrados = this.livros.filter(livro =>
-    removeAcentos(livro.titulo || '').includes(query) ||
-    removeAcentos(livro.autor || '').includes(query) ||
-    removeAcentos(livro.codigoLivro || '').includes(query) ||
-    removeAcentos(livro.categoriaNome || '').includes(query) // alterado aqui
-  );
-
-  return filtrados.sort((a, b) => {
-    const tituloA = removeAcentos(a.titulo || '');
-    const tituloB = removeAcentos(b.titulo || '');
-
-    if (tituloA !== tituloB) {
-      return tituloA.localeCompare(tituloB);
-    }
-
-    return (Number(a.exemplar) || 0) - (Number(b.exemplar) || 0);
-  });
-},
+     const filtrados = this.livros.filter(livro =>
+  removeAcentos(livro.titulo || '').includes(query) ||
+  removeAcentos(livro.autor || '').includes(query) ||
+  removeAcentos(livro.codigoLivro || '').includes(query) ||
+  removeAcentos(livro.Category?.dataValues?.nome || '').includes(query)
+);
 
 
+      if (this.ordemLivros === 'alfabetica') {
+        filtrados.sort((a, b) => {
+          const tituloA = removeAcentos(a.titulo || '');
+          const tituloB = removeAcentos(b.titulo || '');
+          if (tituloA !== tituloB) {
+            return tituloA.localeCompare(tituloB);
+          }
+          return (Number(a.exemplar) || 0) - (Number(b.exemplar) || 0);
+        });
+      } else if (this.ordemLivros === 'dataAsc') {
+        filtrados.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      } else if (this.ordemLivros === 'dataDesc') {
+        filtrados.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      }
 
-  filteredLivro() {
-    const start = (this.currentPage - 1) * this.itemsPerPage;
-    return this.livrosComFiltro.slice(start, start + this.itemsPerPage);
-  },
-todosSelecionados() {
-  return (
-    this.filteredLivro.length > 0 &&
-    this.filteredLivro.every(livro => this.livrosSelecionados.includes(livro))
-  );
-},
-  todosSelecionados() {
-    return this.livros.length > 0 && this.livrosSelecionados.length === this.livros.length;
-  },
-
-
-
+      return filtrados;
+    },
+    filteredLivro() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      return this.livrosComFiltro.slice(start, start + this.itemsPerPage);
+    },
+    todosSelecionados() {
+      return (
+        this.filteredLivro.length > 0 &&
+        this.filteredLivro.every(livro => this.livrosSelecionados.includes(livro))
+      );
+    },
     totalPages() {
       return Math.ceil(this.livrosComFiltro.length / this.itemsPerPage) || 1;
     },
@@ -426,6 +458,9 @@ todosSelecionados() {
     }
   },
   methods: {
+    alterarOrdem(ordem) {
+    this.ordemLivros = ordem;
+  },
     formatarData(data) {
     return dayjs(data).locale('pt-br').format('DD/MM/YYYY HH:mm');
   },
